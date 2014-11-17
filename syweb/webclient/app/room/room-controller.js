@@ -343,6 +343,20 @@ angular.module('RoomController', ['ngSanitize', 'matrixFilter', 'mFileInput', 'a
             room_id_or_alias = decodeURIComponent($routeParams.room_id_or_alias);
         }
         
+        if (!room_id_or_alias) {
+            // Get the room alias by hand from the URL
+            // ie: extract #public:localhost:8080 from http://127.0.0.1:8000/#/room/#public:localhost:8080
+            if (3 === location.hash.split("#").length) {
+                room_id_or_alias = "#" + location.hash.split("#")[2];
+            }
+            else {
+                // In case of issue, go to the default page
+                console.log("Error: cannot extract room alias");
+                $location.url("/");
+                return;
+            }
+        }
+        
         eventHandlerService.joinRoom(room_id_or_alias).then(function(roomId) {
             $scope.room_id = roomId;
             $scope.room = modelService.getRoom($scope.room_id);
