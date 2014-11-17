@@ -197,34 +197,32 @@ function(matrixService, $rootScope, $q, $timeout, $filter, mPresence, notificati
         $rootScope.$broadcast(MSG_EVENT, event, isLiveEvent);
     };
     
-    var handleRoomMember = function(event, isLiveEvent, isStateEvent) {
+    var handleRoomMember = function(event, isLiveEvent) {
         var room = modelService.getRoom(event.room_id);
         
-        // did something change?
         var memberChanges = undefined;
-        if (!isStateEvent) {
-            // could be a membership change, display name change, etc.
-            // Find out which one.
-            if ((event.prev_content === undefined && event.content.membership) || (event.prev_content && (event.prev_content.membership !== event.content.membership))) {
-                memberChanges = "membership";
-            }
-            else if (event.prev_content && (event.prev_content.displayname !== event.content.displayname)) {
-                memberChanges = "displayname";
-            }
-            // mark the key which changed
-            event.changedKey = memberChanges;
+
+        // could be a membership change, display name change, etc.
+        // Find out which one.
+        if ((event.prev_content === undefined && event.content.membership) || (event.prev_content && (event.prev_content.membership !== event.content.membership))) {
+            memberChanges = "membership";
         }
+        else if (event.prev_content && (event.prev_content.displayname !== event.content.displayname)) {
+            memberChanges = "displayname";
+        }
+        // mark the key which changed
+        event.changedKey = memberChanges;
         
         
         // modify state before adding the message so it points to the right thing.
         // The events are copied to avoid referencing the same event when adding
         // the message (circular json structures)
-        if (isStateEvent || isLiveEvent) {
+        if (isLiveEvent) {
             var newEvent = angular.copy(event);
             newEvent.cnt = event.content;
             room.current_room_state.storeStateEvent(newEvent);
         }
-        else if (!isLiveEvent) {
+        else {
             // mutate the old room state
             var oldEvent = angular.copy(event);
             oldEvent.cnt = event.content;
@@ -253,9 +251,7 @@ function(matrixService, $rootScope, $q, $timeout, $filter, mPresence, notificati
             }
         }
         
-        
-        
-        $rootScope.$broadcast(MEMBER_EVENT, event, isLiveEvent, isStateEvent);
+        $rootScope.$broadcast(MEMBER_EVENT, event, isLiveEvent);
     };
     
     var handlePresence = function(event, isLiveEvent) {
@@ -269,16 +265,16 @@ function(matrixService, $rootScope, $q, $timeout, $filter, mPresence, notificati
         $rootScope.$broadcast(POWERLEVEL_EVENT, event, isLiveEvent);   
     };
 
-    var handleRoomName = function(event, isLiveEvent, isStateEvent) {
+    var handleRoomName = function(event, isLiveEvent) {
         console.log("handleRoomName room_id: " + event.room_id + " - isLiveEvent: " + isLiveEvent + " - name: " + event.content.name);
-        handleRoomStateEvent(event, isLiveEvent, !isStateEvent);
+        handleRoomStateEvent(event, isLiveEvent, true);
         $rootScope.$broadcast(NAME_EVENT, event, isLiveEvent);
     };
     
 
-    var handleRoomTopic = function(event, isLiveEvent, isStateEvent) {
+    var handleRoomTopic = function(event, isLiveEvent) {
         console.log("handleRoomTopic room_id: " + event.room_id + " - isLiveEvent: " + isLiveEvent + " - topic: " + event.content.topic);
-        handleRoomStateEvent(event, isLiveEvent, !isStateEvent);
+        handleRoomStateEvent(event, isLiveEvent, true);
         $rootScope.$broadcast(TOPIC_EVENT, event, isLiveEvent);
     };
 
@@ -354,7 +350,7 @@ function(matrixService, $rootScope, $q, $timeout, $filter, mPresence, notificati
             $rootScope.$broadcast(RESET_EVENT);
         },
     
-        handleEvent: function(event, isLiveEvent, isStateEvent) {
+        handleEvent: function(event, isLiveEvent) {
             // Avoid duplicated events
             // Needed for rooms where initialSync has not been done. 
             // In this case, we do not know where to start pagination. So, it starts from the END
@@ -362,15 +358,14 @@ function(matrixService, $rootScope, $q, $timeout, $filter, mPresence, notificati
             // AND from the event stream.
             // FIXME: This workaround should be no more required when /initialSync on a particular room
             // will be available (as opposite to the global /initialSync done at startup)
-            if (!isStateEvent) {    // Do not consider state events
-                if (event.event_id && eventMap[event.event_id]) {
-                    console.log("discarding duplicate event: " + JSON.stringify(event, undefined, 4));
-                    return;
-                }
-                else {
-                    eventMap[event.event_id] = 1;
-                }
+            if (event.event_id && eventMap[event.event_id]) {
+                console.log("discarding duplicate event: " + JSON.stringify(event, undefined, 4));
+                return;
             }
+            else {
+                eventMap[event.event_id] = 1;
+            }
+            
 
             if (event.type.indexOf('m.call.') === 0) {
                 handleCallEvent(event, isLiveEvent);
@@ -387,7 +382,7 @@ function(matrixService, $rootScope, $q, $timeout, $filter, mPresence, notificati
                         handleMessage(event, isLiveEvent);
                         break;
                     case "m.room.member":
-                        handleRoomMember(event, isLiveEvent, isStateEvent);
+                        handleRoomMember(event, isLiveEvent);
                         break;
                     case "m.presence":
                         handlePresence(event, isLiveEvent);
@@ -400,10 +395,10 @@ function(matrixService, $rootScope, $q, $timeout, $filter, mPresence, notificati
                         handlePowerLevels(event, isLiveEvent);
                         break;
                     case 'm.room.name':
-                        handleRoomName(event, isLiveEvent, isStateEvent);
+                        handleRoomName(event, isLiveEvent);
                         break;
                     case 'm.room.topic':
-                        handleRoomTopic(event, isLiveEvent, isStateEvent);
+                        handleRoomTopic(event, isLiveEvent);
                         break;
                     case 'm.room.redaction':
                         handleRedaction(event, isLiveEvent);
@@ -425,9 +420,9 @@ function(matrixService, $rootScope, $q, $timeout, $filter, mPresence, notificati
         
         // isLiveEvents determines whether notifications should be shown, whether
         // messages get appended to the start/end of lists, etc.
-        handleEvents: function(events, isLiveEvents, isStateEvents) {
+        handleEvents: function(events, isLiveEvents) {
             for (var i=0; i<events.length; i++) {
-                this.handleEvent(events[i], isLiveEvents, isStateEvents);
+                this.handleEvent(events[i], isLiveEvents);
             }
         },
 
@@ -439,7 +434,7 @@ function(matrixService, $rootScope, $q, $timeout, $filter, mPresence, notificati
             if (dir && 'b' === dir) {
                 // paginateBackMessages requests messages to be in reverse chronological order
                 for (var i=0; i<events.length; i++) {
-                    this.handleEvent(events[i], isLiveEvents, isLiveEvents);
+                    this.handleEvent(events[i], isLiveEvents);
                 }
                 
                 // Store how far back we've paginated
@@ -451,7 +446,7 @@ function(matrixService, $rootScope, $q, $timeout, $filter, mPresence, notificati
                 // InitialSync returns messages in chronological order, so invert
                 // it to get most recent > oldest
                 for (var i=events.length - 1; i>=0; i--) {
-                    this.handleEvent(events[i], isLiveEvents, isLiveEvents);
+                    this.handleEvent(events[i], isLiveEvents);
                 }
                 // Store where to start pagination
                 var room = modelService.getRoom(room_id);
