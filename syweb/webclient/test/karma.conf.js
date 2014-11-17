@@ -16,24 +16,18 @@ module.exports = function(config) {
     // list of files / patterns to load in the browser
     // XXX: Order is important, and doing /js/angular* makes the tests not run :/
     files: [
-      '../app/lib/jquery*',
-      '../app/lib/angular.js',
-      '../app/lib/angular-mocks.js',
-      '../app/lib/angular-route.js',
-      '../app/lib/angular-animate.js',
-      '../app/lib/angular-sanitize.js',
-      '../app/lib/jquery.peity.min.js',
-      '../app/lib/angular-peity.js',
-      '../app/lib/ng-infinite-scroll-matrix.js',
-      '../app/lib/ui-bootstrap*',
-      '../app/lib/elastic.js',  
-      '../app/login/**/*.js',
-      '../app/room/**/*.js',
-      '../app/components/**/*.js',
-      '../app/user/**/*.js',
-      '../app/home/**/*.js',
-      '../app/recents/**/*.js',
-      '../app/settings/**/*.js',
+      '../lib/jquery*',
+      '../lib/angular.js',
+      '../lib/angular-mocks.js',
+      '../lib/angular-route.js',
+      '../lib/angular-animate.js',
+      '../lib/angular-sanitize.js',
+      '../lib/jquery.peity.min.js',
+      '../lib/angular-peity.js',
+      '../lib/ng-infinite-scroll-matrix.js',
+      '../lib/ui-bootstrap*',
+      '../lib/elastic.js',  
+      '../app/**/!(app*).js',
       '../app/app.js',
       '../app/app*',
       './unit/**/*.js'
@@ -52,14 +46,7 @@ module.exports = function(config) {
     // preprocess matching files before serving them to the browser
     // available preprocessors: https://npmjs.org/browse/keyword/karma-preprocessor
     preprocessors: {
-      '../app/login/**/*.js': 'coverage', 
-      '../app/room/**/*.js': 'coverage',
-      '../app/components/**/*.js': 'coverage',
-      '../app/user/**/*.js': 'coverage',
-      '../app/home/**/*.js': 'coverage',
-      '../app/recents/**/*.js': 'coverage',
-      '../app/settings/**/*.js': 'coverage',
-      '../app/app.js': 'coverage'
+      '../app/**/*.js': 'coverage' 
     },
 
 
