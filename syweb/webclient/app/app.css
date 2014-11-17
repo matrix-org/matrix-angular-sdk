@@ -351,7 +351,7 @@ textarea, input {
     cursor: pointer;
     margin-top: 3px;
     right: 0px;
-    background: url('img/attach.png');
+    background: url('../img/attach.png');
     width: 25px;
     height: 25px;
     border: 0px;
