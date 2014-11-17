@@ -31,6 +31,7 @@ setup(
     packages=find_packages(exclude=["tests", "tests.*"]),
     description="Matrix Angular Sdk",
     include_package_data=True,
+    zip_safe=False,
     long_description=read("README.rst"),
     entry_points=""""""
 )
