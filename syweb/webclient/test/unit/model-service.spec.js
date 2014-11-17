@@ -25,7 +25,7 @@ describe('ModelService', function() {
         });
         
         var user = modelService.getMember(roomId, userId);
-        expect(user.event.state_key).toEqual(userId);
+        expect(user.event.state_key).toEqual(userId+"a");
     }));
     
     it('should be able to get a users power level', inject(
