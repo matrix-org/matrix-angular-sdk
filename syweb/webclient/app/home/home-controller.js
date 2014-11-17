@@ -29,10 +29,6 @@ angular.module('HomeController', ['matrixService', 'eventHandlerService', 'Recen
         room_id: "",
         private: false
     };
-    
-    $scope.goToRoom = {
-        room_id: ""
-    };
 
     $scope.joinAlias = {
         room_alias: ""
@@ -91,53 +87,9 @@ angular.module('HomeController', ['matrixService', 'eventHandlerService', 'Recen
                 $scope.feedback = "Failure: " + JSON.stringify(error.data);
             });
     };
-    
-    // Go to a room
-    $scope.goToRoom = function(room_id) {
-        matrixService.join(room_id).then(
-            function(response) {
-                var final_room_id = room_id;
-                if (response.data.hasOwnProperty("room_id")) {
-                    final_room_id = response.data.room_id;
-                }
-
-                // TODO: factor out the common housekeeping whenever we try to join a room or alias
-                matrixService.roomState(final_room_id).then(
-                    function(response) {
-                        eventHandlerService.handleEvents(response.data, false, true);
-                    },
-                    function(error) {
-                        $scope.feedback = "Failed to get room state for: " + final_room_id;
-                    }
-                );                                        
-
-                $location.url("room/" + final_room_id);
-            },
-            function(error) {
-                $scope.feedback = "Can't join room: " + JSON.stringify(error.data);
-            }
-        );
-    };
 
     $scope.joinAlias = function(room_alias) {
-        matrixService.joinAlias(room_alias).then(
-            function(response) {
-                // TODO: factor out the common housekeeping whenever we try to join a room or alias
-                matrixService.roomState(response.room_id).then(
-                    function(response) {
-                        eventHandlerService.handleEvents(response.data, false, true);
-                    },
-                    function(error) {
-                        $scope.feedback = "Failed to get room state for: " + response.room_id;
-                    }
-                );                                        
-                // Go to this room
-                $location.url("room/" + room_alias);
-            },
-            function(error) {
-                $scope.feedback = "Can't join room: " + JSON.stringify(error.data);
-            }
-        );
+        $location.url("room/" + room_alias);
     };
     
     // FIXME: factor this out between user-controller and home-controller etc.
