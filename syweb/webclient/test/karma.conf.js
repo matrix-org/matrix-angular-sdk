@@ -14,16 +14,15 @@ module.exports = function(config) {
 
 
     // list of files / patterns to load in the browser
-    // XXX: Order is important, and doing /js/angular* makes the tests not run :/
+    // XXX: Order is important; doing /js/angular* makes the tests not run,
+    // hence angular.js THEN angular-*.js. Also, this is also why we import
+    // everything but app*, then app.js, then app*.js else you get
+    // "Module 'matrixWebClient' is not available!" errors.
     files: [
       '../lib/jquery*',
       '../lib/angular.js',
-      '../lib/angular-mocks.js',
-      '../lib/angular-route.js',
-      '../lib/angular-animate.js',
-      '../lib/angular-sanitize.js',
+      '../lib/angular-*.js',
       '../lib/jquery.peity.min.js',
-      '../lib/angular-peity.js',
       '../lib/ng-infinite-scroll-matrix.js',
       '../lib/ui-bootstrap*',
       '../lib/elastic.js',  
