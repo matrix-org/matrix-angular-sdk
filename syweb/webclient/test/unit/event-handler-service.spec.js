@@ -13,6 +13,14 @@ describe('EventHandlerService', function() {
                 current_room_state: testNowState,
                 old_room_state: testOldState,
                 events: testEvents,
+                addMessageEvent: function(event, toFront) {
+                    if (toFront) {
+                        testEvents.unshift(event);
+                    }
+                    else {
+                        testEvents.push(event);
+                    }
+                }
             };
         },
         createRoomIdToAliasMapping: function(roomId, alias) {
@@ -95,6 +103,7 @@ describe('EventHandlerService', function() {
         testJoinSuccess = true;
         testResolvedRoomId = "!foo:matrix.org";
         testRoomState = [];
+        testEvents = [];
         testInitialSync = {
             data: {
                 rooms: [],
@@ -107,6 +116,9 @@ describe('EventHandlerService', function() {
             s: {},
             state: function(t,k) { 
                 return k ? this.s[t+k] : this.s[t]; 
+            },
+            getStateEvent: function(t,k) {
+                return this.state(t,k);
             },
             storeStateEvents: function(events) {
                 if (!events) { return; }
@@ -258,5 +270,157 @@ describe('EventHandlerService', function() {
         expect(matrixService.join).not.toHaveBeenCalled();
         expect(promiseResult).toEqual(roomId);
     }));
+    
+    it('should waitForInitialSyncCompletion.', inject(
+    function(eventHandlerService) {
+        var promiseResult = undefined;
+        eventHandlerService.waitForInitialSyncCompletion().then(function(r) {
+            promiseResult = r;
+        }, function(err) {
+            promiseResult = err;
+        });
+        expect(promiseResult).toBeUndefined();
+        eventHandlerService.handleInitialSyncDone(testInitialSync);
+        scope.$digest(); // resolve stuff
+        expect(promiseResult).toBeDefined();
+    }));
+    
+    it('eventContainsBingWord should return true if notificationService says so.', inject(
+    function(eventHandlerService) {
+        // the main test here is to make sure that event handler service is NOT
+        // applying any special logic to the bing word check; it should just be
+        // channeling the boolean we give it via notificationService. If this
+        // test fails, then there is additional logic for bing word checking which
+        // should be in notificationService. 
+        testContainsBingWords = true;
+        expect(eventHandlerService.eventContainsBingWord({
+            event_id: "a",
+            user_id: "@someone:matrix.org",
+            room_id: "!weuidfwe:matrix.org",
+            content: {
+                body: "foobar"
+            }
+        })).toBeTruthy();
+        
+        testContainsBingWords = false;
+        expect(eventHandlerService.eventContainsBingWord({
+            event_id: "a",
+            user_id: "@someone:matrix.org",
+            room_id: "!weuidfwe:matrix.org",
+            content: {
+                body: "foobar"
+            }
+        })).toBeFalsy();
+    }));
+    
+    it('should be able to handle multiple events.', inject(
+    function(eventHandlerService) {
+        spyOn(modelService, "setUser");
+        eventHandlerService.handleInitialSyncDone(testInitialSync);
+        
+        var eventA = {
+            content: {
+                user_id: "@alice:matrix.org",
+                presence: "online"
+            },
+            user_id: "@alice:matrix.org",
+            type: "m.presence"
+        };
+        
+        var eventB = {
+            content: {
+                user_id: "@bob:matrix.org",
+                presence: "unavailable"
+            },
+            user_id: "@bob:matrix.org",
+            type: "m.presence"
+        };
+        
+        var eventC = {
+            content: {
+                user_id: "@claire:matrix.org",
+                presence: "online"
+            },
+            user_id: "@claire:matrix.org",
+            type: "m.presence"
+        };
+        
+        eventHandlerService.handleEvents([eventA, eventB, eventC]);
+        expect(modelService.setUser).toHaveBeenCalledWith(eventA);
+        expect(modelService.setUser).toHaveBeenCalledWith(eventB);
+        expect(modelService.setUser).toHaveBeenCalledWith(eventC);
+    }));
+    
+    it('should be able to process m.presence events.', inject(
+    function(eventHandlerService) {
+        eventHandlerService.handleInitialSyncDone(testInitialSync);
+        
+        spyOn(modelService, "setUser");
+        var event = {
+            content: {
+                user_id: "@claire:matrix.org",
+                presence: "online"
+            },
+            user_id: "@claire:matrix.org",
+            type: "m.presence"
+        };
+        eventHandlerService.handleEvent(event);
+        expect(modelService.setUser).toHaveBeenCalledWith(event);
+    }));
+    
+    it('should be able to process redaction events and remove the redacted event.', inject(
+    function(eventHandlerService) {
+        var badEventId = "wefiuwehf";
+        eventHandlerService.handleInitialSyncDone(testInitialSync);
+        
+        var event = {
+            content: {
+                body: "something naughty",
+                msgtype: "m.text"
+            },
+            user_id: "@claire:matrix.org",
+            room_id: "!foobar:matrix.org",
+            type: "m.room.message",
+            event_id: badEventId
+        };
+        eventHandlerService.handleEvent(event, true);
+        expect(testEvents[0]).toEqual(event);
+        
+        var redaction = {
+            content: {},
+            user_id: "@bob:matrix.org",
+            room_id: "!foobar:matrix.org",
+            event_id: "wefuiwehfuiw",
+            redacts: badEventId,
+            type: "m.room.redaction"
+        };
+        eventHandlerService.handleEvent(redaction, true);
+        expect(testEvents).toEqual([]);
+    }));
+    
+    it('should be able to process generic room state events.', inject(
+    function(eventHandlerService) {
+        eventHandlerService.handleInitialSyncDone(testInitialSync);
+        
+        spyOn(testNowState, "storeStateEvent");
+        var event = {
+            content: {
+                something: "for nothing"
+            },
+            user_id: "@claire:matrix.org",
+            room_id: "!foobar:matrix.org",
+            state_key: "Rubber_Biscuit",
+            type: "org.matrix.test.random",
+            event_id: "wefiuwehf"
+        };
+        eventHandlerService.handleEvent(event, true);
+        expect(testNowState.storeStateEvent).toHaveBeenCalledWith(event);
+    }));
+    
+    /* TODO
+    it('should be able to store and process initial sync data.', inject(
+    function(eventHandlerService) {
+        eventHandlerService.handleInitialSyncDone(testInitialSync);
+    })); */
     
 });
