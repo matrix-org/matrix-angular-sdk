@@ -347,7 +347,7 @@ angular.module('RoomController', ['ngSanitize', 'matrixFilter', 'mFileInput', 'a
             // Get the room alias by hand from the URL
             // ie: extract #public:localhost:8080 from http://127.0.0.1:8000/#/room/#public:localhost:8080
             if (3 === location.hash.split("#").length) {
-                room_id_or_alias = "#" + location.hash.split("#")[2];
+                room_id_or_alias = "#" + decodeURIComponent(location.hash.split("#")[2]);
             }
             else {
                 // In case of issue, go to the default page
