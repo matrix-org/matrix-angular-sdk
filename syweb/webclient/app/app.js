@@ -29,6 +29,7 @@ var matrixWebClient = angular.module('matrixWebClient', [
     'MatrixCall',
     'eventStreamService',
     'eventHandlerService',
+    'eventReaperService',
     'notificationService',
     'recentsService',
     'modelService',

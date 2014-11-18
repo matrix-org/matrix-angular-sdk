@@ -51,6 +51,8 @@ function(matrixService, $rootScope, $q, $timeout, $filter, mPresence, notificati
     };
     reset();
     
+    // reaps event IDs in eventReapMap. NOTE: This is NOT deleting the event,
+    // this is just removing the event_id from an internal dict!
     var reapOldEventIds = function() {
         var now = new Date().getTime();
         for (var eventId in eventReapMap) {

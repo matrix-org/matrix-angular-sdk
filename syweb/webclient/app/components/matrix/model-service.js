@@ -214,6 +214,10 @@ angular.module('modelService', [])
             return rooms[roomId];
         },
         
+        removeRoom: function(roomId) {
+            delete rooms[roomId];
+        },
+        
         getRooms: function() {
             return rooms;
         },

@@ -21,8 +21,8 @@ limitations under the License.
 'use strict';
 
 angular.module('MatrixWebClientController', ['matrixService', 'mPresence', 'eventStreamService'])
-.controller('MatrixWebClientController', ['$scope', '$location', '$rootScope', '$timeout', 'matrixService', 'mPresence', 'eventStreamService', 'eventHandlerService', 'matrixPhoneService', 'modelService',
-                               function($scope, $location, $rootScope, $timeout, matrixService, mPresence, eventStreamService, eventHandlerService, matrixPhoneService, modelService) {
+.controller('MatrixWebClientController', ['$scope', '$location', '$rootScope', '$timeout', 'matrixService', 'mPresence', 'eventStreamService', 'eventHandlerService', 'matrixPhoneService', 'modelService', 'eventReaperService',
+                               function($scope, $location, $rootScope, $timeout, matrixService, mPresence, eventStreamService, eventHandlerService, matrixPhoneService, modelService, eventReaperService) {
          
     // Check current URL to avoid to display the logout button on the login page
     $scope.location = $location.path();
@@ -42,6 +42,8 @@ angular.module('MatrixWebClientController', ['matrixService', 'mPresence', 'even
     if (config) {
         $scope.user_id = matrixService.config().user_id;
     }
+    
+    // eventReaperService.setEnabled(true);
     
     /**
      * Open a given page.
