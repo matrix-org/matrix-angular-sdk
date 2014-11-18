@@ -6,7 +6,7 @@
         </div>
         <div class="modal-footer">
             <button ng-click="redact()" type="button" class="btn btn-danger redact-button" 
-             ng-disabled="!room.current_room_state.state('m.room.ops_levels').content.redact_level || !modelService.getUserPowerLevel(room_id, state.user_id) || modelService.getUserPowerLevel(room_id, state.user_id) < room.current_room_state.state('m.room.ops_levels').content.redact_level"
+             ng-disabled="!room.current_room_state.state('m.room.power_levels').content.redact || !modelService.getUserPowerLevel(room_id, state.user_id) || modelService.getUserPowerLevel(room_id, state.user_id) < room.current_room_state.state('m.room.power_levels').content.redact"
              title="Delete this event on all home servers. This cannot be undone.">
                 Redact
             </button>
@@ -38,7 +38,6 @@
                     <br/>
                     Set by: <span class="monospace">{{ event.user_id }}</span>
                     <br/>
-                    <span ng-show="event.required_power_level >= 0">Required power level: {{event.required_power_level}}<br/></span>
                     <button ng-click="submit(event)" type="button" class="btn btn-success" ng-disabled="!event.content">
                         Submit
                     </button>

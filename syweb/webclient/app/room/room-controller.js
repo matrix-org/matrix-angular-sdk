@@ -549,11 +549,11 @@ angular.module('RoomController', ['ngSanitize', 'matrixFilter', 'mFileInput', 'a
     };
 
 }])
-.controller('EventInfoController', function($scope, $modalInstance) {
+.controller('EventInfoController', function($scope, $modalInstance, modelService) {
     console.log("Displaying modal dialog for >>>> " + JSON.stringify($scope.event_selected));
     $scope.redact = function() {
-        console.log("User level = "+$scope.pow($scope.room_id, $scope.state.user_id)+
-                    " Redact level = "+$scope.room.current_room_state.state_events["m.room.ops_levels"].content.redact_level);
+        console.log("User level = "+modelService.getUserPowerLevel($scope.room_id, $scope.state.user_id)+
+                    " Redact level = "+$scope.room.current_room_state.state_events["m.room.power_levels"].content.redact);
         console.log("Redact event >> " + JSON.stringify($scope.event_selected));
         $modalInstance.close("redact");
     };
