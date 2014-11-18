@@ -1,8 +1,8 @@
 Matrix Angular SDK
 ==================
-This project provides AngularJS services for implementing the [Client-Server API] 
-on [Matrix]: an open standard for interoperable Instant Messaging and VoIP. It 
-comes shipped with [Synapse] : a home server reference implementation.
+This project provides AngularJS services for implementing the `Client-Server API`_
+on Matrix_ : an open standard for interoperable Instant Messaging and VoIP. It 
+comes shipped with Synapse_ : a home server reference implementation.
 
 This project also provides a complete, stand-alone client which can communicate 
 with Matrix home servers using a web browser.
@@ -15,7 +15,7 @@ components which are used in many places. More specific directories such as ``ho
 and ``settings`` contain code specific to that part of the app: e.g. the home screen
 and settings page respectively.
 
-The [Client-Server API] is encapsulated as an AngularJS service called ``matrixService``.
+The `Client-Server API`_ is encapsulated as an AngularJS service called ``matrixService``.
 There are also complementary services such as ``eventStreamService`` which handle more
 complex non-HTTP client logic.
 
@@ -40,6 +40,6 @@ Karma (running PhantomJS) and Jasmine 2.x+ in order to run. Assuming you have th
 required karma plugins, you can run the tests by running ``karma start`` in the 
 test directory.
 
-[Synapse]: https://github.com/matrix-org/synapse/
-[Matrix]: http://www.matrix.org
-[Client-Server API]: http://matrix.org/docs/api/client-server/
+.. _Synapse: https://github.com/matrix-org/synapse/
+.. _Matrix: http://www.matrix.org
+.. _Client-Server API: http://matrix.org/docs/api/client-server/
