@@ -267,6 +267,12 @@ angular.module('matrixService', [])
             return doRequest("GET", path);
         },
         
+        // get room initialSync for a specific room
+        roomInitialSync: function(room_id) {
+            var path = "/rooms/" + encodeURIComponent(room_id) + "/initialSync";
+            return doRequest("GET", path);
+        },
+        
         // Joins a room
         join: function(room_id) {
             return this.membershipChange(room_id, undefined, "join");

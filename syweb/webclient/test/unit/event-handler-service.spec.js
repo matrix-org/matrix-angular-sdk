@@ -55,10 +55,13 @@ describe('EventHandlerService', function() {
             }
             return defer.promise;
         },
-        roomState: function(roomId) {
+        roomInitialSync: function(roomId) {
             var defer = q.defer();
             if (testRoomState) {
-                defer.resolve({ data: testRoomState });
+                defer.resolve({ data: {
+                    state: testRoomState,
+                    presence: []
+                }});
             }
             else {
                 defer.reject({ data: { error: "some roomState error", errcode: "M_UNKNOWN" } });
@@ -202,7 +205,7 @@ describe('EventHandlerService', function() {
         ];
         
         spyOn(matrixService, "join").and.callThrough();
-        spyOn(matrixService, "roomState").and.callThrough();
+        spyOn(matrixService, "roomInitialSync").and.callThrough();
         var promiseResult = undefined;
         eventHandlerService.joinRoom(roomId).then(function(r) {
             promiseResult = r;
@@ -211,7 +214,7 @@ describe('EventHandlerService', function() {
         });
         scope.$digest(); // resolve stuff
         expect(matrixService.join).toHaveBeenCalledWith(roomId);
-        expect(matrixService.roomState).toHaveBeenCalledWith(roomId);
+        expect(matrixService.roomInitialSync).toHaveBeenCalledWith(roomId);
         expect(promiseResult).toEqual(roomId);
     }));
     
@@ -238,7 +241,7 @@ describe('EventHandlerService', function() {
         ];
         
         spyOn(matrixService, "resolveRoomAlias").and.callThrough();
-        spyOn(matrixService, "roomState").and.callThrough();
+        spyOn(matrixService, "roomInitialSync").and.callThrough();
         spyOn(testNowState, "storeStateEvents").and.callThrough();
         var promiseResult = undefined;
         eventHandlerService.joinRoom(roomAlias).then(function(r) {
@@ -248,7 +251,7 @@ describe('EventHandlerService', function() {
         });
         scope.$digest(); // resolve stuff
         expect(matrixService.resolveRoomAlias).toHaveBeenCalledWith(roomAlias);
-        expect(matrixService.roomState).toHaveBeenCalledWith(testResolvedRoomId);
+        expect(matrixService.roomInitialSync).toHaveBeenCalledWith(testResolvedRoomId);
         expect(testNowState.storeStateEvents).toHaveBeenCalledWith(testRoomState);
         expect(promiseResult).toEqual(testResolvedRoomId);
     }));
