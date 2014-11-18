@@ -61,9 +61,7 @@ function(matrixService, $rootScope, $q, $timeout, $filter, mPresence, notificati
         }
         $timeout(reapOldEventIds, REAP_POLL_MS);
     };
-    // TODO: We cannot reap event IDs since we can get dupes whenever the user paginates
-    //       because of SYN-104
-    // reapOldEventIds();
+    reapOldEventIds();
     
     // Generic method to handle events data
     var handleRoomStateEvent = function(event, isLiveEvent, addToRoomMessages) {

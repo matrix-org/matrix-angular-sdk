@@ -1,5 +1,5 @@
 describe('EventHandlerService', function() {
-    var scope, q;
+    var scope, q, timeout;
     
     var testContainsBingWords, testPresenceState; // mPresence, notificationService
     var testUserId, testDisplayName, testBingWords; // matrixService.config
@@ -173,9 +173,10 @@ describe('EventHandlerService', function() {
         module('eventHandlerService');
     });
     
-    beforeEach(inject(function($rootScope, $q) {
+    beforeEach(inject(function($rootScope, $q, $timeout) {
         scope = $rootScope;
         q = $q;
+        timeout = $timeout;
     }));
 
     it('should be able to join a room from a room ID.', inject(
@@ -449,10 +450,49 @@ describe('EventHandlerService', function() {
         expect(testEvents[0]).toEqual(event);
     }));
     
-    // skip because paginating still returns a dupe event so we can't reap.
-    xit('should reap event IDs after EVENT_ID_LIFETIME_MS.', inject(
+    // NB: We can only indirectly test this by making sure there is no dupe
+    //     suppression after EVENT_ID_LIFETIME_MS.
+    it('should reap event IDs after EVENT_ID_LIFETIME_MS.', inject(
     function(eventHandlerService) {
-        // TODO
+        eventHandlerService.handleInitialSyncDone(testInitialSync);
+        var eventId = "wefiuwehf";
+        
+        var event = {
+            content: {
+                body: "hello",
+                msgtype: "m.text"
+            },
+            user_id: "@claire:matrix.org",
+            room_id: "!foobar:matrix.org",
+            type: "m.room.message",
+            event_id: eventId
+        };
+        eventHandlerService.handleEvent(event, true);
+        
+        var dupeEvent = {
+            content: {
+                body: "goodbye", // should suppress based on event ID
+                msgtype: "m.text"
+            },
+            user_id: "@claire:matrix.org",
+            room_id: "!foobar:matrix.org",
+            type: "m.room.message",
+            event_id: eventId
+        };
+        
+        // mock date
+        var testTime = new Date().getTime() + 
+                       eventHandlerService.EVENT_ID_LIFETIME_MS + 1000;
+        var oldDate = Date;
+        spyOn(window, 'Date').and.callFake(function() {
+            return new oldDate(testTime);
+        });
+        
+        timeout.flush(); // force a recheck
+        
+        // should not suppress since it forgot about it.
+        eventHandlerService.handleEvent(dupeEvent, true);
+        expect(testEvents.length).toEqual(2);
     }));
     
     /* TODO
