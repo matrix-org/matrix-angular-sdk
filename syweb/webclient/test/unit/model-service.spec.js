@@ -47,8 +47,10 @@ describe('ModelService', function() {
         });
         room.current_room_state.storeStateEvent({
             content: {
-                "@adam:matrix.org": 90,
-                "default": 50
+                users: {
+                    "@adam:matrix.org": 90
+                },
+                "users_default": 50
             },
             user_id: "@adam:matrix.org",
             type: "m.room.power_levels"
@@ -180,8 +182,10 @@ describe('ModelService', function() {
         });
         room.current_room_state.storeStateEvent({
             content: {
-                "@adam:matrix.org": 1000,
-                "default": 500
+                users: {
+                    "@adam:matrix.org": 1000
+                },
+                "users_default": 500
             },
             user_id: "@adam:matrix.org",
             type: "m.room.power_levels"
