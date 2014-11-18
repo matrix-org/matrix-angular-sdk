@@ -291,8 +291,7 @@ textarea, input {
 
 #sidebar-resizer {
     position: absolute;
-    top: 0;
-    bottom: 0;
+    background-color: #fff;
     height: 100%;
     left: 320px;
     width: 10px;
