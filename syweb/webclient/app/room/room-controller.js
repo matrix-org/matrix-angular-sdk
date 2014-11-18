@@ -497,7 +497,7 @@ angular.module('RoomController', ['ngSanitize', 'matrixFilter', 'mFileInput', 'a
         
         // scope this so the template can check power levels and enable/disable
         // buttons
-        $scope.pow = modelService.getUserPowerLevel;
+        $scope.modelService = modelService;
 
         var modalInstance = $modal.open({
             templateUrl: 'eventInfoTemplate.html',
