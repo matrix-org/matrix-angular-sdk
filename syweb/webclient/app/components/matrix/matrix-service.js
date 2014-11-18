@@ -275,19 +275,25 @@ angular.module('matrixService', [])
         
         // Joins a room
         join: function(room_id) {
-            return this.membershipChange(room_id, undefined, "join");
+            // this was just making a membership change - but why not actually use the /join API?
+            // return this.membershipChange(room_id, undefined, "join");
+            return this.joinAliasOrId(room_id);
+        },
+        
+        joinAlias: function(room_alias) {
+            return this.joinAliasOrId(room_alias);
         },
 
-        joinAlias: function(room_alias) {
-            var path = "/join/$room_alias";
-            room_alias = encodeURIComponent(room_alias);
+        joinAliasOrId: function(room_alias_or_id) {
+            var path = "/join/$room_alias_or_id";
+            room_alias_or_id = encodeURIComponent(room_alias_or_id);
 
-            path = path.replace("$room_alias", room_alias);
+            path = path.replace("$room_alias_or_id", room_alias_or_id);
 
             // TODO: PUT with txn ID
             return doRequest("POST", path, undefined, {});
         },
-
+        
         // Invite a user to a room
         invite: function(room_id, user_id) {
             return this.membershipChange(room_id, user_id, "invite");

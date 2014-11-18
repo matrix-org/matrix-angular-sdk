@@ -216,6 +216,10 @@ angular.module('MatrixCall', [])
         var roomMembers = modelService.getRoom(this.room_id).current_room_state.members;
         if (roomMembers[matrixService.config().user_id].event.content.membership != 'join') {
             console.log("We need to join the room before we can accept this call");
+            // XXX: what happens if we try to join a remote room based on ID?  Apparently HSes don't
+            // know how to locate the participating servers of a room if it's identified purely by ID...
+            // XXX: in fact, when does this ever happen?  Surely we need to already be joined to a room
+            // in order to have received the event we're answering...
             matrixService.join(this.room_id).then(function() {
                 self.answer();
             }, function() {

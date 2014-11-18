@@ -533,7 +533,7 @@ function(matrixService, $rootScope, $q, $timeout, $filter, mPresence, notificati
                         }
                     }
                     // join the room and get current room state
-                    matrixService.join(roomId).then(function() {
+                    matrixService.joinAliasOrId(roomIdOrAlias).then(function() {
                         matrixService.roomInitialSync(roomId).then(function(response) {
                             var room = modelService.getRoom(roomId);
                             room.current_room_state.storeStateEvents(response.data.state);
