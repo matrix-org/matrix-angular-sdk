@@ -79,7 +79,7 @@ describe('MatrixService', function() {
         httpBackend.flush();
     }));
     
-    it('should be able to POST /rooms/$roomid/join', inject(
+    it('should be able to POST /join/$roomid', inject(
     function(matrixService) {
         matrixService.setConfig(CONFIG);
         matrixService.join(roomId).then(function(response) {
@@ -87,8 +87,8 @@ describe('MatrixService', function() {
         });
 
         httpBackend.expectPOST(
-            URL + "/rooms/" + encodeURIComponent(roomId) + 
-            "/join?access_token=foobar",
+            URL + "/join/" + encodeURIComponent(roomId) + 
+            "?access_token=foobar",
             {})
             .respond({});
         httpBackend.flush();
