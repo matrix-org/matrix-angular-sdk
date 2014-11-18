@@ -67,7 +67,7 @@ angular.module('modelService', [])
         this.old_room_state = new RoomState();
         this.current_room_state = new RoomState();
         this.now = this.current_room_state; // makes html access shorter
-        this.events = []; // events which can be displayed on the UI. TODO move?
+        this.events = []; // events which can be displayed on the UI.
     };
     Room.prototype = {
         addMessageEvents: function addMessageEvents(events, toFront) {
@@ -119,7 +119,7 @@ angular.module('modelService', [])
         this.members = {}; 
         // state events, the key is a compound of event type + state_key
         this.state_events = {}; 
-        this.pagination_token = ""; 
+        this.pagination_token = "";
     };
     RoomState.prototype = {
         // get a state event for this room from this.state_events. State events
@@ -212,10 +212,6 @@ angular.module('modelService', [])
                 rooms[roomId] = new Room(roomId);
             }
             return rooms[roomId];
-        },
-        
-        removeRoom: function(roomId) {
-            delete rooms[roomId];
         },
         
         getRooms: function() {

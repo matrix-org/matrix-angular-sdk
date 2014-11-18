@@ -22,20 +22,28 @@ control memory usage.
 */
 angular.module('eventReaperService', [])
 .factory('eventReaperService', [ '$rootScope', 'modelService', 'recentsService',
-function($rootScope, modelService, recentsService) {
+'matrixService', 'eventHandlerService',
+function($rootScope, modelService, recentsService, matrixService, eventHandlerService) {
 
     var enabled = false;
     var roomViewHistory = [];
     
-    var reapRoom = function(roomIdToReap) {
+    var reapEvents = function(roomIdToReap) {
         var room = modelService.getRoom(roomIdToReap);
-        // nuke messages but keep the current state
-        var currentState = room.now;
-        modelService.removeRoom(roomIdToReap);
-        room = modelService.getRoom(roomIdToReap); // recreate the room
-        room.current_room_state = currentState;
-        room.old_room_state = currentState;
-        console.log(" ( '-')_/` (x_x) Reaped "+roomIdToReap);
+        var state = room.current_room_state;
+        // re-paginate and dump that in.
+        matrixService.paginateBackMessages(roomIdToReap, undefined, 20).then(
+        function(response) {
+            // nuke events and old state
+            room.events = [];
+            room.old_room_state = state;
+            // re-construct events and old state
+            eventHandlerService.handleRoomMessages(roomIdToReap, response.data, false, 'b');
+            console.log(" ( '-')_/` (x_x) Reaped "+roomIdToReap);
+        },
+        function(error) {
+            console.error("Failed to reap "+roomIdToReap+" : "+JSON.stringify(error));
+        });
     };
 
     // listen for the room being viewed now
@@ -47,7 +55,7 @@ function($rootScope, modelService, recentsService) {
         roomViewHistory.push(roomId);
         while (roomViewHistory.length > 3) { // reap the earliest one
             var roomIdToReap = roomViewHistory.shift();
-            reapRoom(roomIdToReap);
+            reapEvents(roomIdToReap);
         }
     });
     
