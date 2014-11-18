@@ -38,18 +38,32 @@ function(matrixService, $rootScope, $q, $timeout, $filter, mPresence, notificati
     var TOPIC_EVENT = "TOPIC_EVENT";
     var RESET_EVENT = "RESET_EVENT";    // eventHandlerService has been resetted
 
-    // used for dedupping events - could be expanded in future...
-    // FIXME: means that we leak memory over time (along with lots of the rest
-    // of the app, given we never try to reap memory yet)
-    var eventMap = {};
+    // used for dedupping events 
+    var eventReapMap = {};
+    var EVENT_ID_LIFETIME_MS = 1000 * 10; // lifetime of an event ID in the map is 10s
+    var REAP_POLL_MS = 1000 * 11; // check for eligible event IDs to reap every 11s
 
     var initialSyncDeferred;
 
     var reset = function() {
         initialSyncDeferred = $q.defer();
-        eventMap = {};
+        eventReapMap = {};
     };
     reset();
+    
+    var reapOldEventIds = function() {
+        var now = new Date().getTime();
+        for (var eventId in eventReapMap) {
+            if (!eventReapMap.hasOwnProperty(eventId)) continue;
+            if ( (now - eventReapMap[eventId]) > EVENT_ID_LIFETIME_MS) {
+                delete eventReapMap[eventId];
+            }
+        }
+        $timeout(reapOldEventIds, REAP_POLL_MS);
+    };
+    // TODO: We cannot reap event IDs since we can get dupes whenever the user paginates
+    //       because of SYN-104
+    // reapOldEventIds();
     
     // Generic method to handle events data
     var handleRoomStateEvent = function(event, isLiveEvent, addToRoomMessages) {
@@ -295,20 +309,17 @@ function(matrixService, $rootScope, $q, $timeout, $filter, mPresence, notificati
 
         // we need to remove something possibly: do we know the redacted
         // event ID?
-        if (eventMap[event.redacts]) {
-            var room = modelService.getRoom(event.room_id);
-            // remove event from list of messages in this room.
-            var eventList = room.events;
-            for (var i=0; i<eventList.length; i++) {
-                if (eventList[i].event_id === event.redacts) {
-                    console.log("Removing event " + event.redacts);
-                    eventList.splice(i, 1);
-                    break;
-                }
+        var room = modelService.getRoom(event.room_id);
+        // remove event from list of messages in this room.
+        var eventList = room.events;
+        for (var i=0; i<eventList.length; i++) {
+            if (eventList[i].event_id === event.redacts) {
+                console.log("Removing event " + event.redacts);
+                eventList.splice(i, 1);
+                break;
             }
-
-            console.log("Redacted an event.");
         }
+        
     };
     
     // resolves a room ID or alias, returning a deferred.
@@ -344,6 +355,7 @@ function(matrixService, $rootScope, $q, $timeout, $filter, mPresence, notificati
         NAME_EVENT: NAME_EVENT,
         TOPIC_EVENT: TOPIC_EVENT,
         RESET_EVENT: RESET_EVENT,
+        EVENT_ID_LIFETIME_MS: EVENT_ID_LIFETIME_MS,
         
         reset: function() {
             reset();
@@ -358,12 +370,12 @@ function(matrixService, $rootScope, $q, $timeout, $filter, mPresence, notificati
             // AND from the event stream.
             // FIXME: This workaround should be no more required when /initialSync on a particular room
             // will be available (as opposite to the global /initialSync done at startup)
-            if (event.event_id && eventMap[event.event_id]) {
+            if (event.event_id && eventReapMap[event.event_id]) {
                 console.log("discarding duplicate event: " + JSON.stringify(event, undefined, 4));
                 return;
             }
             else {
-                eventMap[event.event_id] = 1;
+                eventReapMap[event.event_id] = new Date().getTime();
             }
             
 

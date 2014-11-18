@@ -417,6 +417,44 @@ describe('EventHandlerService', function() {
         expect(testNowState.storeStateEvent).toHaveBeenCalledWith(event);
     }));
     
+    it('should suppress duplicate event IDs.', inject(
+    function(eventHandlerService) {
+        eventHandlerService.handleInitialSyncDone(testInitialSync);
+        var eventId = "wefiuwehf";
+        
+        var event = {
+            content: {
+                body: "hello",
+                msgtype: "m.text"
+            },
+            user_id: "@claire:matrix.org",
+            room_id: "!foobar:matrix.org",
+            type: "m.room.message",
+            event_id: eventId
+        };
+        
+        var dupeEvent = {
+            content: {
+                body: "goodbye", // should suppress based on event ID
+                msgtype: "m.text"
+            },
+            user_id: "@claire:matrix.org",
+            room_id: "!foobar:matrix.org",
+            type: "m.room.message",
+            event_id: eventId
+        };
+        eventHandlerService.handleEvent(event, true);
+        eventHandlerService.handleEvent(dupeEvent, true);
+        expect(testEvents.length).toEqual(1);
+        expect(testEvents[0]).toEqual(event);
+    }));
+    
+    // skip because paginating still returns a dupe event so we can't reap.
+    xit('should reap event IDs after EVENT_ID_LIFETIME_MS.', inject(
+    function(eventHandlerService) {
+        // TODO
+    }));
+    
     /* TODO
     it('should be able to store and process initial sync data.', inject(
     function(eventHandlerService) {
