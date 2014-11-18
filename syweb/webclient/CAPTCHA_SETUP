@@ -27,7 +27,7 @@ options. You should put your ReCaptcha public key there like so:
 webClientConfig = {
     useCaptcha: true,
     recaptcha_public_key: "YOUR_PUBLIC_KEY"
-}
+};
 
 This should be put in webclient/config.js which is already .gitignored, rather 
 than in the web client source files. You MUST set useCaptcha to true else a
