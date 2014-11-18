@@ -159,19 +159,22 @@ angular.module('modelService', [])
             else if (event.type === "m.room.power_levels") {
                 // normalise power levels: find the max first.
                 var maxPowerLevel = 0;
-                for (var user_id in event.content) {
-                    if (!event.content.hasOwnProperty(user_id) || user_id === "hsob_ts") continue; // XXX hsob_ts on some old rooms :(
-                    maxPowerLevel = Math.max(maxPowerLevel, event.content[user_id]);
+                
+                var userList = event.content.users;
+                
+                for (var user_id in userList) {
+                    if (!userList.hasOwnProperty(user_id) || user_id === "hsob_ts") continue; // XXX hsob_ts on some old rooms :(
+                    maxPowerLevel = Math.max(maxPowerLevel, userList[user_id]);
                 }
                 // set power level f.e room member
-                var defaultPowerLevel = event.content.default === undefined ? 0 : event.content.default;
+                var defaultPowerLevel = event.content.users_default === undefined ? 0 : event.content.users_default;
                 for (var user_id in this.members) {
                     if (!this.members.hasOwnProperty(user_id)) continue;
                     var rm = this.members[user_id];
                     if (!rm) {
                         continue;
                     }
-                    rm.power_level = event.content[user_id] === undefined ? defaultPowerLevel : event.content[user_id];
+                    rm.power_level = userList[user_id] === undefined ? defaultPowerLevel : userList[user_id];
                     rm.power_level_norm = (rm.power_level * 100) / maxPowerLevel;
                 }
             }
@@ -288,12 +291,12 @@ angular.module('modelService', [])
             var powerLevel = 0;
             var room = this.getRoom(room_id).current_room_state;
             if (room.state("m.room.power_levels")) {
-                if (user_id in room.state("m.room.power_levels").content) {
-                    powerLevel = room.state("m.room.power_levels").content[user_id];
+                if (user_id in room.state("m.room.power_levels").content.users) {
+                    powerLevel = room.state("m.room.power_levels").content.users[user_id];
                 }
                 else {
                     // Use the room default user power
-                    powerLevel = room.state("m.room.power_levels").content["default"];
+                    powerLevel = room.state("m.room.power_levels").content["users_default"];
                 }
             }
             return powerLevel;

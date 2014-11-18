@@ -678,14 +678,16 @@ angular.module('matrixService', [])
          * @returns {promise} an $http promise
          */
         setUserPowerLevel: function(room_id, user_id, powerLevel, event) {
-            var content = {};
+            var content = {
+                users: {}
+            };
             if (event) {
                 // if there is an existing event, copy the content as it contains
                 // the power level values for other members which we do not want
                 // to modify.
                 content = angular.copy(event.content);
             }
-            content[user_id] = powerLevel;
+            content.users[user_id] = powerLevel;
                 
             var path = "/rooms/$room_id/state/m.room.power_levels";
             path = path.replace("$room_id", encodeURIComponent(room_id));
