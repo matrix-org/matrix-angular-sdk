@@ -124,6 +124,14 @@
         <div ng-include="'app/recents/recents.html'"></div>
     </div>
     
+    <div id="sidebar-resizer" 
+        resizer="vertical" 
+        resizer-width="6" 
+        resizer-left="#roomRecentsTableWrapper" 
+        resizer-right="#messageTableWrapper"
+        resizer-max="320">
+    </div>
+    
     <div id="usersTableWrapper" ng-hide="state.permission_denied">
         <div ng-repeat="member in room.now.members | orderMembersList" class="userAvatar">
             <div class="userAvatarFrame" ng-class="(member.user.event.content.presence === 'online' ? 'online' : (member.user.event.content.presence === 'unavailable' ? 'unavailable' : '')) + ' ' + (member.event.content.membership == 'invite' ? 'invited' : '')">

@@ -289,6 +289,17 @@ textarea, input {
 
 /*** Room page ***/
 
+#sidebar-resizer {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    height: 100%;
+    left: 320px;
+    width: 10px;
+    border-right: 1px solid #ccc;
+    cursor: e-resize;
+}
+
 #roomPage {
     position: absolute;
     top: 120px;
@@ -298,6 +309,7 @@ textarea, input {
 }
 
 #roomWrapper {
+    position: relative;
     margin: auto;
     max-width: 1280px;
     height: 100%;
