@@ -399,8 +399,6 @@ function(matrixService, $rootScope, $q, $timeout, $filter, mPresence, notificati
                     case "m.presence":
                         handlePresence(event, isLiveEvent);
                         break;
-                    case 'm.room.send_event_level':
-                    case 'm.room.add_state_level':
                     case 'm.room.join_rules':
                     case 'm.room.power_levels':
                         handlePowerLevels(event, isLiveEvent);
