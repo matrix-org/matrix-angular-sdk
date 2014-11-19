@@ -17,8 +17,8 @@ limitations under the License.
 'use strict';
 
 angular.module('SettingsController', ['matrixService', 'mFileUpload', 'mFileInput'])
-.controller('SettingsController', ['$scope', 'matrixService', 'mFileUpload',
-                              function($scope, matrixService, mFileUpload) {                 
+.controller('SettingsController', ['$scope', 'matrixService', 'mFileUpload', 'dialogService',
+                              function($scope, matrixService, mFileUpload, dialogService) {
     // XXX: duplicated from register
     var generateClientSecret = function() {
         var ret = "";
@@ -93,10 +93,10 @@ angular.module('SettingsController', ['matrixService', 'mFileUpload', 'mFileInpu
     var setDisplayName = function(displayName) {
         matrixService.setDisplayName(displayName).then(
             function(response) {
-                $scope.feedback = "Updated display name.";
+                dialogService.showSuccess("Success", "Updated display name.");
             },
             function(error) {
-                $scope.feedback = "Can't update display name: " + error.data;
+                dialogService.showError(error);
             }
         );
     };
@@ -105,11 +105,10 @@ angular.module('SettingsController', ['matrixService', 'mFileUpload', 'mFileInpu
         console.log("Updating avatar to " + avatarURL);
         matrixService.setProfilePictureUrl(avatarURL).then(
             function(response) {
-                console.log("Updated avatar");
-                $scope.feedback = "Updated avatar.";
+                dialogService.showSuccess("Success", "Updated profile avatar.");
             },
             function(error) {
-                $scope.feedback = "Can't update avatar: " + error.data;
+                dialogService.showError(error);
             }
         );
     };

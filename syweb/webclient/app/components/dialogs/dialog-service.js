@@ -29,9 +29,13 @@ angular.module('dialogService', [])
         if (kind === "error") {
             dialog = dialogs.error(title, body);
         }
+        else if (kind === "success") {
+            dialog = dialogs.notify(title, body);
+        }
         else {
             console.error("Unknown kind of dialog: " + kind);
         }
+        
         if (dialog) {
             return dialog.result;
         }
@@ -43,6 +47,10 @@ angular.module('dialogService', [])
     };
     
     return {
+    
+        showSuccess: function(title, body) {
+            return showDialog("success", title, body);
+        },
     
         showMatrixError: function(error) {
             return showDialog("error", "Error", 
@@ -57,8 +65,11 @@ angular.module('dialogService', [])
                 error = error.data;
                 return this.showMatrixError(error);
             }
-            else if (error && error.errcode && error.error) {
+            else if (error.errcode && error.error) {
                 return this.showMatrixError(error);
+            }
+            else if (error.status === 0) {
+                return showDialog("error", "Network Error", "Unable to complete your request.");
             }
             else {
                 console.error("Unknown error: "+JSON.stringify(error));
