@@ -15,8 +15,8 @@ limitations under the License.
 */
 
 angular.module('RoomController', ['ngSanitize', 'matrixFilter', 'mFileInput', 'angular-peity'])
-.controller('RoomController', ['$modal', '$filter', '$scope', '$timeout', '$routeParams', '$location', '$rootScope', 'matrixService', 'mPresence', 'eventHandlerService', 'mFileUpload', 'matrixPhoneService', 'MatrixCall', 'modelService', 'recentsService', 'commandsService', 'mUserDisplayNameFilter', 'dialogService',
-                               function($modal, $filter, $scope, $timeout, $routeParams, $location, $rootScope, matrixService, mPresence, eventHandlerService, mFileUpload, matrixPhoneService, MatrixCall, modelService, recentsService, commandsService, mUserDisplayNameFilter, dialogService) {
+.controller('RoomController', ['$modal', '$scope', '$timeout', '$routeParams', '$location', '$rootScope', 'matrixService', 'eventHandlerService', 'mFileUpload', 'MatrixCall', 'modelService', 'recentsService', 'commandsService', 'mUserDisplayNameFilter', 'dialogService',
+                               function($modal, $scope, $timeout, $routeParams, $location, $rootScope, matrixService, eventHandlerService, mFileUpload, MatrixCall, modelService, recentsService, commandsService, mUserDisplayNameFilter, dialogService) {
    'use strict';
     var MESSAGES_PER_PAGINATION = 30;
     var THUMBNAIL_SIZE = 320;
@@ -557,7 +557,7 @@ angular.module('RoomController', ['ngSanitize', 'matrixFilter', 'mFileInput', 'a
     };
     $scope.dismiss = $modalInstance.dismiss;
 })
-.controller('RoomInfoController', function($scope, $modalInstance, $filter, matrixService, dialogService) {
+.controller('RoomInfoController', function($scope, $modalInstance, matrixService, dialogService) {
     console.log("Displaying room info.");
     
     $scope.userIDToInvite = "";
