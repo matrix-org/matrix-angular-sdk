@@ -392,7 +392,18 @@ angular.module('RoomController', ['ngSanitize', 'matrixFilter', 'mFileInput', 'a
             scrollToBottom(true);
         },
         function(err) {
-            $scope.state.permission_denied = err;
+            if (err.data && err.data.errcode) {
+                if (err.data.errcode === "M_FORBIDDEN") {
+                    $scope.state.permission_denied = "You do not have permission to join this room";		
+                }		
+                else {		
+                    console.error("Error: cannot join room: "+JSON.stringify(err));		
+                    $location.url("/");		
+                }
+            }
+            else {
+                $scope.state.permission_denied = err;
+            }
         });
     };
 
