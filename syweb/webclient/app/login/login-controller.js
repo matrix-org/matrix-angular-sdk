@@ -15,8 +15,8 @@
  */
  
 angular.module('LoginController', ['matrixService'])
-.controller('LoginController', ['$scope', '$rootScope', '$location', 'matrixService', 'eventStreamService',
-                                    function($scope, $rootScope, $location, matrixService, eventStreamService) {
+.controller('LoginController', ['$scope', '$rootScope', '$location', 'matrixService', 'eventStreamService', 'dialogService',
+                                    function($scope, $rootScope, $location, matrixService, eventStreamService, dialogService) {
     'use strict';
     
     
@@ -100,14 +100,7 @@ angular.module('LoginController', ['matrixService'])
                 }
             },
             function(error) {
-                if (error.data) {
-                    if (error.data.errcode === "M_FORBIDDEN") {
-                        $scope.login_error_msg = "Incorrect username or password.";
-                    }
-                }
-                else if (error.status === 0) {
-                    $scope.login_error_msg = "Unable to talk to the server.";
-                }
+                dialogService.showError(error);
             }
         );
     };
