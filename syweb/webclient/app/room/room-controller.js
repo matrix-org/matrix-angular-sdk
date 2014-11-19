@@ -557,7 +557,7 @@ angular.module('RoomController', ['ngSanitize', 'matrixFilter', 'mFileInput', 'a
     };
     $scope.dismiss = $modalInstance.dismiss;
 })
-.controller('RoomInfoController', function($scope, $modalInstance, $filter, matrixService) {
+.controller('RoomInfoController', function($scope, $modalInstance, $filter, matrixService, dialogService) {
     console.log("Displaying room info.");
     
     $scope.userIDToInvite = "";
@@ -571,7 +571,7 @@ angular.module('RoomController', ['ngSanitize', 'matrixFilter', 'mFileInput', 'a
                 $scope.userIDToInvite = "";
             },
             function(reason) {
-                $scope.feedback = "Failure: " + reason.data.error;
+                dialogService.showError(reason);
             });
     };
 
@@ -582,7 +582,7 @@ angular.module('RoomController', ['ngSanitize', 'matrixFilter', 'mFileInput', 'a
                 event.content, event.state_key).then(function(response) {
                     $modalInstance.dismiss();
                 }, function(err) {
-                    $scope.feedback = err.data.error;
+                    dialogService.showError(err);
                 }
             );
         }
