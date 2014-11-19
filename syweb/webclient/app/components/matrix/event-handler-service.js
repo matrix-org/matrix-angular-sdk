@@ -332,7 +332,7 @@ function(matrixService, $rootScope, $q, $timeout, $filter, mPresence, notificati
             },
             function(err) {
                 console.error("resolveRoomIdentifier: lookup failed. "+JSON.stringify(err.data));
-                defer.reject(err.data);
+                defer.reject(err);
             });
         }
         else if ('!' === roomIdOrAlias[0]) {
