@@ -15,8 +15,8 @@ limitations under the License.
 */
 
 angular.module('RoomController', ['ngSanitize', 'matrixFilter', 'mFileInput', 'angular-peity'])
-.controller('RoomController', ['$modal', '$filter', '$scope', '$timeout', '$routeParams', '$location', '$rootScope', 'matrixService', 'mPresence', 'eventHandlerService', 'mFileUpload', 'matrixPhoneService', 'MatrixCall', 'modelService', 'recentsService', 'commandsService', 'mUserDisplayNameFilter',
-                               function($modal, $filter, $scope, $timeout, $routeParams, $location, $rootScope, matrixService, mPresence, eventHandlerService, mFileUpload, matrixPhoneService, MatrixCall, modelService, recentsService, commandsService, mUserDisplayNameFilter) {
+.controller('RoomController', ['$modal', '$filter', '$scope', '$timeout', '$routeParams', '$location', '$rootScope', 'matrixService', 'mPresence', 'eventHandlerService', 'mFileUpload', 'matrixPhoneService', 'MatrixCall', 'modelService', 'recentsService', 'commandsService', 'mUserDisplayNameFilter', 'dialogService',
+                               function($modal, $filter, $scope, $timeout, $routeParams, $location, $rootScope, matrixService, mPresence, eventHandlerService, mFileUpload, matrixPhoneService, MatrixCall, modelService, recentsService, commandsService, mUserDisplayNameFilter, dialogService) {
    'use strict';
     var MESSAGES_PER_PAGINATION = 30;
     var THUMBNAIL_SIZE = 320;
@@ -392,18 +392,11 @@ angular.module('RoomController', ['ngSanitize', 'matrixFilter', 'mFileInput', 'a
             scrollToBottom(true);
         },
         function(err) {
-            if (err.data && err.data.errcode) {
-                if (err.data.errcode === "M_FORBIDDEN") {
-                    $scope.state.permission_denied = "You do not have permission to join this room";		
-                }		
-                else {		
-                    console.error("Error: cannot join room: "+JSON.stringify(err));		
-                    $location.url("/");		
-                }
-            }
-            else {
-                $scope.state.permission_denied = err;
-            }
+            dialogService.showError(err).then(function(r){
+                $location.url("/");	
+            }, function(r) {
+                $location.url("/");	
+            });
         });
     };
 

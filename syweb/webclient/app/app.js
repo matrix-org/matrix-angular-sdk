@@ -31,11 +31,13 @@ var matrixWebClient = angular.module('matrixWebClient', [
     'eventHandlerService',
     'eventReaperService',
     'notificationService',
+    'dialogService',
     'recentsService',
     'modelService',
     'commandsService',
     'infinite-scroll',
     'ui.bootstrap',
+    'dialogs.main',
     'monospaced.elastic'
 ]);
 
