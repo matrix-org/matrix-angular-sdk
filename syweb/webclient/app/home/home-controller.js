@@ -97,8 +97,7 @@ angular.module('HomeController', ['matrixService', 'eventHandlerService', 'Recen
     };
     
     // FIXME: factor this out between user-controller and home-controller etc.
-    $scope.messageUser = function() {    
-        
+    $scope.messageUser = function() {
         // FIXME: create a new room every time, for now
         
         matrixService.create(null, 'private', [$scope.newChat.user]).then(
@@ -110,7 +109,8 @@ angular.module('HomeController', ['matrixService', 'eventHandlerService', 'Recen
             },
             function(error) {
                 dialogService.showError(error);
-            });                
+            }
+        );                
     };
     
  

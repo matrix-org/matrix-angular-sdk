@@ -72,7 +72,7 @@ angular.module('RoomController', ['ngSanitize', 'matrixFilter', 'mFileInput', 'a
                 function() {
                 },
                 function(error) {
-                    $scope.feedback = "Request failed: " + error.data.error;
+                    dialogService.showError(error);
                 }
             );
 
@@ -113,7 +113,7 @@ angular.module('RoomController', ['ngSanitize', 'matrixFilter', 'mFileInput', 'a
                 function() {
                 },
                 function(error) {
-                    $scope.feedback = "Request failed: " + error.data.error;
+                    dialogService.showError(error);
                 }
             );
 
