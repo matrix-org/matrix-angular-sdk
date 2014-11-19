@@ -272,19 +272,8 @@ angular.module('matrixService', [])
             var path = "/rooms/" + encodeURIComponent(room_id) + "/initialSync";
             return doRequest("GET", path);
         },
-        
-        // Joins a room
-        join: function(room_id) {
-            // this was just making a membership change - but why not actually use the /join API?
-            // return this.membershipChange(room_id, undefined, "join");
-            return this.joinAliasOrId(room_id);
-        },
-        
-        joinAlias: function(room_alias) {
-            return this.joinAliasOrId(room_alias);
-        },
 
-        joinAliasOrId: function(room_alias_or_id) {
+        join: function(room_alias_or_id) {
             var path = "/join/$room_alias_or_id";
             room_alias_or_id = encodeURIComponent(room_alias_or_id);
 

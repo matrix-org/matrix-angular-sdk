@@ -67,7 +67,7 @@ describe('MatrixService', function() {
     
     it('should be able to POST /join', inject(function(matrixService) {
         matrixService.setConfig(CONFIG);
-        matrixService.joinAlias(roomId).then(function(response) {
+        matrixService.join(roomId).then(function(response) {
             expect(response.data).toEqual({});
         });
 
