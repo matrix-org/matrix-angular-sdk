@@ -8,6 +8,10 @@ describe("RegisterController ", function() {
         useCaptcha: false
     };
     
+    var dialogService = {
+        showError: function(err){} // will be spyed
+    };
+    
     // test vars
     var testRegisterData, testFailRegisterData;
     
@@ -59,7 +63,8 @@ describe("RegisterController ", function() {
                 '$rootScope': $rootScope, 
                 '$location': $location,
                 'matrixService': matrixService,
-                'eventStreamService': eventStreamService
+                'eventStreamService': eventStreamService,
+                'dialogService': dialogService
             });
         })
     );
@@ -67,6 +72,7 @@ describe("RegisterController ", function() {
     // SYWEB-109
     it('should display an error if the HS rejects the username on registration', function() {
         var prevFeedback = angular.copy(scope.feedback);
+        spyOn(dialogService, "showError");
     
         testFailRegisterData = {
             errcode: "M_UNKNOWN",
@@ -79,6 +85,6 @@ describe("RegisterController ", function() {
         scope.register(); // this depends on the result of a deferred
         rootScope.$digest(); // which is delivered after the digest
         
-        expect(scope.feedback).not.toEqual(prevFeedback);
+        expect(dialogService.showError).toHaveBeenCalled();
     });
 });

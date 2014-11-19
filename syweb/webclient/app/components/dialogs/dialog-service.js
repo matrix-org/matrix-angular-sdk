@@ -52,8 +52,8 @@ angular.module('dialogService', [])
             return showDialog("success", title, body);
         },
     
-        showMatrixError: function(error) {
-            return showDialog("error", "Error", 
+        showMatrixError: function(title, error) {
+            return showDialog("error", title, 
                     error.error + " ("+error.errcode+")");
         },
     
@@ -63,13 +63,16 @@ angular.module('dialogService', [])
             }
             else if (error.data && error.data.errcode && error.data.error) {
                 error = error.data;
-                return this.showMatrixError(error);
+                return this.showMatrixError("Error", error);
             }
             else if (error.errcode && error.error) {
-                return this.showMatrixError(error);
+                return this.showMatrixError("Error", error);
             }
             else if (error.status === 0) {
                 return showDialog("error", "Network Error", "Unable to complete your request.");
+            }
+            else if (error.status > 0) {
+                return showDialog("error", "HTTP Error", "Unable to complete your request. ("+error.status+")");
             }
             else {
                 console.error("Unknown error: "+JSON.stringify(error));

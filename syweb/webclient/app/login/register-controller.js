@@ -15,8 +15,8 @@
  */
  
 angular.module('RegisterController', ['matrixService'])
-.controller('RegisterController', ['$scope', '$rootScope', '$location', 'matrixService', 'eventStreamService',
-                                    function($scope, $rootScope, $location, matrixService, eventStreamService) {
+.controller('RegisterController', ['$scope', '$rootScope', '$location', 'matrixService', 'eventStreamService', 'dialogService',
+                                    function($scope, $rootScope, $location, matrixService, eventStreamService, dialogService) {
     'use strict';
     
     var config = window.webClientConfig;
@@ -84,7 +84,7 @@ angular.module('RegisterController', ['matrixService'])
                     $scope.feedback = "";
                 },
                 function(response) {
-                    $scope.feedback = "Couldn't request verification email!";
+                    dialogService.showError(error);
                 }
             );
         } else {
@@ -130,22 +130,21 @@ angular.module('RegisterController', ['matrixService'])
                 }
                 if (error.data) {
                     if (error.data.errcode === "M_USER_IN_USE") {
-                        $scope.feedback = "Username already taken.";
+                        dialogService.showMatrixError("Username taken", error.data);
                         $scope.reenter_username = true;
                     }
                     else if (error.data.errcode == "M_CAPTCHA_INVALID") {
-                        $scope.feedback = "Failed captcha.";
+                        dialogService.showMatrixError("Captcha failed", error.data);
                     }
                     else if (error.data.errcode == "M_CAPTCHA_NEEDED") {
-                        $scope.feedback = "Captcha is required on this home " +
-                                          "server.";
+                        dialogService.showMatrixError("Captcha required", error.data);
                     }
-                    else if (error.data.error) {
-                        $scope.feedback = error.data.error;
+                    else {
+                        dialogService.showError(error);
                     }
                 }
-                else if (error.status === 0) {
-                    $scope.feedback = "Unable to talk to the server.";
+                else {
+                    dialogService.showError(error);
                 }
             });
     }
