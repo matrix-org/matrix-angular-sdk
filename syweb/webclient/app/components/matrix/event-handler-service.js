@@ -515,6 +515,8 @@ function(matrixService, $rootScope, $q, $timeout, $filter, mPresence, notificati
             var defer = $q.defer();
             var eventHandlerService = this;
             
+            // TODO standardise error responses rather than returning where they fail, which could
+            // return an error object (with errcode) or a string.
             var errorFunc = function(error) {
                 console.error("joinRoom: " + JSON.stringify(error));
                 defer.reject(error);
