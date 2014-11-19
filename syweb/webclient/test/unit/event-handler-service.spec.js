@@ -45,7 +45,7 @@ describe('EventHandlerService', function() {
             }
             return defer.promise;
         },
-        join: function(roomId) {
+        joinAliasOrId: function(roomId) {
             var defer = q.defer();
             if (testJoinSuccess) {
                 defer.resolve({});
@@ -204,7 +204,7 @@ describe('EventHandlerService', function() {
         
         ];
         
-        spyOn(matrixService, "join").and.callThrough();
+        spyOn(matrixService, "joinAliasOrId").and.callThrough();
         spyOn(matrixService, "roomInitialSync").and.callThrough();
         var promiseResult = undefined;
         eventHandlerService.joinRoom(roomId).then(function(r) {
@@ -213,7 +213,7 @@ describe('EventHandlerService', function() {
             promiseResult = err;
         });
         scope.$digest(); // resolve stuff
-        expect(matrixService.join).toHaveBeenCalledWith(roomId);
+        expect(matrixService.joinAliasOrId).toHaveBeenCalledWith(roomId);
         expect(matrixService.roomInitialSync).toHaveBeenCalledWith(roomId);
         expect(promiseResult).toEqual(roomId);
     }));
@@ -269,9 +269,9 @@ describe('EventHandlerService', function() {
             promiseResult = err;
         });
         
-        spyOn(matrixService, "join");
+        spyOn(matrixService, "joinAliasOrId");
         scope.$digest(); // resolve stuff
-        expect(matrixService.join).not.toHaveBeenCalled();
+        expect(matrixService.joinAliasOrId).not.toHaveBeenCalled();
         expect(promiseResult).toEqual(roomId);
     }));
     
