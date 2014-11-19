@@ -229,7 +229,7 @@ angular.module('matrixService', [])
         },
 
         // Create a room
-        create: function(room_alias, visibility) {
+        create: function(room_alias, visibility, inviteList) {
             // The REST path spec
             var path = "/createRoom";
 
@@ -238,6 +238,9 @@ angular.module('matrixService', [])
             };
             if (room_alias) {
                 req.room_alias_name = room_alias;
+            }
+            if (inviteList) {
+                req.invite = inviteList;
             }
             
             return doRequest("POST", path, undefined, req);

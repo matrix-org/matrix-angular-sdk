@@ -49,14 +49,6 @@
         </tbody>
     </table>
     <br/>
-    
-    <div>
-        <form>
-            <input size="40" ng-model="newRoom.room_alias" ng-enter="createNewRoom(newRoom.room_alias, newRoom.private)" placeholder="(e.g. foo)"/>
-            <input type="checkbox" ng-model="newRoom.private">private
-            <button ng-disabled="!newRoom.room_alias" ng-click="createNewRoom(newRoom.room_alias, newRoom.private)">Create room</button>    
-        </form>
-    </div>
     <div>
         <form>
             <input size="40" ng-model="joinAlias.room_alias" ng-enter="joinAlias(joinAlias.room_alias)" placeholder="(e.g. #foo:example.org)"/>

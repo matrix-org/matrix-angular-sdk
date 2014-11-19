@@ -17,8 +17,8 @@ limitations under the License.
 'use strict';
 
 angular.module('HomeController', ['matrixService', 'eventHandlerService', 'RecentsController'])
-.controller('HomeController', ['$scope', '$location', 'matrixService', 'eventHandlerService', 'modelService', 'recentsService',
-                               function($scope, $location, matrixService, eventHandlerService, modelService, recentsService) {
+.controller('HomeController', ['$scope', '$location', 'matrixService', 'eventHandlerService', 'modelService', 'recentsService', 'dialogService',
+                               function($scope, $location, matrixService, eventHandlerService, modelService, recentsService, dialogService) {
 
     $scope.config = matrixService.config();
     $scope.public_rooms = [];
@@ -67,29 +67,33 @@ angular.module('HomeController', ['matrixService', 'eventHandlerService', 'Recen
             }
         );
     };
-    
-    $scope.createNewRoom = function(room_alias, isPrivate) {
-        
-        var visibility = "public";
-        if (isPrivate) {
-            visibility = "private";
-        }
-        
-        matrixService.create(room_alias, visibility).then(
-            function(response) { 
-                // This room has been created. Refresh the rooms list
-                console.log("Created room " + response.data.room_alias + " with id: "+
-                response.data.room_id);
-                modelService.createRoomIdToAliasMapping(
-                    response.data.room_id, response.data.room_alias);
-            },
-            function(error) {
-                $scope.feedback = "Failure: " + JSON.stringify(error.data);
-            });
-    };
 
     $scope.joinAlias = function(room_alias) {
-        $location.url("room/" + room_alias);
+        eventHandlerService.joinRoom(room_alias).then(function(roomId) {
+            $location.url("room/" + room_alias);
+        }, 
+        function(err) {
+            if (err.data && err.data.error === "No such room alias") { // FIXME I died a little inside writing this. PLEASE add an errcode for this.
+                // try to create it. We trust the server has authed the alias, so we can mangle it for an alias.
+                var localpart = room_alias.split(":")[0].substring(1);
+                
+                matrixService.create(localpart, 'public').then(
+                    function(response) { 
+                        // This room has been created. Refresh the rooms list
+                        var room_id = response.data.room_id;
+                        console.log("Created room with id: "+ room_id);
+                        $scope.$parent.goToPage("/room/" + room_id);
+                    },
+                    function(error) {
+                        dialogService.showError(error);
+                    }
+                ); 
+            }
+            else {
+                dialogService.showError(err);
+            }
+        });
+        
     };
     
     // FIXME: factor this out between user-controller and home-controller etc.
@@ -97,23 +101,15 @@ angular.module('HomeController', ['matrixService', 'eventHandlerService', 'Recen
         
         // FIXME: create a new room every time, for now
         
-        matrixService.create(null, 'private').then(
+        matrixService.create(null, 'private', [$scope.newChat.user]).then(
             function(response) { 
                 // This room has been created. Refresh the rooms list
                 var room_id = response.data.room_id;
                 console.log("Created room with id: "+ room_id);
-                
-                matrixService.invite(room_id, $scope.newChat.user).then(
-                    function() {
-                        $scope.feedback = "Invite sent successfully";
-                        $scope.$parent.goToPage("/room/" + room_id);
-                    },
-                    function(reason) {
-                        $scope.feedback = "Failure: " + JSON.stringify(reason);
-                    });
+                $scope.$parent.goToPage("/room/" + room_id);
             },
             function(error) {
-                $scope.feedback = "Failure: " + JSON.stringify(error.data);
+                dialogService.showError(error);
             });                
     };
     
