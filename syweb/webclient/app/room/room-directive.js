@@ -296,8 +296,8 @@ angular.module('RoomController')
                     x = parseInt($attrs.resizerMax);
                 }
                 
-                if (x < 0) {
-                    x = 0;
+                if (x < -$attrs.resizerWidth) {
+                    x = -$attrs.resizerWidth;
                 }
 
                 $element.css({
