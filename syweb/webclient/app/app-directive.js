@@ -19,13 +19,16 @@
 angular.module('matrixWebClient')
 .directive('ngEnter', function () {
     return function (scope, element, attrs) {
-        element.bind("keydown keypress", function (event) {
+        element.on("keydown keypress", function (event) {
             if(event.which === 13) {
                 scope.$apply(function () {
                     scope.$eval(attrs.ngEnter);
                 });
                 event.preventDefault();
             }
+        });
+        scope.$on('$destroy', function() {
+            element.off("keydown keypress");
         });
     };
 })
