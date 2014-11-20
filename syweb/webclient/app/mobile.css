@@ -31,9 +31,11 @@
     #header {
         background-color: transparent;
     }
-    
+        
     #headerContent {
         padding-right: 5px;
+        height: auto;
+        line-height: normal;
     }
     
     #headerContent button {
@@ -56,6 +58,8 @@
     #roomRecentsTableWrapper,
     #usersTableWrapper,
     #controlButtons,
+    #sidebar-resizer,
+    #callbar,
     .extraControls {
         display: none;
     }
@@ -75,7 +79,7 @@
     }
 
     #roomHeader {
-        padding-top: 10px;
+        padding-top: 20px;
     }
     
     .roomHeaderInfo {
