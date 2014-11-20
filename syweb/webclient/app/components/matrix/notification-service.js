@@ -82,12 +82,16 @@ angular.module('notificationService', [])
             return false;
         },
         
-        showNotification: function(title, body, icon, onclick) {
+        showNotification: function(title, body, icon, onclick, tag) {
+            if (!tag) {
+                tag = "matrix";
+            }
             var notification = new window.Notification(
                 title,
                 {
                     "body": body,
-                    "icon": icon
+                    "icon": icon,
+                    "tag": tag
                 }
             );
 
