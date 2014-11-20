@@ -26,8 +26,8 @@ def read(fname):
     return open(os.path.join(os.path.dirname(__file__), fname)).read()
 
 setup(
-    name="syweb",
-    version="0.0.1",
+    name="matrix-angular-sdk",
+    version=read("VERSION").strip(),
     packages=find_packages(exclude=["tests", "tests.*"]),
     description="Matrix Angular Sdk",
     include_package_data=True,
