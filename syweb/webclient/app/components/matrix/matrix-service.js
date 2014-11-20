@@ -271,9 +271,12 @@ angular.module('matrixService', [])
         },
         
         // get room initialSync for a specific room
-        roomInitialSync: function(room_id) {
+        roomInitialSync: function(room_id, limit) {
             var path = "/rooms/" + encodeURIComponent(room_id) + "/initialSync";
-            return doRequest("GET", path);
+            if (!limit) {
+                limit = 30;
+            }
+            return doRequest("GET", path, { limit: limit });
         },
 
         join: function(room_alias_or_id) {

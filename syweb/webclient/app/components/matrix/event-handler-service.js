@@ -39,7 +39,9 @@ function(matrixService, $rootScope, $q, $timeout, $filter, mPresence, notificati
     var RESET_EVENT = "RESET_EVENT";    // eventHandlerService has been resetted
 
     // used for dedupping events 
-    var eventReapMap = {};
+    var eventReapMap = {
+    //  room_id: { event_id: time_seen }
+    };
     var EVENT_ID_LIFETIME_MS = 1000 * 10; // lifetime of an event ID in the map is 10s
     var REAP_POLL_MS = 1000 * 11; // check for eligible event IDs to reap every 11s
 
@@ -55,12 +57,17 @@ function(matrixService, $rootScope, $q, $timeout, $filter, mPresence, notificati
     // this is just removing the event_id from an internal dict!
     var reapOldEventIds = function() {
         var now = new Date().getTime();
-        for (var eventId in eventReapMap) {
-            if (!eventReapMap.hasOwnProperty(eventId)) continue;
-            if ( (now - eventReapMap[eventId]) > EVENT_ID_LIFETIME_MS) {
-                delete eventReapMap[eventId];
+        for (var roomId in eventReapMap) {
+            if (!eventReapMap.hasOwnProperty(roomId)) continue;
+            var roomEvents = eventReapMap[roomId];
+            for (var eventId in roomEvents) {
+                if (!roomEvents.hasOwnProperty(eventId)) continue;
+                if ( (now - roomEvents[eventId]) > EVENT_ID_LIFETIME_MS) {
+                    delete roomEvents[eventId];
+                }
             }
         }
+        
         $timeout(reapOldEventIds, REAP_POLL_MS);
     };
     reapOldEventIds();
@@ -363,19 +370,17 @@ function(matrixService, $rootScope, $q, $timeout, $filter, mPresence, notificati
         },
     
         handleEvent: function(event, isLiveEvent) {
-            // Avoid duplicated events
-            // Needed for rooms where initialSync has not been done. 
-            // In this case, we do not know where to start pagination. So, it starts from the END
-            // and we can have the same event (ex: joined, invitation) coming from the pagination
-            // AND from the event stream.
-            // FIXME: This workaround should be no more required when /initialSync on a particular room
-            // will be available (as opposite to the global /initialSync done at startup)
-            if (event.event_id && eventReapMap[event.event_id]) {
+            // Suppress duplicate events: can be from races between /events and
+            // room initial sync.
+            if (event.event_id && eventReapMap[event.room_id] && eventReapMap[event.room_id][event.event_id]) {
                 console.log("discarding duplicate event: " + JSON.stringify(event, undefined, 4));
                 return;
             }
             else {
-                eventReapMap[event.event_id] = new Date().getTime();
+                if (!eventReapMap[event.room_id]) {
+                    eventReapMap[event.room_id] = {};
+                }
+                eventReapMap[event.room_id][event.event_id] = new Date().getTime();
             }
             
 
@@ -462,11 +467,27 @@ function(matrixService, $rootScope, $q, $timeout, $filter, mPresence, notificati
                 room.old_room_state.pagination_token = messages.start;
             }
         },
+        
+        handleRoomInitialSync: function(newRoom, response) {
+            console.log("handleRoomInitialSync: "+newRoom.room_id+
+                " ("+response.state.length+" state events) "+
+                (response.messages && response.messages.chunk ? response.messages.chunk.length : "No")+
+                " events");
+            newRoom.current_room_state.storeStateEvents(response.state);
+            newRoom.old_room_state.storeStateEvents(response.state);
+
+            // this should be done AFTER storing state events since these
+            // messages may make the old_room_state diverge.
+            if (response.messages) {
+                this.handleRoomMessages(newRoom.room_id, response.messages, false);
+                newRoom.current_room_state.pagination_token = response.messages.end;
+                newRoom.old_room_state.pagination_token = response.messages.start;
+            }
+        },
 
         handleInitialSyncDone: function(response) {
-            console.log("# handleInitialSyncDone");
-
             var rooms = response.data.rooms;
+            console.log("processing "+rooms.length+" initialSync rooms.");
             for (var i = 0; i < rooms.length; ++i) {
                 var room = rooms[i];
                 
@@ -493,16 +514,7 @@ function(matrixService, $rootScope, $q, $timeout, $filter, mPresence, notificati
                 }
                 
                 var newRoom = modelService.getRoom(room.room_id);
-                newRoom.current_room_state.storeStateEvents(room.state);
-                newRoom.old_room_state.storeStateEvents(room.state);
-
-                // this should be done AFTER storing state events since these
-                // messages may make the old_room_state diverge.
-                if ("messages" in room) {
-                    this.handleRoomMessages(room.room_id, room.messages, false);
-                    newRoom.current_room_state.pagination_token = room.messages.end;
-                    newRoom.old_room_state.pagination_token = room.messages.start;
-                }
+                this.handleRoomInitialSync(newRoom, room);
             }
             var presence = response.data.presence;
             this.handleEvents(presence, false);
@@ -536,7 +548,7 @@ function(matrixService, $rootScope, $q, $timeout, $filter, mPresence, notificati
                     }
                     // join the room and get current room state
                     matrixService.join(roomIdOrAlias).then(function() {
-                        matrixService.roomInitialSync(roomId).then(function(response) {
+                        matrixService.roomInitialSync(roomId, 0).then(function(response) {
                             var room = modelService.getRoom(roomId);
                             room.current_room_state.storeStateEvents(response.data.state);
                             room.old_room_state.storeStateEvents(response.data.state);
@@ -559,6 +571,16 @@ function(matrixService, $rootScope, $q, $timeout, $filter, mPresence, notificati
         
         eventContainsBingWord: function(event) {
             return containsBingWord(event);
+        },
+        
+        // remove the ability to detect duplicates by removing known event IDs for this room.
+        // Used in the event reaper service which nukes entire rooms: it needs to know that
+        // the initial sync it performs will not be incorrectly dupe suppressed.
+        wipeDuplicateDetection: function(roomId) {
+            if (roomId in eventReapMap) {
+                delete eventReapMap[roomId];
+                console.log("[]? (<_<)=(>_>) ?[] Removed duplicate suppression for " + roomId);
+            }
         }
         
     };

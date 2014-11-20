@@ -214,7 +214,7 @@ describe('EventHandlerService', function() {
         });
         scope.$digest(); // resolve stuff
         expect(matrixService.join).toHaveBeenCalledWith(roomId);
-        expect(matrixService.roomInitialSync).toHaveBeenCalledWith(roomId);
+        expect(matrixService.roomInitialSync).toHaveBeenCalledWith(roomId, jasmine.any(Number));
         expect(promiseResult).toEqual(roomId);
     }));
     
@@ -251,7 +251,7 @@ describe('EventHandlerService', function() {
         });
         scope.$digest(); // resolve stuff
         expect(matrixService.resolveRoomAlias).toHaveBeenCalledWith(roomAlias);
-        expect(matrixService.roomInitialSync).toHaveBeenCalledWith(testResolvedRoomId);
+        expect(matrixService.roomInitialSync).toHaveBeenCalledWith(testResolvedRoomId, jasmine.any(Number));
         expect(testNowState.storeStateEvents).toHaveBeenCalledWith(testRoomState);
         expect(promiseResult).toEqual(testResolvedRoomId);
     }));

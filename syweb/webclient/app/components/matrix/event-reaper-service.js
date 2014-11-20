@@ -28,18 +28,18 @@ function($rootScope, modelService, recentsService, matrixService, eventHandlerSe
     var enabled = false;
     var roomViewHistory = [];
     
-    var reapEvents = function(roomIdToReap) {
-        var room = modelService.getRoom(roomIdToReap);
-        var state = room.current_room_state;
-        // re-paginate and dump that in.
-        matrixService.paginateBackMessages(roomIdToReap, undefined, 20).then(
+    var reapRoom = function(roomIdToReap) {
+        matrixService.roomInitialSync(roomIdToReap, 30).then(
         function(response) {
+            console.log(" ( '-')_/` (O_O)' Reaping "+roomIdToReap);
             // nuke events and old state
-            room.events = [];
-            room.old_room_state = state;
-            // re-construct events and old state
-            eventHandlerService.handleRoomMessages(roomIdToReap, response.data, false, 'b');
-            console.log(" ( '-')_/` (x_x) Reaped "+roomIdToReap);
+            modelService.removeRoom(roomIdToReap);
+            var room = modelService.getRoom(roomIdToReap);
+            // remove dupe suppression on this room, else it is possible that these
+            // events will be suppressed, thinking they are from the global /initialSync
+            eventHandlerService.wipeDuplicateDetection(roomIdToReap);
+            eventHandlerService.handleRoomInitialSync(room, response.data);
+            console.log(" `\\_('-' ) (x_x) Reaped "+roomIdToReap);
         },
         function(error) {
             console.error("Failed to reap "+roomIdToReap+" : "+JSON.stringify(error));
@@ -49,13 +49,13 @@ function($rootScope, modelService, recentsService, matrixService, eventHandlerSe
     // listen for the room being viewed now
     $rootScope.$on(recentsService.BROADCAST_SELECTED_ROOM_ID, 
     function(ngEvent, roomId) {
-        if (!enabled) {
+        if (!enabled || !roomId) {
             return;
         }
         roomViewHistory.push(roomId);
         while (roomViewHistory.length > 3) { // reap the earliest one
             var roomIdToReap = roomViewHistory.shift();
-            reapEvents(roomIdToReap);
+            reapRoom(roomIdToReap);
         }
     });
     
