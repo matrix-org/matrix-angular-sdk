@@ -35,12 +35,15 @@ angular.module('mFileInput', [])
             
             // Check if HTML5 file selection is supported
             if (window.FileList) {
-                element.bind("click", function() {
+                element.on("click", function() {
                     element.find("input")[0].click();
                     element.find("input").bind("change", function(e) {
                         scope.selectedFile = this.files[0];
                         scope.$apply();
                     });
+                });
+                scope.$on('$destroy', function() {
+                    element.off("click");
                 });
             }
             else {
