@@ -62,6 +62,10 @@ function($rootScope, modelService, recentsService, matrixService, eventHandlerSe
     return {
         setEnabled: function(isEnabled) {
             enabled = isEnabled;
+        },
+        
+        reap: function(roomId) {
+            reapRoom(roomId);
         }
     };
     
