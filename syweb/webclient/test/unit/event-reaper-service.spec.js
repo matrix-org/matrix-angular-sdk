@@ -47,10 +47,41 @@ describe('EventReaperService', function() {
 
     xit('should not reap rooms if it is not enabled.', inject(
     function(eventReaperService) {
+        eventReaperService.setEnabled(false);
+        
+        var roomId = "!reaper:matrix.org";
+        
+        var event = {
+            content: {},
+            room_id: roomId,
+            event_id: "f",
+            type: "m.room.message"
+        };
+        
+        var eventsArray = [event];
+        spyOn(modelService, "getRoom").and.callFake(function(roomId) {
+            return {
+                events: eventsArray
+            }
+        });
+        
+        spyOn(matrixService, "roomInitialSync").and.callFake(function() {
+            return q.defer().promise;
+        });
+        
+        for (var i=0; i< eventReaperService.MAX_EVENTS + 1; i++) {
+            eventsArray.push(event);
+            scope.$broadcast(eventHandlerService.MSG_EVENT, event, true);
+            scope.$digest();
+        }
+        
+        expect(matrixService.roomInitialSync).not.toHaveBeenCalled();
     }));
     
-    it('should be able to reap a room.', inject(
+    it('should be able to force reap a room, even if it is not enabled.', inject(
     function(eventReaperService) {
+        eventReaperService.setEnabled(false);
+        
         var roomId = "!reaper:matrix.org";
         spyOn(modelService, "removeRoom");
         spyOn(eventHandlerService, "wipeDuplicateDetection");
@@ -75,13 +106,73 @@ describe('EventReaperService', function() {
         expect(eventHandlerService.handleRoomInitialSync).toHaveBeenCalled();
     }));
     
-    xit('should not reap the room being viewed currently.', inject(
+    it('should not reap the room being viewed currently.', inject(
     function(eventReaperService) {
-    
+        eventReaperService.setEnabled(true);
+        
+        var roomId = "!reaper:matrix.org";
+        scope.$broadcast(recentsService.BROADCAST_SELECTED_ROOM_ID, roomId);
+        scope.$digest();
+        
+        var event = {
+            content: {},
+            room_id: roomId,
+            event_id: "f",
+            type: "m.room.message"
+        };
+        
+        var eventsArray = [event];
+        spyOn(modelService, "getRoom").and.callFake(function(roomId) {
+            return {
+                events: eventsArray
+            }
+        });
+        
+        spyOn(matrixService, "roomInitialSync").and.callFake(function() {
+            return q.defer().promise;
+        });
+        
+        for (var i=0; i< eventReaperService.MAX_EVENTS + 1; i++) {
+            eventsArray.push(event);
+            scope.$broadcast(eventHandlerService.MSG_EVENT, event, true);
+            scope.$digest();
+        }
+        
+        expect(matrixService.roomInitialSync).not.toHaveBeenCalled();
     }));
     
-    xit('should reap rooms with more than 100 events.', inject(
+    it('should reap rooms with more than MAX_EVENTS events.', inject(
     function(eventReaperService) {
-    
+        eventReaperService.setEnabled(true);
+        
+        var roomId = "!reaper:matrix.org";
+        scope.$broadcast(recentsService.BROADCAST_SELECTED_ROOM_ID, "!a:b.com");
+        scope.$digest();
+        
+        var event = {
+            content: {},
+            room_id: roomId,
+            event_id: "f",
+            type: "m.room.message"
+        };
+        
+        var eventsArray = [event];
+        spyOn(modelService, "getRoom").and.callFake(function(roomId) {
+            return {
+                events: eventsArray
+            }
+        });
+        
+        spyOn(matrixService, "roomInitialSync").and.callFake(function() {
+            return q.defer().promise;
+        });
+        
+        for (var i=0; i< eventReaperService.MAX_EVENTS + 1; i++) {
+            eventsArray.push(event);
+            scope.$broadcast(eventHandlerService.MSG_EVENT, event, true);
+            scope.$digest();
+        }
+        
+        expect(matrixService.roomInitialSync).toHaveBeenCalled();
     }));
 });

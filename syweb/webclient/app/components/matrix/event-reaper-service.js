@@ -25,8 +25,26 @@ angular.module('eventReaperService', [])
 'matrixService', 'eventHandlerService',
 function($rootScope, modelService, recentsService, matrixService, eventHandlerService) {
 
+
+    /* Reaping strategy:
+     * We want to reap rooms which have lots of events (e.g. from paginating, or from
+     * leaving the app open for a while). We do not want to reap the room being viewed
+     * as they may be actively paginating / interacting with the room.
+     *
+     * - If a room is being viewed, it cannot be reaped. Detected via BROADCAST_SELECTED_ROOM_ID
+     * - If a room exceeds MAX_EVENTS events, it will be reaped. Detected via the length of room.events.
+     * 
+     * It is important to check for eligible rooms to reap *without any user interaction*
+     * as one of the use cases we are trying to resolve here is leaving open the webapp in a
+     * tab for a couple of days.
+     *
+     * - Lazily check rooms when an event for that room comes down the event stream. 
+     *   Detected via MSG_EVENT broadcast.
+     */
+    var MAX_EVENTS = 50;
+
     var enabled = false;
-    var roomViewHistory = [];
+    var viewingRoom = undefined;
     
     var reapRoom = function(roomIdToReap) {
         matrixService.roomInitialSync(roomIdToReap, 30).then(
@@ -49,17 +67,24 @@ function($rootScope, modelService, recentsService, matrixService, eventHandlerSe
     // listen for the room being viewed now
     $rootScope.$on(recentsService.BROADCAST_SELECTED_ROOM_ID, 
     function(ngEvent, roomId) {
-        if (!enabled || !roomId) {
+        viewingRoom = roomId;
+        console.log("Viewing => " + roomId);
+    });
+    
+    $rootScope.$on(eventHandlerService.MSG_EVENT, 
+    function(ngEvent, event, isLive) {
+        if (!enabled || event.room_id === viewingRoom) {
             return;
         }
-        roomViewHistory.push(roomId);
-        while (roomViewHistory.length > 3) { // reap the earliest one
-            var roomIdToReap = roomViewHistory.shift();
-            reapRoom(roomIdToReap);
+        var room = modelService.getRoom(event.room_id);
+        if (room.events.length > MAX_EVENTS) {
+            reapRoom(event.room_id);
         }
     });
     
     return {
+        MAX_EVENTS: MAX_EVENTS,
+        
         setEnabled: function(isEnabled) {
             enabled = isEnabled;
         },
