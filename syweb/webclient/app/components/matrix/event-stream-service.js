@@ -26,7 +26,6 @@ angular.module('eventStreamService', [])
 .factory('eventStreamService', ['$q', '$timeout', 'matrixService', 'eventHandlerService', function($q, $timeout, matrixService, eventHandlerService) {
     var END = "END";
     var SERVER_TIMEOUT_MS = 30000;
-    var CLIENT_TIMEOUT_MS = 40000;
     var ERR_TIMEOUT_MS = 5000;
     
     var settings = {
@@ -37,6 +36,8 @@ angular.module('eventStreamService', [])
         isActive: false
     };
     
+    var timeout = $q.defer();
+    
     // interrupts the stream. Only valid if there is a stream conneciton 
     // open.
     var interrupt = function(shouldPoll) {
@@ -44,10 +45,8 @@ angular.module('eventStreamService', [])
                     JSON.stringify(settings));
         settings.shouldPoll = shouldPoll;
         settings.isActive = false;
-    };
-    
-    var saveStreamSettings = function() {
-        localStorage.setItem("streamSettings", JSON.stringify(settings));
+        timeout.resolve("interrupted.");
+        timeout = $q.defer();
     };
 
     var doEventStream = function(deferred) {
@@ -56,19 +55,21 @@ angular.module('eventStreamService', [])
         deferred = deferred || $q.defer();
 
         // run the stream from the latest token
-        matrixService.getEventStream(settings.from, SERVER_TIMEOUT_MS, CLIENT_TIMEOUT_MS).then(
+        matrixService.getEventStream(settings.from, SERVER_TIMEOUT_MS, timeout.promise).then(
             function(response) {
                 if (!settings.isActive) {
                     console.log("[EventStream] Got response but now inactive. Dropping data.");
                     return;
                 }
                 
-                settings.from = response.data.end;
-                
                 console.log(
                     "[EventStream] Got response from "+settings.from+
                     " to "+response.data.end
                 );
+                
+                settings.from = response.data.end;
+                
+                
                 eventHandlerService.handleEvents(response.data.chunk, true);
                 
                 deferred.resolve(response);
@@ -113,6 +114,7 @@ angular.module('eventStreamService', [])
 
                 // Start event streaming from that point
                 settings.from = response.data.end;
+                console.log("[EventStream] initialSync complete. Using token "+settings.from);
                 doEventStream(deferred);        
             },
             function(error) {
@@ -126,7 +128,6 @@ angular.module('eventStreamService', [])
     return {
         // expose these values for testing
         SERVER_TIMEOUT: SERVER_TIMEOUT_MS,
-        CLIENT_TIMEOUT: CLIENT_TIMEOUT_MS,
     
         // resume the stream from whereever it last got up to. Typically used
         // when the page is opened.
@@ -145,8 +146,6 @@ angular.module('eventStreamService', [])
             console.log("[EventStream] pause "+JSON.stringify(settings));
             // kill any running stream
             interrupt(false);
-            // save the latest token
-            saveStreamSettings();
         },
         
         // stop the stream and wipe the position in the stream. Typically used
@@ -157,7 +156,6 @@ angular.module('eventStreamService', [])
             interrupt(false);
             // clear the latest token
             settings.from = END;
-            saveStreamSettings();
         }
     };
 

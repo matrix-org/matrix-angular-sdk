@@ -65,7 +65,7 @@ describe('EventStreamService', function() {
         spyOn(eventHandlerService, "handleInitialSyncDone");
         spyOn(eventHandlerService, "handleEvents");
         eventStreamService.resume();
-        scope.$apply(); // initialSync request
+        scope.$digest(); // initialSync request
         expect(eventHandlerService.handleInitialSyncDone).toHaveBeenCalledWith(testInitialSync);
         expect(eventHandlerService.handleEvents).toHaveBeenCalledWith(testEventStream.data.chunk, true);
     }));
@@ -74,7 +74,51 @@ describe('EventStreamService', function() {
     function(eventStreamService) {
         spyOn(matrixService, "getEventStream").and.callThrough();
         eventStreamService.resume();
-        scope.$apply(); // initialSync request
-        expect(matrixService.getEventStream).toHaveBeenCalledWith("foo", eventStreamService.SERVER_TIMEOUT, eventStreamService.CLIENT_TIMEOUT);
+        scope.$digest(); // initialSync request
+        expect(matrixService.getEventStream).toHaveBeenCalledWith("foo", eventStreamService.SERVER_TIMEOUT, jasmine.any(Object));
+    }));
+    
+    it('should cancel the /events request when paused.', inject(
+    function(eventStreamService) {
+        var timeout = undefined; // this is the promise provided to $http.timeout
+        var timeoutResolved = false; // flag to see if the cancel request was made
+        var request = q.defer().promise; // the http request which we're blocking on
+        spyOn(matrixService, "getEventStream").and.callFake(function(from, timeoutMs, promise) {
+            timeout = promise;
+            timeout.then(function(r){
+                timeoutResolved = true;
+            });
+            return request;
+        });
+        eventStreamService.resume();
+        scope.$digest(); // initialSync request
+        expect(timeout).toBeDefined();
+        expect(timeoutResolved).toBeFalsy();
+        eventStreamService.pause();
+        scope.$digest(); // resolving the timeout
+        expect(timeoutResolved).toBeTruthy();
+        
+    }));
+    
+    it('should cancel the /events request when stopped.', inject(
+    function(eventStreamService) {
+        var timeout = undefined; // this is the promise provided to $http.timeout
+        var timeoutResolved = false; // flag to see if the cancel request was made
+        var request = q.defer().promise; // the http request which we're blocking on
+        spyOn(matrixService, "getEventStream").and.callFake(function(from, timeoutMs, promise) {
+            timeout = promise;
+            timeout.then(function(r){
+                timeoutResolved = true;
+            });
+            return request;
+        });
+        eventStreamService.resume();
+        scope.$digest(); // initialSync request
+        expect(timeout).toBeDefined();
+        expect(timeoutResolved).toBeFalsy();
+        eventStreamService.stop();
+        scope.$digest(); // resolving the timeout
+        expect(timeoutResolved).toBeTruthy();
+        
     }));
 });
