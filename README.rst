@@ -23,13 +23,13 @@ Usage
 =====
 Services can be used independently provided their dependencies are satisfied. 
 
- * ``matrixService`` is provided at the lowest level, as it just wraps the raw HTTP calls.
- * ``modelService`` allows models of matrix objects to be accessed, such as ``User``, 
-   ``Room``, ``RoomState`` and ``RoomMember``, and provides convenience functions to perform
-   HTTP calls on these objects (e.g. ``Room.leave``).
- * ``eventHandlerService`` interprets raw Matrix events and determines what needs to be
-   stored with the ``modelService``.
- * ``eventStreamService`` controls long-polling behaviour on the ``/events`` HTTP call.
+* ``matrixService`` is provided at the lowest level, as it just wraps the raw HTTP calls.
+* ``modelService`` allows models of matrix objects to be accessed, such as ``User``, 
+  ``Room``, ``RoomState`` and ``RoomMember``, and provides convenience functions to perform
+  HTTP calls on these objects (e.g. ``Room.leave``).
+* ``eventHandlerService`` interprets raw Matrix events and determines what needs to be
+  stored with the ``modelService``.
+* ``eventStreamService`` controls long-polling behaviour on the ``/events`` HTTP call.
  
 Alternatively, you can use different controllers and html templates and leave the services
 to work together as is.
