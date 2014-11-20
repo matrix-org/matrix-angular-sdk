@@ -519,7 +519,7 @@ function(matrixService, $rootScope, $q, $timeout, $filter, mPresence, notificati
             var presence = response.data.presence;
             this.handleEvents(presence, false);
 
-            initialSyncDeferred.resolve(response);
+            initialSyncDeferred.resolve("");
         },
         
         // joins a room and handles the requests which need to be done e.g. getting room state
