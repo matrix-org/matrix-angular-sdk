@@ -92,13 +92,14 @@ matrixWebClient.run(['$location', '$rootScope', 'matrixService', function($locat
 
     // Check browser support
     // Support IE from 9.0. AngularJS needs some tricks to run on IE8 and below
+    /* FIXME: $.browser.version was removed in jquery 1.9
     var version = parseFloat($.browser.version);
     if ($.browser.msie && version < 9.0) {
         $rootScope.unsupportedBrowser = {
             browser: navigator.userAgent,
             reason: "Internet Explorer is supported from version 9"
         };
-    }
+    } */
     // The app requires localStorage
     if(typeof(Storage) === "undefined") {
         $rootScope.unsupportedBrowser = {
