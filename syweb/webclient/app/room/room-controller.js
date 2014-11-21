@@ -250,11 +250,20 @@ angular.module('RoomController', ['ngSanitize', 'matrixFilter', 'mFileInput', 'a
         );
     };
     
-    var updatePresenceTimes = function() {
+    var presencePromise = undefined;
+    var updatePresenceTimes = function() { 
+        if (presencePromise === "$destroy") {
+            return;
+        }
         $scope.now = new Date().getTime();
         // TODO: don't bother polling every 5s if we know none of our counters are younger than 1 minute
-        $timeout(updatePresenceTimes, 5 * 1000);
+        presencePromise = $timeout(updatePresenceTimes, 5 * 1000); 
     };
+    
+    $scope.$on("$destroy", function() {
+        $timeout.cancel(presencePromise);
+        presencePromise = "$destroy";
+    });
 
     $scope.send = function() {
         var input = $('#mainInput').val();

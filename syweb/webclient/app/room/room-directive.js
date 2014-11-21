@@ -20,7 +20,7 @@ angular.module('RoomController')
 // XXX FIXME : This has tight coupling with $scope.room.now.members
 .directive('tabComplete', ['$timeout', function ($timeout) {
     return function (scope, element, attrs) {
-        element.bind("keydown keypress", function (event) {
+        element.on("keydown keypress", function (event) {
             // console.log("event: " + event.which);
             var TAB = 9;
             var SHIFT = 16;
@@ -143,6 +143,10 @@ angular.module('RoomController')
                 scope.tabCompleteIndex = 0;
             }
         });
+        scope.$on('$destroy', function() {
+            element.off("keydown keypress");
+            scope = null;
+        });
     };
 }])
 // A directive which stores text sent into it and restores it via up/down arrows
@@ -222,7 +226,7 @@ angular.module('RoomController')
             roomId: "=commandHistory"
         },
         link: function (scope, element, attrs) {
-            element.bind("keydown", function (event) {
+            element.on("keydown", function (event) {
                 var keycodePressed = event.which;
                 var UP_ARROW = 38;
                 var DOWN_ARROW = 40;
@@ -238,11 +242,17 @@ angular.module('RoomController')
                 }
             });
             
-            scope.$on(BROADCAST_NEW_HISTORY_ITEM, function(ngEvent, item) {
+            var unreg = scope.$on(BROADCAST_NEW_HISTORY_ITEM, function(ngEvent, item) {
                 history.push(item);
             });
             
             history.init(element, scope.roomId);
+            
+            scope.$on('$destroy', function() {
+                element.off("keydown");
+                unreg();
+                scope = null;
+            });
         },
         
     }
@@ -257,7 +267,7 @@ angular.module('RoomController')
             scope.windowHeight = $window.innerHeight;
 
             // Listen to window size change
-            angular.element($window).bind('resize', function() {
+            angular.element($window).on('resize', function() {
 
                 // If the scroller is scrolled to the bottom, there is nothing to do.
                 // The browser will move it as expected
@@ -269,6 +279,11 @@ angular.module('RoomController')
 
                 // Store the new window height for the next screen size change
                 scope.windowHeight = $window.innerHeight;
+            });
+            
+            scope.$on('$destroy', function() {
+                angular.element($window).off('resize');
+                scope = null;
             });
         }
     };
@@ -289,6 +304,13 @@ angular.module('RoomController')
             
             $document.on('mousemove', mousemove);
             $document.on('mouseup', mouseup);
+        });
+        
+        $scope.$on('$destroy', function() {
+            $element.off('mousedown');
+            $document.off('mousemove', mousemove);
+            $document.off('mouseup', mouseup);
+            $scope = null;
         });
         
         function mousemove(event) {
@@ -359,8 +381,8 @@ angular.module('RoomController')
                 });
             }
             
-            $document.unbind('mousemove', mousemove);
-            $document.unbind('mouseup', mouseup);
+            $document.off('mousemove', mousemove);
+            $document.off('mouseup', mouseup);
         }
     };
 });
