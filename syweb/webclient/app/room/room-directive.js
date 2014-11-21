@@ -279,13 +279,18 @@ angular.module('RoomController')
 
     return function($scope, $element, $attrs) {
 
+        var clickX, clickY;
+        
         $element.on('mousedown', function(event) {
             event.preventDefault();
 
+            clickX = event.pageX;
+            clickY = event.pageY;
+            
             $document.on('mousemove', mousemove);
             $document.on('mouseup', mouseup);
         });
-
+        
         function mousemove(event) {
 
             if ($attrs.resizer == 'vertical') {
@@ -328,7 +333,32 @@ angular.module('RoomController')
             }
         }
 
-        function mouseup() {
+        function mouseup(event) {
+            
+            if (event.pageX == clickX && event.pageY == clickY) {
+                // Handle vertical resizer
+                var x = event.pageX - $($attrs.resizerLeft).offset().left;
+
+                console.log(x + " " + -$attrs.resizerWidth + " " + $attrs.resizerMax);
+                
+                if (x > $attrs.resizerWidth) {
+                    x = -$attrs.resizerWidth;
+                }
+                else {
+                    x = parseInt($attrs.resizerMax);
+                }
+            
+                $element.css({
+                    left: x + 'px'
+                });
+                $($attrs.resizerLeft).css({
+                    width: x + 'px'
+                });
+                $($attrs.resizerRight).css({
+                    left: (x + parseInt($attrs.resizerWidth)) + 'px'
+                });
+            }
+            
             $document.unbind('mousemove', mousemove);
             $document.unbind('mouseup', mouseup);
         }
