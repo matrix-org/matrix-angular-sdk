@@ -68,6 +68,7 @@ angular.module('modelService', [])
         this.current_room_state = new RoomState();
         this.now = this.current_room_state; // makes html access shorter
         this.events = []; // events which can be displayed on the UI.
+        this.lastEvent = undefined;
     };
     Room.prototype = {
         addMessageEvents: function addMessageEvents(events, toFront) {
@@ -88,9 +89,13 @@ angular.module('modelService', [])
             
             if (toFront) {
                 this.events.unshift(event);
+                if (!this.lastEvent) {
+                    this.lastEvent = event;
+                }
             }
             else {
                 this.events.push(event);
+                this.lastEvent = event;
             }
         },
         
@@ -324,29 +329,6 @@ angular.module('modelService', [])
             }
 
             return memberCount;
-        },
-        
-        /**
-         * Return the last message event of a room
-         * @param {String} room_id the room id
-         * @param {Boolean} filterFake true to not take into account fake messages
-         * @returns {undefined | Event} the last message event if available
-         */
-        getLastMessage: function(room_id, filterEcho) {
-            var lastMessage;
-
-            var events = this.getRoom(room_id).events;
-            for (var i = events.length - 1; i >= 0; i--) {
-                var message = events[i];
-
-                // TODO: define a better marker than echo_msg_state
-                if (!filterEcho || undefined === message.echo_msg_state) {
-                    lastMessage = message;
-                    break;
-                }
-            }
-
-            return lastMessage;
         },
         
         clearRooms: function() {

@@ -26,6 +26,10 @@ angular.module('RecentsController', ['matrixService', 'matrixFilter'])
     // retrieve all rooms and expose them
     $scope.rooms = modelService.getRooms();
     
+    $scope.$on("$destroy", function() {
+        $scope.rooms = null;
+    });
+    
     // track the selected room ID: the html will use this
     $scope.recentsSelectedRoomID = recentsService.getSelectedRoomId();
     $scope.$on(recentsService.BROADCAST_SELECTED_ROOM_ID, function(ngEvent, room_id) {
