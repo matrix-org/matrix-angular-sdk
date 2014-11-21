@@ -687,7 +687,6 @@ textarea, input {
 }
 
 .image {
-    border: 1px solid #888;
     display: block;
     max-width:320px;
     max-height:320px;
