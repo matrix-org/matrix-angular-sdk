@@ -7,6 +7,12 @@ comes shipped with Synapse_ : a home server reference implementation.
 This project also provides a complete, stand-alone client which can communicate 
 with Matrix home servers using a web browser.
 
+The Synapse_ homeserver ships the latest stable version of this library.  If you
+wish it to serve up a development copy instead, then you must configure this
+checkout to be picked up by synapse::
+
+    $ python setup.py develop --user
+
 Overview
 ========
 The ``app`` directory contains the SDK, which is split up into subfolders depending
