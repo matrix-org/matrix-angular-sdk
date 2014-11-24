@@ -46,6 +46,16 @@ function(matrixService, $rootScope, $q, $timeout, $filter, mPresence, notificati
     var REAP_POLL_MS = 1000 * 11; // check for eligible event IDs to reap every 11s
 
     var initialSyncDeferred;
+    
+    // used for mapping mimetypes to thumbnails (if thumbnail is missing)
+    var mimeTypeToIcon = {
+        'audio'   : 'img/icons/filetype-audio.png',
+        'image'   : 'img/icons/filetype-image.png',
+        'message' : 'img/icons/filetype-message.png',
+        'text'    : 'img/icons/filetype-text.png',
+        'video'   : 'img/icons/filetype-video.png',
+        ''        : 'img/icons/filetype-attachment.png', // the default. yes, keys can be an empty string
+    };
 
     var reset = function() {
         initialSyncDeferred = $q.defer();
@@ -195,6 +205,16 @@ function(matrixService, $rootScope, $q, $timeout, $filter, mPresence, notificati
         if (!hasContent) {
             // empty json object is a redacted event, so ignore.
             return;
+        }
+
+        // fix up icons for files. XXX: is this the right place to do this?
+        if (event.content.url && !event.content.thumbnail_url && event.content.info && event.content.info.mimetype) {
+            var major = event.content.info.mimetype.substr(event.content.info.mimetype.indexOf("/"));
+            event.content.thumbnail_url = mimeTypeToIcon[major] || mimeTypeToIcon[''];
+            event.content.thumbnail_info = {
+                w: 33,
+                h: 40
+            };
         }
         
         // =======================

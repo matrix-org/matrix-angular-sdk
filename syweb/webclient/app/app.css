@@ -686,6 +686,11 @@ textarea, input {
     border: 0px ! important;
 }
 
+.file_thumbnail {
+    float: left;
+    margin-right: 10px;
+}
+
 .image {
     display: block;
     max-width:320px;

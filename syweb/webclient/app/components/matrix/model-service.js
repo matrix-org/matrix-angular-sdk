@@ -86,7 +86,7 @@ angular.module('modelService', [])
                 // give information on both the inviter and invitee
                 event.__target_room_member = stateAtTheTime.getStateEvent("m.room.member", event.state_key);
             }
-            
+                        
             if (toFront) {
                 this.events.unshift(event);
                 if (!this.lastEvent) {

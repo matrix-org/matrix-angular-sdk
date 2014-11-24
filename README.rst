@@ -50,3 +50,8 @@ test directory.
 .. _Synapse: https://github.com/matrix-org/synapse/
 .. _Matrix: http://www.matrix.org
 .. _Client-Server API: http://matrix.org/docs/api/client-server/
+
+Attributions
+============
+File icons are taken from http://medialoot.com/item/free-flat-filetype-icons/ and
+distributed under the terms of the Paid License (invoice #7355)

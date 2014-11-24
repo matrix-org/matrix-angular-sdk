@@ -229,12 +229,12 @@
                              </div>
 
                             <span ng-switch-when="m.file" ng-class="msg.echo_msg_state">
-                                <a href="{{ msg.content.url}}" target="_blank">{{ msg.content.body }}</a>
-                                <div ng-show='msg.content.thumbnail_url' ng-style="{ 'height' : msg.content.thumbnail_info.h }">
+                                <div class="file_thumbnail" ng-show='msg.content.thumbnail_url' ng-style="{ 'height' : msg.content.thumbnail_info.h }">
                                     <a href="{{ msg.content.url}}" target="_blank">
-                                        <img class="image mouse-pointer" ng-src="{{ msg.content.thumbnail_url }}"/>
+                                        <img class="image mouse-pointer" ng-style="{ 'height' : msg.content.thumbnail_info.h }" ng-src="{{ msg.content.thumbnail_url }}"/>
                                     </a>
                                 </div>
+                                <a href="{{ msg.content.url}}" target="_blank">{{ msg.content.body }}</a>
                             </span>
                                 
                             <span ng-switch-default
