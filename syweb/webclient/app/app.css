@@ -727,6 +727,10 @@ textarea, input {
     padding-top: 14px ! important;
 }
 
+.msg_meta {
+    font-style: italic;
+}
+
 .mine {
     text-align: right;
 }
