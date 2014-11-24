@@ -1,5 +1,24 @@
 <div ng-controller="HomeController" data-ng-init="onInit()">
 
+    <script type="text/ng-template" id="createRoomTemplate.html">
+        <div class="modal-header">
+            Create New Room
+        </div>
+        <div class="modal-body">
+            <div>
+                <input type="checkbox" ng-model="newRoom.isPublic">Public Room</input>
+            </div>
+            <div>
+                <input size="40" ng-model="newRoom.alias" placeholder="Room Alias e.g. 'matrix' (optional)"/>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button ng-click="create()" type="button" class="btn btn-success">
+                Create
+            </button>
+        </div>
+    </script>
+
     <div id="wrapper">
     
     <div id="genericHeading">
@@ -49,6 +68,9 @@
         </tbody>
     </table>
     <br/>
+    <div>
+        <button ng-click="showCreateRoomDialog()">Create Room</button>
+    </div>
     <div>
         <form>
             <input size="40" ng-model="joinAlias.room_alias" ng-enter="joinAlias(joinAlias.room_alias)" placeholder="e.g. #foo:example.org"/>

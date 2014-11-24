@@ -17,8 +17,8 @@ limitations under the License.
 'use strict';
 
 angular.module('HomeController', ['matrixService', 'eventHandlerService', 'RecentsController'])
-.controller('HomeController', ['$scope', '$location', 'matrixService', 'eventHandlerService', 'modelService', 'recentsService', 'dialogService',
-                               function($scope, $location, matrixService, eventHandlerService, modelService, recentsService, dialogService) {
+.controller('HomeController', ['$scope', '$location', 'matrixService', 'eventHandlerService', 'modelService', 'recentsService', 'dialogService', '$modal',
+                               function($scope, $location, matrixService, eventHandlerService, modelService, recentsService, dialogService, $modal) {
 
     $scope.config = matrixService.config();
     $scope.public_rooms = undefined;
@@ -73,25 +73,7 @@ angular.module('HomeController', ['matrixService', 'eventHandlerService', 'Recen
             $location.url("room/" + room_alias);
         }, 
         function(err) {
-            if (err.data && err.data.errcode === "M_NOT_FOUND") {
-                // try to create it. We trust the server has authed the alias, so we can mangle it for an alias.
-                var localpart = room_alias.split(":")[0].substring(1);
-                
-                matrixService.create(localpart, 'public').then(
-                    function(response) { 
-                        // This room has been created. Refresh the rooms list
-                        var room_id = response.data.room_id;
-                        console.log("Created room with id: "+ room_id);
-                        $scope.$parent.goToPage("/room/" + room_id);
-                    },
-                    function(error) {
-                        dialogService.showError(error);
-                    }
-                ); 
-            }
-            else {
-                dialogService.showError(err);
-            }
+            dialogService.showError(err);
         });
         
     };
@@ -111,6 +93,19 @@ angular.module('HomeController', ['matrixService', 'eventHandlerService', 'Recen
                 dialogService.showError(error);
             }
         );                
+    };
+    
+    $scope.showCreateRoomDialog = function() {
+        $scope.newRoom = {
+            isPublic: false,
+            alias: ""
+        };
+        var modalInstance = $modal.open({
+            templateUrl: 'createRoomTemplate.html',
+            controller: 'CreateRoomController',
+            size: 'lg',
+            scope: $scope
+        });
     };
     
  
@@ -154,4 +149,27 @@ angular.module('HomeController', ['matrixService', 'eventHandlerService', 'Recen
     $scope.$on(eventHandlerService.RESET_EVENT, function() {
         $scope.public_rooms = [];
     });
+}])
+.controller('CreateRoomController', ['$scope', '$location', '$modalInstance', 'matrixService', 'dialogService', 
+function($scope, $location, $modalInstance, matrixService, dialogService) {
+    $scope.create = function() {
+        var isPublic = $scope.newRoom.isPublic ? "public" : "private";
+        var alias = $scope.newRoom.alias;
+        if (alias.trim().length == 0) {
+            alias = undefined;
+        }
+        matrixService.create(alias, isPublic).then(
+            function(response) { 
+                // This room has been created. Refresh the rooms list
+                var room_id = response.data.room_id;
+                console.log("Created room with id: "+ room_id);
+                $modalInstance.dismiss();
+                $location.url("/room/" + room_id);
+            },
+            function(error) {
+                $modalInstance.dismiss();
+                dialogService.showError(error);
+            }
+        );
+    };
 }]);
