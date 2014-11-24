@@ -20,6 +20,30 @@ describe('EventHandlerService', function() {
                     else {
                         testEvents.push(event);
                     }
+                },
+                addOrReplaceMessageEvent: function(event, toFront) {
+                    for (var i = this.events.length - 1; i >= 0; i--) {
+                        var storedEvent = this.events[i];
+                        if (storedEvent.event_id === event.event_id) {
+                            this.events[i] = event;
+                            return;
+                        }
+                    }
+                    this.addMessageEvent(event, toFront);
+                },
+                getEvent: function(eventId) {
+                    for (var i = this.events.length - 1; i >= 0; i--) {
+                        var storedEvent = this.events[i];
+                        if (storedEvent.event_id === eventId) {
+                            return storedEvent;
+                        }
+                    }
+                },
+                removeEchoEvent: function(event) {
+                    var index = this.events.indexOf(event);
+                    if (index >= 0) {
+                        this.events.splice(index, 1);
+                    }
                 }
             };
         },
@@ -75,6 +99,16 @@ describe('EventHandlerService', function() {
                 bingWords: testBingWords
             };
         },
+        sendTextMessage: function(roomId, input) {
+            var defer = q.defer();
+            if (testSendMessage) {
+                defer.resolve({ data: testSendMessage });
+            }
+            else {
+                defer.reject({ data: { error: "some testSendMessage error", errcode: "M_UNKNOWN" } });
+            }
+            return defer.promise;
+        },
         presence: { unavailable: "unavailable", online: "online" }
     };
     
@@ -94,7 +128,7 @@ describe('EventHandlerService', function() {
     };
     
     var commandsService = {
-    
+        processInput: function(roomId, input) {}
     };
 
     // setup the service and mocked dependencies
@@ -111,6 +145,9 @@ describe('EventHandlerService', function() {
         testResolvedRoomId = "!foo:matrix.org";
         testRoomState = [];
         testEvents = [];
+        testSendMessage = {
+            event_id: "foobar"
+        };
         testInitialSync = {
             data: {
                 rooms: [],
@@ -460,7 +497,67 @@ describe('EventHandlerService', function() {
     
     it('should suppress duplicate event IDs when sending messages.', inject(
     function(eventHandlerService) {
-        // TODO
+        var roomId = "!flibble:matrix.org";
+        var sendCallback = {
+            onSendEcho: function(echo){},
+            onSent: function(response, isEcho){},
+            onError: function(error){}
+        };
+        spyOn(sendCallback, "onSendEcho");
+        spyOn(sendCallback, "onSent");
+        spyOn(sendCallback, "onError");
+        
+        
+        var eventId = "someEventId";
+        testSendMessage = {
+            event_id: eventId
+        };
+        
+        eventHandlerService.sendMessage(roomId, "some text", sendCallback);
+        expect(sendCallback.onSendEcho).toHaveBeenCalled();
+        expect(testEvents.length).toEqual(1);
+        
+        // oh noes, the message comes down the event stream before this request finishes
+        var event = {
+            content: {
+                body: "some text",
+                msgtype: "m.text"
+            },
+            user_id: testUserId,
+            room_id: roomId,
+            type: "m.room.message",
+            event_id: eventId
+        };
+        eventHandlerService.handleEvent(event, true);
+        
+        scope.$digest(); // process the send message request
+        
+        expect(testEvents.length).toEqual(1);
+        expect(testEvents[0]).toEqual(event);
+    }));
+    
+    it('should be able to send a text message with echo.', inject(
+    function(eventHandlerService) {
+        var roomId = "!flibble:matrix.org";
+        var sendCallback = {
+            onSendEcho: function(echo){},
+            onSent: function(response, isEcho){},
+            onError: function(error){}
+        };
+        spyOn(sendCallback, "onSendEcho");
+        spyOn(sendCallback, "onSent");
+        spyOn(sendCallback, "onError");
+        
+        var eventId = "someEventId";
+        testSendMessage = {
+            event_id: eventId
+        };
+        
+        eventHandlerService.sendMessage(roomId, "some text", sendCallback);
+        
+        expect(sendCallback.onSendEcho).toHaveBeenCalled();
+        scope.$digest(); // process the matrix request
+        expect(sendCallback.onSent).toHaveBeenCalledWith({ data: testSendMessage}, true);
     }));
     
     // NB: We can only indirectly test this by making sure there is no dupe

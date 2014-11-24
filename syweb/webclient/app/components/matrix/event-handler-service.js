@@ -587,11 +587,19 @@ function(matrixService, $rootScope, $q, $timeout, $filter, mPresence, notificati
                     function(response) {
                         sendCallback.onSent(response, echo);
                         if (echoMessage) {
-                            // Mark this fake message event with its allocated event_id
-                            // When the true message event will come from the events stream (in handleMessage),
-                            // we will be able to replace the fake one by the true one
-                            echoMessage.event_id = response.data.event_id;
-                        }       
+                            var eventId = response.data.event_id;
+                            var exists = modelService.getRoom(roomId).getEvent(eventId);
+                            if (exists) {
+                                // kill the echo message, we have the real one already
+                                modelService.getRoom(roomId).removeEchoEvent(echoMessage);
+                            }
+                            else {
+                                // Mark this fake message event with its allocated event_id
+                                // When the true message event will come from the events stream (in handleMessage),
+                                // we will be able to replace the fake one by the true one
+                                echoMessage.event_id = response.data.event_id;
+                            }
+                        }
                     },
                     function(error) {
                         sendCallback.onError(error);

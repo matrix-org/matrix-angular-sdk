@@ -113,6 +113,23 @@ angular.module('modelService', [])
             this.addMessageEvent(event, toFront);
         },
         
+        getEvent: function(eventId) {
+            // typically for dupe detection, so start at the end and work back
+            for (var i = this.events.length - 1; i >= 0; i--) {
+                var storedEvent = this.events[i];
+                if (storedEvent.event_id == eventId) {
+                    return storedEvent;
+                }
+            }
+        },
+        
+        removeEchoEvent: function(event) {
+            var index = this.events.indexOf(event);
+            if (index >= 0) {
+                this.events.splice(index, 1);
+            }
+        },
+        
         leave: function leave() {
             return matrixService.leave(this.room_id);
         }
