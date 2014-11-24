@@ -278,6 +278,18 @@ angular.module('RoomController', ['ngSanitize', 'matrixFilter', 'mFileInput', 'a
         presencePromise = "$destroy";
         $scope.room = null;
     });
+    
+    $scope.appendName = function($event, event) {
+        if ($event.shiftKey) {
+            var name = event.__room_member.cnt ? event.__room_member.cnt.displayname : undefined;
+            if (!name) {
+                name = mUserDisplayNameFilter(event.user_id);
+            }
+            if (name) {
+                $('#mainInput').val($('#mainInput').val() + name);
+            }
+        }
+    };
 
     $scope.send = function() {
         var input = $('#mainInput').val();
