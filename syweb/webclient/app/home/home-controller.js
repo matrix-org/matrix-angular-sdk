@@ -73,7 +73,7 @@ angular.module('HomeController', ['matrixService', 'eventHandlerService', 'Recen
             $location.url("room/" + room_alias);
         }, 
         function(err) {
-            if (err.data && err.data.error === "No such room alias") { // FIXME I died a little inside writing this. PLEASE add an errcode for this.
+            if (err.data && err.data.errcode === "M_NOT_FOUND") {
                 // try to create it. We trust the server has authed the alias, so we can mangle it for an alias.
                 var localpart = room_alias.split(":")[0].substring(1);
                 
