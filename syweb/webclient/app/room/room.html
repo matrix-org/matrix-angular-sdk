@@ -174,7 +174,7 @@
                          ng-hide="room.events[$index - 1].user_id === msg.user_id || msg.user_id === state.user_id"/>
                 </td>
                 <td class="msg" ng-class="(!msg.content.membership && ('m.room.topic' !== msg.type && 'm.room.name' !== msg.type))? (msg.content.msgtype === 'm.emote' ? 'emote text' : 'text') : 'membership text'">
-                    <div class="bubble" ng-dblclick="openJson(msg)">
+                    <div class="bubble" ng-dblclick="openJson(msg)" ng-mouseover="state.showTs = 1" ng-mouseout="state.showTs = 0">
                         <span class="msg_meta" ng-if="'join' === msg.content.membership && msg.changedKey === 'membership'">
                             {{ msg.content.displayname || room.now.members[msg.state_key].user.event.content.displayname || msg.state_key }} joined
                         </span>
