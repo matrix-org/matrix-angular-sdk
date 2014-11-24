@@ -15,8 +15,8 @@ limitations under the License.
 */
 
 angular.module('RoomController', ['ngSanitize', 'matrixFilter', 'mFileInput', 'angular-peity'])
-.controller('RoomController', ['$modal', '$scope', '$timeout', '$routeParams', '$location', '$rootScope', 'matrixService', 'eventHandlerService', 'mFileUpload', 'MatrixCall', 'modelService', 'recentsService', 'commandsService', 'mUserDisplayNameFilter', 'dialogService',
-                               function($modal, $scope, $timeout, $routeParams, $location, $rootScope, matrixService, eventHandlerService, mFileUpload, MatrixCall, modelService, recentsService, commandsService, mUserDisplayNameFilter, dialogService) {
+.controller('RoomController', ['$modal', '$scope', '$timeout', '$routeParams', '$location', '$rootScope', 'matrixService', 'eventHandlerService', 'mFileUpload', 'MatrixCall', 'modelService', 'recentsService', 'mUserDisplayNameFilter', 'dialogService',
+                               function($modal, $scope, $timeout, $routeParams, $location, $rootScope, matrixService, eventHandlerService, mFileUpload, MatrixCall, modelService, recentsService, mUserDisplayNameFilter, dialogService) {
    'use strict';
     var MESSAGES_PER_PAGINATION = 30;
     var THUMBNAIL_SIZE = 320;
@@ -282,79 +282,27 @@ angular.module('RoomController', ['ngSanitize', 'matrixFilter', 'mFileInput', 'a
         if (undefined === input || input === "") {
             return;
         }
-        
+        $scope.feedback = "";
         scrollToBottom(true);
-
-        // Store the command in the history
-        $rootScope.$broadcast("commandHistory:BROADCAST_NEW_HISTORY_ITEM(item)",
-                              input);
-
-        var isEmote = input.indexOf("/me ") === 0;
-        var promise;
-        if (!isEmote) {
-            promise = commandsService.processInput($scope.room_id, input);
-        }
-        var echo = false;
         
-        
-        if (!promise) { // not a non-echoable command
-            echo = true;
-            if (isEmote) {
-                promise = matrixService.sendEmoteMessage($scope.room_id, input.substring(4));
+        eventHandlerService.sendMessage($scope.room_id, input,
+        {
+            onSendEcho: function(echoMessage) {
+                $('#mainInput').val('');
+            },
+            
+            onSent: function(response, isEcho) {
+                if (!isEcho) { // echos were already cleared
+                    $('#mainInput').val('');
+                }
+            },
+            
+            onError: function(error) {
+                dialogService.showError(error);
             }
-            else {
-                promise = matrixService.sendTextMessage($scope.room_id, input);
-            }
-        }
+        });
+
         
-        if (echo) {
-            // Echo the message to the room
-            // To do so, create a minimalist fake text message event and add it to the in-memory list of room messages
-            var echoMessage = {
-                content: {
-                    body: (isEmote ? input.substring(4) : input),
-                    msgtype: (isEmote ? "m.emote" : "m.text"),
-                },
-                origin_server_ts: new Date().getTime(), // fake a timestamp
-                room_id: $scope.room_id,
-                type: "m.room.message",
-                user_id: $scope.state.user_id,
-                echo_msg_state: "messagePending"     // Add custom field to indicate the state of this fake message to HTML
-            };
-
-            $('#mainInput').val('');
-            $scope.room.addMessageEvent(echoMessage);
-            scrollToBottom();
-        }
-
-        if (promise) {
-            // Reset previous feedback
-            $scope.feedback = "";
-
-            promise.then(
-                function(response) {
-                    console.log("Request successfully sent");
-
-                    if (echo) {
-                        // Mark this fake message event with its allocated event_id
-                        // When the true message event will come from the events stream (in handleMessage),
-                        // we will be able to replace the fake one by the true one
-                        echoMessage.event_id = response.data.event_id;
-                    }
-                    else {
-                        $('#mainInput').val('');
-                    }         
-                },
-                function(error) {
-                    $scope.feedback = error.data.error;
-
-                    if (echoMessage) {
-                        // Mark the message as unsent for the rest of the page life
-                        echoMessage.origin_server_ts = "Unsent";
-                        echoMessage.echo_msg_state = "messageUnSent";
-                    }
-                });
-        }
     };
 
     // Tries to find a suitable room ID for this room.

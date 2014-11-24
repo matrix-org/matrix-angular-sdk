@@ -26,8 +26,8 @@ Typically, this service will store events and broadcast them to any listeners
 (e.g. controllers) via $broadcast. 
 */
 angular.module('eventHandlerService', [])
-.factory('eventHandlerService', ['matrixService', '$rootScope', '$q', '$timeout', '$filter', 'mPresence', 'notificationService', 'modelService',
-function(matrixService, $rootScope, $q, $timeout, $filter, mPresence, notificationService, modelService) {
+.factory('eventHandlerService', ['matrixService', '$rootScope', '$q', '$timeout', '$filter', 'mPresence', 'notificationService', 'modelService', 'commandsService',
+function(matrixService, $rootScope, $q, $timeout, $filter, mPresence, notificationService, modelService, commandsService) {
     var ROOM_CREATE_EVENT = "ROOM_CREATE_EVENT";
     var MSG_EVENT = "MSG_EVENT";
     var MEMBER_EVENT = "MEMBER_EVENT";
@@ -540,6 +540,69 @@ function(matrixService, $rootScope, $q, $timeout, $filter, mPresence, notificati
             this.handleEvents(presence, false);
 
             initialSyncDeferred.resolve("");
+        },
+        
+        sendMessage: function(roomId, input, sendCallback) {
+            // Store the command in the history
+            $rootScope.$broadcast("commandHistory:BROADCAST_NEW_HISTORY_ITEM(item)",
+                              input);
+
+            var isEmote = input.indexOf("/me ") === 0;
+            var promise;
+            if (!isEmote) {
+                promise = commandsService.processInput(roomId, input);
+            }
+            
+            var echo = false;
+            if (!promise) { // not a non-echoable command
+                echo = true;
+                if (isEmote) {
+                    promise = matrixService.sendEmoteMessage(roomId, input.substring(4));
+                }
+                else {
+                    promise = matrixService.sendTextMessage(roomId, input);
+                }
+            }
+            
+            if (echo) {
+                // Echo the message to the room
+                // To do so, create a minimalist fake text message event and add it to the in-memory list of room messages
+                var echoMessage = {
+                    content: {
+                        body: (isEmote ? input.substring(4) : input),
+                        msgtype: (isEmote ? "m.emote" : "m.text"),
+                    },
+                    origin_server_ts: new Date().getTime(), // fake a timestamp
+                    room_id: roomId,
+                    type: "m.room.message",
+                    user_id: matrixService.config().user_id,
+                    echo_msg_state: "messagePending"     // Add custom field to indicate the state of this fake message to HTML
+                };
+                modelService.getRoom(roomId).addMessageEvent(echoMessage);
+                sendCallback.onSendEcho(echoMessage);
+            }
+
+            if (promise) {
+                promise.then(
+                    function(response) {
+                        sendCallback.onSent(response, echo);
+                        if (echoMessage) {
+                            // Mark this fake message event with its allocated event_id
+                            // When the true message event will come from the events stream (in handleMessage),
+                            // we will be able to replace the fake one by the true one
+                            echoMessage.event_id = response.data.event_id;
+                        }       
+                    },
+                    function(error) {
+                        sendCallback.onError(error);
+                        if (echoMessage) {
+                            // Mark the message as unsent for the rest of the page life
+                            echoMessage.origin_server_ts = "Unsent";
+                            echoMessage.echo_msg_state = "messageUnSent";
+                        }
+                    }
+                );
+            }
         },
         
         // joins a room and handles the requests which need to be done e.g. getting room state

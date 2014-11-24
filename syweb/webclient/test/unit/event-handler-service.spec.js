@@ -92,6 +92,10 @@ describe('EventHandlerService', function() {
             return testPresenceState;
         }
     };
+    
+    var commandsService = {
+    
+    };
 
     // setup the service and mocked dependencies
     beforeEach(function() {
@@ -170,6 +174,7 @@ describe('EventHandlerService', function() {
             $provide.value('matrixService', matrixService);
             $provide.value('notificationService', notificationService);
             $provide.value('mPresence', mPresence);
+            $provide.value('commandsService', commandsService);
         });
         
         // tested service
@@ -421,7 +426,7 @@ describe('EventHandlerService', function() {
         expect(testNowState.storeStateEvent).toHaveBeenCalledWith(event);
     }));
     
-    it('should suppress duplicate event IDs.', inject(
+    it('should suppress duplicate event IDs received from /events.', inject(
     function(eventHandlerService) {
         eventHandlerService.handleInitialSyncDone(testInitialSync);
         var eventId = "wefiuwehf";
@@ -451,6 +456,11 @@ describe('EventHandlerService', function() {
         eventHandlerService.handleEvent(dupeEvent, true);
         expect(testEvents.length).toEqual(1);
         expect(testEvents[0]).toEqual(event);
+    }));
+    
+    it('should suppress duplicate event IDs when sending messages.', inject(
+    function(eventHandlerService) {
+        // TODO
     }));
     
     // NB: We can only indirectly test this by making sure there is no dupe
