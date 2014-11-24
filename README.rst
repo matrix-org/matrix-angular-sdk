@@ -42,16 +42,17 @@ to work together as is.
 
 Tests
 =====
-Tests are contained in the [test directory](syweb/webclient/test). They require
+Tests are contained in the `test directory`_. They require
 Karma (running PhantomJS) and Jasmine 2.x+ in order to run. Assuming you have the 
 required karma plugins, you can run the tests by running ``karma start`` in the 
 test directory.
-
-.. _Synapse: https://github.com/matrix-org/synapse/
-.. _Matrix: http://www.matrix.org
-.. _Client-Server API: http://matrix.org/docs/api/client-server/
 
 Attributions
 ============
 File icons are taken from http://medialoot.com/item/free-flat-filetype-icons/ and
 distributed under the terms of the Paid License (invoice #7355)
+
+.. _Synapse: https://github.com/matrix-org/synapse/
+.. _Matrix: http://www.matrix.org
+.. _Client-Server API: http://matrix.org/docs/api/client-server/
+.. _test directory: syweb/webclient/test
