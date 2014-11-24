@@ -27,6 +27,8 @@ textarea, input {
 
 .spinner {
     position: relative;
+    opacity: 0.5;
+    top: 2px;
 }
 
 .page {
@@ -306,7 +308,7 @@ textarea, input {
 #roomPage {
     position: absolute;
     top: 120px;
-    bottom: 60px;
+    bottom: 70px;
     left: 20px;
     right: 20px;
 }
