@@ -169,6 +169,9 @@ angular.module('RoomController', ['ngSanitize', 'matrixFilter', 'mFileInput', 'a
                     $scope.state.permission_denied = "You have been kicked by " + mUserDisplayNameFilter(event.user_id);
                 }  
             }
+            else if ("leave" === event.content.membership) {
+                $scope.state.permission_denied = "You left the room";
+            }
             else {
                 scrollToBottom();
             }
