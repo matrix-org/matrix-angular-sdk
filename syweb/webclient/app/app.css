@@ -306,7 +306,7 @@ textarea, input {
 #roomPage {
     position: absolute;
     top: 120px;
-    bottom: 120px;
+    bottom: 60px;
     left: 20px;
     right: 20px;
 }
@@ -330,7 +330,7 @@ textarea, input {
     position: absolute;
     bottom: 0px;
     width: 100%;
-    height: 70px;
+    height: 60px;
     background-color: #f8f8f8;
     border-top: #aaa 1px solid;
 }
