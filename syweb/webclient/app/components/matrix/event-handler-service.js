@@ -654,6 +654,31 @@ function(matrixService, $rootScope, $q, $timeout, $filter, mPresence, notificati
             
             return defer.promise;
         },
+        
+        createRoom: function(alias, isPublic) {
+            var defer = $q.defer();
+            var eventHandlerService = this;
+            
+            var errorFunc = function(error) {
+                console.error("joinRoom: " + JSON.stringify(error));
+                defer.reject(error);
+            };
+            
+            matrixService.create(alias, isPublic).then(function(response) {
+                var roomId = response.data.room_id;
+                matrixService.roomInitialSync(roomId, 0).then(function(syncResponse) {
+                    var room = modelService.getRoom(roomId);
+                    room.current_room_state.storeStateEvents(syncResponse.data.state);
+                    room.old_room_state.storeStateEvents(syncResponse.data.state);
+                    var presence = syncResponse.data.presence;
+                    eventHandlerService.handleEvents(presence, false);
+                    console.log("createRoom: Synced room "+roomId);
+                    defer.resolve(roomId);
+                }, errorFunc);
+            }, errorFunc);
+            
+            return defer.promise;
+        },
 
         // Returns a promise that resolves when the initialSync request has been processed
         waitForInitialSyncCompletion: function() {

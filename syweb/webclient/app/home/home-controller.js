@@ -150,21 +150,19 @@ angular.module('HomeController', ['matrixService', 'eventHandlerService', 'Recen
         $scope.public_rooms = [];
     });
 }])
-.controller('CreateRoomController', ['$scope', '$location', '$modalInstance', 'matrixService', 'dialogService', 
-function($scope, $location, $modalInstance, matrixService, dialogService) {
+.controller('CreateRoomController', ['$scope', '$location', '$modalInstance', 'eventHandlerService', 'dialogService', 
+function($scope, $location, $modalInstance, eventHandlerService, dialogService) {
     $scope.create = function() {
         var isPublic = $scope.newRoom.isPublic ? "public" : "private";
         var alias = $scope.newRoom.alias;
         if (alias.trim().length == 0) {
             alias = undefined;
         }
-        matrixService.create(alias, isPublic).then(
-            function(response) { 
-                // This room has been created. Refresh the rooms list
-                var room_id = response.data.room_id;
-                console.log("Created room with id: "+ room_id);
+        eventHandlerService.createRoom(alias, isPublic).then(
+            function(roomId) { 
+                console.log("aaaaCreated room with id: "+ roomId);
                 $modalInstance.dismiss();
-                $location.url("/room/" + room_id);
+                $location.url("/room/" + roomId);
             },
             function(error) {
                 $modalInstance.dismiss();
