@@ -207,14 +207,14 @@
                         
                         <span ng-show='msg.type === "m.room.message"' ng-switch='msg.content.msgtype'>
                             <span ng-switch-when="m.emote"
-                                  fix-width="msg.user_id === state.user_id" 
+                                  fix-width="false && msg.user_id === state.user_id" 
                                   ng-class="containsBingWord(msg) && msg.user_id != state.user_id ? msg.echo_msg_state + ' messageBing' : msg.echo_msg_state"
                                   ng-bind-html="'* ' + (msg.__room_member.cnt.displayname || msg.user_id) + ' ' + msg.content.body | linky:'_blank'"
                                   />
 
                             <span ng-switch-when="m.text"
                                   class="message"
-                                  fix-width="msg.user_id === state.user_id" 
+                                  fix-width="false && msg.user_id === state.user_id" 
                                   ng-class="containsBingWord(msg) && msg.user_id != state.user_id ? msg.echo_msg_state + ' messageBing' : msg.echo_msg_state"
                                   ng-bind-html="(msg.content.format === 'org.matrix.custom.html') ? (msg.content.formatted_body | unsanitizedLinky) : (msg.content.body | linky:'_blank') "/>
 
