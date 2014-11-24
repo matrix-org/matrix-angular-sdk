@@ -38,6 +38,7 @@ var matrixWebClient = angular.module('matrixWebClient', [
     'infinite-scroll',
     'ui.bootstrap',
     'dialogs.main',
+    'angularSpinner',
     'monospaced.elastic'
 ]);
 

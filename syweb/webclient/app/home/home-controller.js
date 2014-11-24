@@ -21,7 +21,7 @@ angular.module('HomeController', ['matrixService', 'eventHandlerService', 'Recen
                                function($scope, $location, matrixService, eventHandlerService, modelService, recentsService, dialogService) {
 
     $scope.config = matrixService.config();
-    $scope.public_rooms = [];
+    $scope.public_rooms = undefined;
     $scope.newRoomId = "";
     $scope.feedback = "";
     

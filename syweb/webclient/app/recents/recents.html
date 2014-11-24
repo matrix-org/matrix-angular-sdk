@@ -1,5 +1,6 @@
 <div ng-controller="RecentsController">
     <table class="recentsTable">
+        <div class="spinner recentsSpinner" us-spinner ng-show="!doneInitialSync"> </div>
         <tbody ng-repeat="(index, room) in rooms | orderRecents" 
                ng-click="selectRoom(room)" 
                class="recentsRoom"

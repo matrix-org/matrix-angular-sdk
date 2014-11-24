@@ -25,6 +25,10 @@ textarea, input {
    font-size: inherit;
 }
 
+.spinner {
+    position: relative;
+}
+
 .page {
     min-height: 100%;
     margin-bottom: -32px; /* to make room for the footer */
@@ -374,6 +378,11 @@ textarea, input {
 
 .roomHighlight {
     font-weight: bold;
+}
+
+.publicRoomSpinner {
+    max-width: 480px;
+    padding: 20px;
 }
 
 .publicTable {
@@ -804,6 +813,11 @@ textarea, input {
     width: 100%;
     border-collapse: collapse;
     table-layout: fixed;
+}
+
+.recentsSpinner {
+    padding: 20px;
+    max-width: 480px;
 }
 
 .recentsTable tr {

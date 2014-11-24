@@ -17,8 +17,13 @@
 'use strict';
 
 angular.module('RecentsController', ['matrixService', 'matrixFilter'])
-.controller('RecentsController', ['$rootScope', '$scope', 'modelService', 'recentsService',
-                               function($rootScope, $scope, modelService, recentsService) {
+.controller('RecentsController', ['$rootScope', '$scope', 'modelService', 'recentsService', 'eventHandlerService',
+                               function($rootScope, $scope, modelService, recentsService, eventHandlerService) {
+
+    $scope.doneInitialSync = false;
+    eventHandlerService.waitForInitialSyncCompletion().then(function() {
+        $scope.doneInitialSync = true;
+    });
 
     // Expose the service to the view
     $scope.modelService = modelService;
