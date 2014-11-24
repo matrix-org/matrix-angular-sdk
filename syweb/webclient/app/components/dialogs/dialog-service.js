@@ -26,6 +26,8 @@ angular.module('dialogService', [])
     // create a rejected promise with the given message
     var showDialog = function(kind, title, body) {
         var dialog;
+        title = escapeHtml(title);
+        body = escapeHtml(body);
         if (kind === "error") {
             dialog = dialogs.error(title, body);
         }
@@ -44,6 +46,12 @@ angular.module('dialogService', [])
             defer.reject(error);
             return defer.promise;
         }
+    };
+    
+    var escapeHtml = function(str) {
+        var div = document.createElement('div');
+        div.appendChild(document.createTextNode(str));
+        return div.innerHTML;
     };
     
     return {
