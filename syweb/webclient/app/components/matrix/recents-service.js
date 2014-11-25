@@ -27,11 +27,15 @@ This is preferable to polluting the $rootScope with recents specific info, and
 makes the dependency on this shared state *explicit*.
 */
 angular.module('recentsService', [])
-.factory('recentsService', ['$rootScope', 'eventHandlerService', function($rootScope, eventHandlerService) {
+.factory('recentsService', ['$rootScope', '$document', 'eventHandlerService', function($rootScope, $document, eventHandlerService) {
     // notify listeners when variables in the service are updated. We need to do
     // this since we do not tie them to any scope.
     var BROADCAST_SELECTED_ROOM_ID = "recentsService:BROADCAST_SELECTED_ROOM_ID(room_id)";
     var selectedRoomId = undefined;
+    
+    var showCountInTitle = true;
+    var titleCount = 0;
+    var originalTitle = $document[0].title;
     
     var BROADCAST_UNREAD_MESSAGES = "recentsService:BROADCAST_UNREAD_MESSAGES(room_id, unreadCount)";
     var unreadMessages = {
@@ -58,13 +62,32 @@ angular.module('recentsService', [])
                 unreadMessages[event.room_id] = 0;
             }
             unreadMessages[event.room_id] += 1;
+            titleCount += 1;
+            updateTitleCount();
             $rootScope.$broadcast(BROADCAST_UNREAD_MESSAGES, event.room_id, unreadMessages[event.room_id]);
         }
     });
     
+    var updateTitleCount = function() {
+        if (!showCountInTitle) {
+            return;
+        }
+        
+        if (titleCount <= 0) {
+            $document[0].title = originalTitle;
+        }
+        else {
+            $document[0].title = "("+titleCount+") " + originalTitle;
+        }
+    };
+    
     return {
         BROADCAST_SELECTED_ROOM_ID: BROADCAST_SELECTED_ROOM_ID,
         BROADCAST_UNREAD_MESSAGES: BROADCAST_UNREAD_MESSAGES,
+        
+        showUnreadMessagesInTitle: function(showMessages) {
+            showCountInTitle = showMessages;
+        },
     
         getSelectedRoomId: function() {
             return selectedRoomId;
@@ -85,6 +108,7 @@ angular.module('recentsService', [])
         
         markAsRead: function(room_id) {
             if (unreadMessages[room_id]) {
+                titleCount -= unreadMessages[room_id];
                 unreadMessages[room_id] = 0;
             }
             if (unreadBingMessages[room_id]) {
@@ -92,6 +116,7 @@ angular.module('recentsService', [])
             }
             $rootScope.$broadcast(BROADCAST_UNREAD_MESSAGES, room_id, 0);
             $rootScope.$broadcast(BROADCAST_UNREAD_BING_MESSAGES, room_id, undefined);
+            updateTitleCount();
         }
     
     };

@@ -2,7 +2,7 @@ describe('RecentsService', function() {
     var scope;
     var MSG_EVENT = "__test__";
     
-    var testEventContainsBingWord, testIsLive, testEvent;
+    var testEventContainsBingWord, testIsLive, testEvent, testDocumentTitle;
     
     var eventHandlerService = {
         MSG_EVENT: MSG_EVENT,
@@ -10,11 +10,16 @@ describe('RecentsService', function() {
             return testEventContainsBingWord;
         }
     };
+    
+    var doc = [
+        { title: testDocumentTitle }
+    ];
 
     // setup the service and mocked dependencies
     beforeEach(function() {
         
         // set default mock values
+        testDocumentTitle = "some title";
         testEventContainsBingWord = false;
         testIsLive = true;
         testEvent = {
@@ -30,6 +35,7 @@ describe('RecentsService', function() {
         // mocked dependencies
         module(function ($provide) {
           $provide.value('eventHandlerService', eventHandlerService);
+          $provide.value('$document', doc);
         });
         
         // tested service
@@ -149,5 +155,29 @@ describe('RecentsService', function() {
         recentsService.markAsRead("!someotherroomid:localhost");
         expect(recentsService.getUnreadMessages()).toEqual({});
         expect(recentsService.getUnreadBingMessages()).toEqual({});
+    }));
+    
+    it('should update the title with the number of unread messages.', inject(
+    function(recentsService) {
+        var oldTitle = doc[0].title;
+        scope.$broadcast(MSG_EVENT, testEvent, testIsLive);
+        expect(doc[0].title).not.toEqual(oldTitle);
+    }));
+    
+    it('should reset the title if there are no unread messages.', inject(
+    function(recentsService) {
+        var oldTitle = doc[0].title;
+        scope.$broadcast(MSG_EVENT, testEvent, testIsLive);
+        expect(doc[0].title).not.toEqual(oldTitle);
+        recentsService.markAsRead(testEvent.room_id);
+        expect(doc[0].title).toEqual(oldTitle);
+    }));
+    
+    it('should not adjust the title if it is not enabled.', inject(
+    function(recentsService) {
+        recentsService.showUnreadMessagesInTitle(false);
+        var oldTitle = doc[0].title;
+        scope.$broadcast(MSG_EVENT, testEvent, testIsLive);
+        expect(doc[0].title).toEqual(oldTitle);
     }));
 });
