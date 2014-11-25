@@ -140,4 +140,13 @@ describe('CommandsService', function() {
         expect(matrixService.setUserPowerLevel).toHaveBeenCalledWith(roomId, "@bob:matrix.org", undefined, testPowerLevelsEvent);
         expect(promise).toBe(testMatrixServicePromise);
     }));
+    
+    // SYWEB-100
+    it('should treat /commands as case-insensitive.', inject(
+    function(commandsService) {
+        spyOn(matrixService, 'kick').and.returnValue(testMatrixServicePromise);
+        var promise = commandsService.processInput(roomId, "/KicK @bob:matrix.org");
+        expect(matrixService.kick).toHaveBeenCalledWith(roomId, "@bob:matrix.org", undefined);
+        expect(promise).toBe(testMatrixServicePromise);
+    }));
 });
