@@ -151,8 +151,9 @@ angular.module('RoomController', ['ngSanitize', 'matrixFilter', 'mFileInput', 'a
         }
     };
 
-    $scope.$on(eventHandlerService.MSG_EVENT, function(ngEvent, event, isLive) {
-        if (isLive && event.room_id === $scope.room_id) {
+    $scope.$on(modelService.LIVE_MESSAGE_EVENT, function(ngEvent, event) {
+        console.error("LIVE_MESSAGE_EVENT "+(event.room_id === $scope.room_id));
+        if (event.room_id === $scope.room_id) {
             scrollToBottom();
         }
     });
