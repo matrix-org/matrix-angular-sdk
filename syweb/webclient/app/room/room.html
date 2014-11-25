@@ -184,7 +184,7 @@
                                 {{ msg.__room_member.cnt.displayname || room.now.members[msg.state_key].user.event.content.displayname || msg.state_key }} left
                             </span>
                             <span ng-if="msg.user_id !== msg.state_key && msg.prev_content">
-                                {{ msg.content.displayname || room.now.members[msg.user_id].user.event.content.displayname || msg.user_id }}
+                                {{ msg.__room_member.cnt.displayname || msg.user_id | mUserDisplayName:room_id:true }}
                                 {{ {"invite": "kicked", "join": "kicked", "ban": "unbanned"}[msg.prev_content.membership] }}
                                 {{ msg.__target_room_member.content.displayname || msg.state_key }}
                                 <span ng-if="'join' === msg.prev_content.membership && msg.content.reason">
@@ -194,7 +194,7 @@
                         </span>
                         <span class="msg_meta" ng-if="'invite' === msg.content.membership && msg.changedKey === 'membership' || 
                                      'ban' === msg.content.membership && msg.changedKey === 'membership'">
-                            {{ msg.__room_member.cnt.displayname || msg.user_id }}
+                            {{ msg.__room_member.cnt.displayname || msg.user_id | mUserDisplayName:room_id:true }}
                             {{ {"invite": "invited", "ban": "banned"}[msg.content.membership] }}
                             {{ msg.__target_room_member.cnt.displayname || msg.state_key }}
                             <span ng-if="msg.prev_content && 'ban' === msg.prev_content.membership && msg.content.reason">
@@ -209,7 +209,7 @@
                             <span ng-switch-when="m.emote"
                                   fix-width="false && msg.user_id === state.user_id" 
                                   ng-class="containsBingWord(msg) && msg.user_id != state.user_id ? msg.echo_msg_state + ' messageBing' : msg.echo_msg_state"
-                                  ng-bind-html="'* ' + (msg.__room_member.cnt.displayname || msg.user_id) + ' ' + msg.content.body | linky:'_blank'"
+                                  ng-bind-html="'* ' + (msg.__room_member.cnt.displayname || msg.user_id | mUserDisplayName:room_id:true) + ' ' + msg.content.body | linky:'_blank'"
                                   />
 
                             <span ng-switch-when="m.text"
@@ -247,11 +247,11 @@
                         <span class="msg_meta" ng-show='msg.type === "m.call.invite" && msg.user_id != state.user_id'>Incoming Call{{ isWebRTCSupported() ? '' : ' (But your browser does not support VoIP)' }}</span>
 
                         <span class="msg_meta" ng-if="'m.room.topic' === msg.type">
-                            {{ msg.__room_member.cnt.displayname || msg.user_id }} changed the topic to: {{ msg.content.topic }}
+                            {{ msg.__room_member.cnt.displayname || msg.user_id | mUserDisplayName:room_id:true }} changed the topic to: {{ msg.content.topic }}
                         </span>
 
                         <span class="msg_meta" ng-if="'m.room.name' === msg.type">
-                            {{ msg.__room_member.cnt.displayname || msg.user_id }} changed the room name to: {{ msg.content.name }}
+                            {{ msg.__room_member.cnt.displayname || msg.user_id | mUserDisplayName:room_id:true }} changed the room name to: {{ msg.content.name }}
                         </span>
 
                     </div>
