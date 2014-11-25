@@ -16,7 +16,7 @@
 
 'use strict';
 
-angular.module('RecentsController')
+angular.module('RecentsFilter', [])
 .filter('orderRecents', ["matrixService", "modelService", function(matrixService, modelService) {
     return function(rooms) {
         var user_id = matrixService.config().user_id;
