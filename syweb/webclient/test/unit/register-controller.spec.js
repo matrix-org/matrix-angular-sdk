@@ -14,6 +14,8 @@ describe("RegisterController ", function() {
     
     // test vars
     var testRegisterData, testFailRegisterData;
+    var testEmailLinkData, testFailEmailLinkData;
+    var testEmailAuthData, testFailEmailAuthData
     
     
     // mock services
@@ -24,6 +26,35 @@ describe("RegisterController ", function() {
             }
         },
         setConfig: function(){},
+        saveConfig: function(){},
+        linkEmail: function(){
+            var d = $q.defer();
+            if (testFailEmailLinkData) {
+                d.reject({
+                    data: testFailEmailLinkData
+                });
+            }
+            else {
+                d.resolve({
+                    data: testEmailLinkData
+                });
+            }
+            return d.promise;
+        },
+        authEmail: function() {
+            var d = $q.defer();
+            if (testFailEmailAuthData) {
+                d.reject({
+                    data: testFailEmailAuthData
+                });
+            }
+            else {
+                d.resolve({
+                    data: testEmailAuthData
+                });
+            }
+            return d.promise;
+        },
         register: function(mxid, password, threepidCreds, useCaptcha) {
             var d = $q.defer();
             if (testFailRegisterData) {
@@ -40,7 +71,9 @@ describe("RegisterController ", function() {
         }
     };
     
-    var eventStreamService = {};
+    var eventStreamService = {
+        resume: function(){}
+    };
     
     beforeEach(function() {
         module('matrixWebClient');
@@ -55,6 +88,7 @@ describe("RegisterController ", function() {
             $timeout = _$timeout_;
             scope = $rootScope.$new();
             rootScope = $rootScope;
+            rootScope.updateHeader = function(){};
             routeParams = {
                 user_matrix_id: userId
             };
@@ -86,5 +120,70 @@ describe("RegisterController ", function() {
         rootScope.$digest(); // which is delivered after the digest
         
         expect(dialogService.showError).toHaveBeenCalled();
+    });
+
+    it('should be able to register with just a user ID and password and save the response.', function() {
+        var prevFeedback = angular.copy(scope.feedback);
+        spyOn(matrixService, "register").and.callThrough();
+        spyOn(matrixService, "saveConfig");
+    
+        testRegisterData = {
+            user_id: "@bob:localhost",
+            access_token: "abc123"
+        };
+    
+        scope.account.pwd1 = "password";
+        scope.account.pwd2 = "password";
+        scope.account.desired_user_id = "bob";
+        scope.register(); // this depends on the result of a deferred
+        rootScope.$digest(); // which is delivered after the digest
+        
+        expect(matrixService.register).toHaveBeenCalledWith("bob", "password", undefined, false);
+        expect(matrixService.saveConfig).toHaveBeenCalled();
+    });
+    
+    it('should be able to register with an email and a user ID and password and save the response.', function() {
+        var prevFeedback = angular.copy(scope.feedback);
+        spyOn(matrixService, "register").and.callThrough();
+        spyOn(matrixService, "authEmail").and.callThrough();
+        spyOn(matrixService, "linkEmail").and.callThrough();
+        spyOn(matrixService, "saveConfig");
+
+        testEmailLinkData = {
+            sid: "session_id"
+        };
+        
+        testEmailAuthData = {
+            success: true
+        };
+        
+        testRegisterData = {
+            user_id: "@bob:localhost",
+            access_token: "abc123"
+        };
+    
+        // registration request
+        scope.account.pwd1 = "password";
+        scope.account.pwd2 = "password";
+        scope.account.desired_user_id = "bob";
+        scope.account.email = "foo@bar.com";
+        scope.register(); // this depends on the result of a deferred
+        rootScope.$digest(); // which is delivered after the digest
+        expect(scope.clientSecret).toBeDefined();
+        expect(matrixService.linkEmail).toHaveBeenCalledWith("foo@bar.com", scope.clientSecret, 1); // XXX what is sendAttempt?
+        
+        // token entry
+        scope.account.threepidtoken = "123456";
+        scope.verifyToken();
+        rootScope.$digest();
+        expect(matrixService.authEmail).toHaveBeenCalledWith(scope.clientSecret, 
+                testEmailLinkData.sid, scope.account.threepidtoken);
+        
+        expect(matrixService.register).toHaveBeenCalledWith("bob", "password", 
+            [jasmine.objectContaining({
+                sid: testEmailLinkData.sid,
+                clientSecret: scope.clientSecret
+            })], false);
+        expect(matrixService.saveConfig).toHaveBeenCalled();
     });
 });
