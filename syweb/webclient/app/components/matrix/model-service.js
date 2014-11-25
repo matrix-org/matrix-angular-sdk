@@ -68,7 +68,10 @@ angular.module('modelService', [])
         this.current_room_state = new RoomState();
         this.now = this.current_room_state; // makes html access shorter
         this.events = []; // events which can be displayed on the UI.
+        
+        // some pre-calculated cached information
         this.lastEvent = undefined;
+        this.name = room_id;
     };
     Room.prototype = {
         addMessageEvents: function addMessageEvents(events, toFront) {

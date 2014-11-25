@@ -113,6 +113,11 @@ function(matrixService, $rootScope, $q, $timeout, $filter, mPresence, notificati
 
     var handleRoomAliases = function(event, isLiveEvent) {
         modelService.createRoomIdToAliasMapping(event.room_id, event.content.aliases[0]);
+        recalculateRoomName(event.room_id);
+    };
+    
+    var recalculateRoomName = function(roomId) {
+        modelService.getRoom(roomId).name = $filter("mRoomName")(roomId);
     };
     
     var containsBingWord = function(event) {
@@ -288,6 +293,7 @@ function(matrixService, $rootScope, $q, $timeout, $filter, mPresence, notificati
             room.addMessageEvent(event, !isLiveEvent);
             
             if (memberChanges === "membership" && isLiveEvent) {
+                recalculateRoomName(event.room_id);
                 displayNotification(event);
             }
         }
@@ -309,9 +315,9 @@ function(matrixService, $rootScope, $q, $timeout, $filter, mPresence, notificati
     var handleRoomName = function(event, isLiveEvent) {
         console.log("handleRoomName room_id: " + event.room_id + " - isLiveEvent: " + isLiveEvent + " - name: " + event.content.name);
         handleRoomStateEvent(event, isLiveEvent, true);
+        recalculateRoomName(event.room_id);
         $rootScope.$broadcast(NAME_EVENT, event, isLiveEvent);
     };
-    
 
     var handleRoomTopic = function(event, isLiveEvent) {
         console.log("handleRoomTopic room_id: " + event.room_id + " - isLiveEvent: " + isLiveEvent + " - topic: " + event.content.topic);
@@ -503,6 +509,7 @@ function(matrixService, $rootScope, $q, $timeout, $filter, mPresence, notificati
                 newRoom.current_room_state.pagination_token = response.messages.end;
                 newRoom.old_room_state.pagination_token = response.messages.start;
             }
+            recalculateRoomName(newRoom.room_id);
         },
 
         handleInitialSyncDone: function(response) {

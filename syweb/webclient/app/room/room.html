@@ -93,7 +93,7 @@
 
             <div class="roomNameSection">
                 <div ng-hide="name.isEditing" ng-dblclick="name.editName()" id="roomName">
-                    {{ room_id | mRoomName }}
+                    {{ room.name }}
                 </div>
                 <form ng-submit="name.updateName()" ng-show="name.isEditing" class="roomNameForm">
                     <input ng-model="name.newNameText" ng-blur="name.cancelEdit()" class="roomNameInput" placeholder="Room name"/>
