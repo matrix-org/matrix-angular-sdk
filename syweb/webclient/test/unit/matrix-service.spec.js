@@ -224,9 +224,7 @@ describe('MatrixService', function() {
         httpBackend.flush();
     }));
     
-    // TODO: Skipped since the webclient is purposefully broken so as not to
-    // 500 matrix.org
-    xit('should be able to send generic state events with a state key', inject(
+    it('should be able to send generic state events with a state key', inject(
     function(matrixService) {
         matrixService.setConfig(CONFIG);
         var roomId = "!fh38hfwfwef:example.com";

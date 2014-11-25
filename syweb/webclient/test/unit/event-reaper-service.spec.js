@@ -45,7 +45,7 @@ describe('EventReaperService', function() {
         scope = $rootScope;
     }));
 
-    xit('should not reap rooms if it is not enabled.', inject(
+    it('should not reap rooms if it is not enabled.', inject(
     function(eventReaperService) {
         eventReaperService.setEnabled(false);
         
