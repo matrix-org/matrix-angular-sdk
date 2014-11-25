@@ -23,7 +23,7 @@ This serves to isolate the caller from changes to the underlying url paths, as
 well as attach common params (e.g. access_token) to requests.
 */
 angular.module('matrixService', [])
-.factory('matrixService', ['$http', '$q', function($http, $q) {
+.factory('matrixService', ['$http', '$timeout', '$q', function($http, $timeout, $q) {
         
    /* 
     * Permanent storage of user information
@@ -39,6 +39,8 @@ angular.module('matrixService', [])
     // Current version of permanent storage
     var configVersion = 0;
     var prefixPath = "/_matrix/client/api/v1";
+    var handleRateLimiting = true;
+    var rateLimitMaxMs = 1000 * 20; // 20s
 
     var doRequest = function(method, path, params, data, $httpParams) {
         if (!config) {
@@ -74,8 +76,56 @@ angular.module('matrixService', [])
         if ($httpParams) {
             angular.extend(request, $httpParams);
         }
-
-        return $http(request);
+        
+        if (handleRateLimiting) {
+            // wrap the request in another deferred so we can do rate limit 
+            // handling if we need to.
+            var defer = $q.defer();
+            
+            $http(request).then(function(response) {
+                defer.resolve(response); // pass through
+            },
+            function(error) {
+                // check for rate limiting.
+                if (error.data && error.data.errcode === "M_LIMIT_EXCEEDED" &&
+                        error.data.retry_after_ms !== undefined) {
+                    handleRateLimit(defer, request, error, 0);
+                }
+                else {
+                    // either not a rate limit or not enough info to wait, so 
+                    // ignore it and pass through.
+                    defer.reject(error);
+                }
+            });
+            return defer.promise;
+        }
+        else {
+            return $http(request);
+        }
+    };
+    
+    // recursively called to handle rate limiting: giving up based on the cumulative
+    // time spent waiting.
+    var handleRateLimit = function(defer, request, error, timeWaiting) {
+        // base case
+        if (timeWaiting > rateLimitMaxMs) {
+            console.error("Giving up rate limited request: spent too long retrying.");
+            defer.reject(error);
+            return;
+        }
+        var retryAfterMs = error.data.retry_after_ms;
+        console.log("Rate limited. Waiting "+retryAfterMs+"ms. Already waited "+
+                    timeWaiting+"ms.");
+        $timeout(function() {
+            console.log("Waited "+retryAfterMs+"ms, retrying request.");
+            $http(request).then(function(response) {
+                defer.resolve(response);
+            },
+            function(err) {
+                timeWaiting += retryAfterMs;
+                handleRateLimit(defer, request, err, timeWaiting);
+            });
+        }, retryAfterMs);
     };
     
     var doRegisterLogin = function(path, loginType, sessionId, userName, password, threepidCreds) {
@@ -110,8 +160,15 @@ angular.module('matrixService', [])
     };
 
     return {
-        /****** Home server API ******/
         prefix: prefixPath,
+        
+        shouldHandleRateLimiting: function(handleLimiting) {
+            handleRateLimiting = handleLimiting;
+        },
+        
+        giveUpRateLimitRetryAfter: function(ms) {
+            rateLimitMaxMs = ms;
+        },
 
         // Register an user
         register: function(user_name, password, threepidCreds, useCaptcha) {

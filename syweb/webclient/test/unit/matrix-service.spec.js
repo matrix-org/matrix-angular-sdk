@@ -1,5 +1,5 @@
 describe('MatrixService', function() {
-    var scope, httpBackend;
+    var scope, timeout, httpBackend;
     var BASE = "http://example.com";
     var PREFIX = "/_matrix/client/api/v1";
     var URL = BASE + PREFIX;
@@ -12,9 +12,10 @@ describe('MatrixService', function() {
     
     beforeEach(module('matrixService'));
 
-    beforeEach(inject(function($rootScope, $httpBackend) {
+    beforeEach(inject(function($rootScope, $httpBackend, $timeout) {
         httpBackend = $httpBackend;
         scope = $rootScope;
+        timeout = $timeout;
     }));
 
     afterEach(function() {
@@ -498,5 +499,145 @@ describe('MatrixService', function() {
             })
             .respond({});
         httpBackend.flush();
+    }));
+    
+    it('should be able to handle rate limiting from the server, if enabled.', inject(
+    function(matrixService) {
+        matrixService.setConfig(CONFIG);
+        matrixService.shouldHandleRateLimiting(true);
+        var roomId = "!fh38hfwfwef:example.com";
+        var body = "ABC 123";
+        var successResponse = undefined;
+        var errorResponse = undefined;
+        matrixService.sendTextMessage(roomId, body).then(function(suc){
+            successResponse = suc;
+        }, function(err) {
+            errorResponse = err;
+        });
+
+        var retryTime = 2942;
+        var errMsg = {
+            error: "You've been rate limited.",
+            errcode: "M_LIMIT_EXCEEDED",
+            retry_after_ms: retryTime
+        };
+        httpBackend.expectPUT(
+            new RegExp(URL + "/rooms/" + encodeURIComponent(roomId) + 
+            "/send/m.room.message/(.*)" +
+            "?access_token=foobar"),
+            {
+                body: body,
+                msgtype: "m.text"
+            })
+            .respond(429, errMsg);
+        httpBackend.flush();
+        
+        expect(errorResponse).toBeUndefined(); // shouldn't have failed yet.  
+        
+        
+        var success = {
+            event_id: "foo"
+        };
+        httpBackend.expectPUT(
+            new RegExp(URL + "/rooms/" + encodeURIComponent(roomId) + 
+            "/send/m.room.message/(.*)" +
+            "?access_token=foobar"),
+            {
+                body: body,
+                msgtype: "m.text"
+            })
+            .respond(success);
+            
+        timeout.flush(); // expires all timers
+        httpBackend.flush(); // checks the request was made
+        
+        expect(successResponse).toBeDefined();
+        expect(successResponse.data).toEqual(success);
+        
+    }));
+    
+    it('should NOT handle rate limiting from the server if not enabled.', inject(
+    function(matrixService) {
+        matrixService.setConfig(CONFIG);
+        matrixService.shouldHandleRateLimiting(false);
+        var roomId = "!fh38hfwfwef:example.com";
+        var body = "ABC 123";
+        var errorResponse = undefined;
+        matrixService.sendTextMessage(roomId, body).then(function(){}, function(err) {
+            errorResponse = err;
+        });
+
+        var errMsg = {
+            error: "You've been rate limited.",
+            errcode: "M_LIMIT_EXCEEDED",
+            retry_after_ms: 2942
+        };
+        httpBackend.expectPUT(
+            new RegExp(URL + "/rooms/" + encodeURIComponent(roomId) + 
+            "/send/m.room.message/(.*)" +
+            "?access_token=foobar"),
+            {
+                body: body,
+                msgtype: "m.text"
+            })
+            .respond(429, errMsg);
+        httpBackend.flush();
+        expect(errorResponse).toBeDefined();
+        expect(errorResponse.data).toEqual(errMsg);
+    }));
+    
+    it('should give up retrying rate limits based on giveUpRateLimitRetryAfter.', inject(
+    function(matrixService) {
+        matrixService.setConfig(CONFIG);
+        matrixService.shouldHandleRateLimiting(true);
+        matrixService.giveUpRateLimitRetryAfter(5000); // 5sec
+        var roomId = "!fh38hfwfwef:example.com";
+        var body = "ABC 123";
+        var successResponse = undefined;
+        var errorResponse = undefined;
+        matrixService.sendTextMessage(roomId, body).then(function(suc){
+            successResponse = suc;
+        }, function(err) {
+            errorResponse = err;
+        });
+
+        var retryTime = 5942;
+        var errMsg = {
+            error: "You've been rate limited.",
+            errcode: "M_LIMIT_EXCEEDED",
+            retry_after_ms: retryTime
+        };
+        httpBackend.expectPUT(
+            new RegExp(URL + "/rooms/" + encodeURIComponent(roomId) + 
+            "/send/m.room.message/(.*)" +
+            "?access_token=foobar"),
+            {
+                body: body,
+                msgtype: "m.text"
+            })
+            .respond(429, errMsg);
+        httpBackend.flush();
+        
+        expect(errorResponse).toBeUndefined(); // shouldn't have failed yet.  
+        
+        
+        // rate limit again
+        httpBackend.expectPUT(
+            new RegExp(URL + "/rooms/" + encodeURIComponent(roomId) + 
+            "/send/m.room.message/(.*)" +
+            "?access_token=foobar"),
+            {
+                body: body,
+                msgtype: "m.text"
+            })
+            .respond(429, errMsg);
+            
+        timeout.flush(); // expires all timers
+        httpBackend.flush(); // checks the request was made
+        
+        // should've given up.
+        expect(errorResponse).toBeDefined();
+        expect(errorResponse.data).toEqual(errMsg);
+        
     }));
 });
