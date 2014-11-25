@@ -662,7 +662,7 @@ function(matrixService, $rootScope, $q, $timeout, $filter, mPresence, notificati
             return defer.promise;
         },
         
-        createRoom: function(alias, isPublic) {
+        createRoom: function(alias, isPublic, inviteList) {
             var defer = $q.defer();
             var eventHandlerService = this;
             
@@ -671,7 +671,7 @@ function(matrixService, $rootScope, $q, $timeout, $filter, mPresence, notificati
                 defer.reject(error);
             };
             
-            matrixService.create(alias, isPublic).then(function(response) {
+            matrixService.create(alias, isPublic, inviteList).then(function(response) {
                 var roomId = response.data.room_id;
                 matrixService.roomInitialSync(roomId, 0).then(function(syncResponse) {
                     var room = modelService.getRoom(roomId);
