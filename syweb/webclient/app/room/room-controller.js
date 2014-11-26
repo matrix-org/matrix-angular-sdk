@@ -470,9 +470,7 @@ angular.module('RoomController', ['ngSanitize', 'matrixFilter', 'mFileInput', 'a
                     console.log("Redaction = " + JSON.stringify(response));
                 }, function(error) {
                     console.error("Failed to redact event: "+JSON.stringify(error));
-                    if (error.data.error) {
-                        $scope.feedback = error.data.error;
-                    }
+                    dialogService.showError(error);
                 });
             }
             else if (action === "resend") {

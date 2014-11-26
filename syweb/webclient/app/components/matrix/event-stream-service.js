@@ -100,10 +100,12 @@ angular.module('eventStreamService', [])
         return deferred.promise;
     }; 
 
-    var startEventStream = function() {
+    var startEventStream = function(deferred) {
         settings.shouldPoll = true;
         settings.isActive = true;
-        var deferred = $q.defer();
+        if (!deferred) {
+            deferred = $q.defer();
+        }
 
         // Initial sync: get all information and the last 30 messages of all rooms of the user
         // 30 messages should be enough to display a full page of messages in a room
@@ -118,7 +120,10 @@ angular.module('eventStreamService', [])
                 doEventStream(deferred);        
             },
             function(error) {
-                $scope.feedback = "Failure: " + error.data;
+                console.error("[EventStream] initialSync failed, retrying...");
+                $timeout(function() {
+                    startEventStream(deferred);
+                }, ERR_TIMEOUT_MS);
             }
         );
 
