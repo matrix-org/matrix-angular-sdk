@@ -7,8 +7,14 @@
         <div class="modal-footer">
             <button ng-click="redact()" type="button" class="btn btn-danger redact-button" 
              ng-disabled="!room.current_room_state.state('m.room.power_levels').content.redact || !modelService.getUserPowerLevel(room_id, state.user_id) || modelService.getUserPowerLevel(room_id, state.user_id) < room.current_room_state.state('m.room.power_levels').content.redact"
+             ng-hide="event_selected.__echo_msg_state === 'messageUnSent'"
              title="Delete this event on all home servers. This cannot be undone.">
                 Redact
+            </button>
+            
+            <button ng-click="resend()" type="button" class="btn btn-info redact-button" 
+             ng-show="event_selected.__echo_msg_state === 'messageUnSent'">
+                Resend
             </button>
 
             <button ng-click="dismiss()" type="button" class="btn">
@@ -161,7 +167,7 @@
                 <td class="leftBlock" ng-mouseover="state.showTs = 1" ng-mouseout="state.showTs = 0">
                     <div class="timestamp"
                          ng-style="{ 'opacity': state.showTs ? 1.0 : 0.0 }"
-                         ng-class="msg.echo_msg_state">
+                         ng-class="msg.__echo_msg_state">
                         {{ (msg.origin_server_ts) | date:'MMM d HH:mm' }}
                     </div>
                     <div class="sender" ng-click="appendName($event, msg)" ng-hide="room.events[$index - 1].user_id === msg.user_id || msg.user_id === state.user_id"> {{ msg.__room_member.cnt.displayname || msg.user_id | mUserDisplayName:room_id:true }}</div>
@@ -208,14 +214,14 @@
                         <span ng-show='msg.type === "m.room.message"' ng-switch='msg.content.msgtype'>
                             <span ng-switch-when="m.emote"
                                   fix-width="false && msg.user_id === state.user_id" 
-                                  ng-class="containsBingWord(msg) && msg.user_id != state.user_id ? msg.echo_msg_state + ' messageBing' : msg.echo_msg_state"
+                                  ng-class="containsBingWord(msg) && msg.user_id != state.user_id ? msg.__echo_msg_state + ' messageBing' : msg.__echo_msg_state"
                                   ng-bind-html="'* ' + (msg.__room_member.cnt.displayname || msg.user_id | mUserDisplayName:room_id:true) + ' ' + msg.content.body | linky:'_blank'"
                                   />
 
                             <span ng-switch-when="m.text"
                                   class="message"
                                   fix-width="false && msg.user_id === state.user_id" 
-                                  ng-class="containsBingWord(msg) && msg.user_id != state.user_id ? msg.echo_msg_state + ' messageBing' : msg.echo_msg_state"
+                                  ng-class="containsBingWord(msg) && msg.user_id != state.user_id ? msg.__echo_msg_state + ' messageBing' : msg.__echo_msg_state"
                                   ng-bind-html="(msg.content.format === 'org.matrix.custom.html') ? (msg.content.formatted_body | unsanitizedLinky) : (msg.content.body | linky:'_blank') "/>
 
                              <div ng-switch-when="m.image">
@@ -228,7 +234,7 @@
                                  </div>
                              </div>
 
-                            <span ng-switch-when="m.file" ng-class="msg.echo_msg_state">
+                            <span ng-switch-when="m.file" ng-class="msg.__echo_msg_state">
                                 <div class="file_thumbnail" ng-show='msg.content.thumbnail_url' ng-style="{ 'height' : msg.content.thumbnail_info.h }">
                                     <a href="{{ msg.content.url}}" target="_blank">
                                         <img class="image mouse-pointer" ng-style="{ 'height' : msg.content.thumbnail_info.h }" ng-src="{{ msg.content.thumbnail_url }}"/>
@@ -238,7 +244,7 @@
                             </span>
                                 
                             <span ng-switch-default
-                                ng-class="containsBingWord(msg) && msg.user_id != state.user_id ? msg.echo_msg_state + ' messageBing' : msg.echo_msg_state"
+                                ng-class="containsBingWord(msg) && msg.user_id != state.user_id ? msg.__echo_msg_state + ' messageBing' : msg.__echo_msg_state"
                                 ng-bind-html="msg.content.body | linky:'_blank'"
                                 />
                         </span>

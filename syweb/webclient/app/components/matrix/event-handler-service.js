@@ -558,6 +558,15 @@ function(matrixService, $rootScope, $q, $timeout, $filter, mPresence, notificati
             initialSyncDeferred.resolve("");
         },
         
+        resendMessage: function(echoMessage, sendCallback) {
+            modelService.getRoom(echoMessage.room_id).removeEchoEvent(echoMessage);
+            return this.sendMessage(
+                echoMessage.room_id, 
+                echoMessage.__echo_original_input, 
+                sendCallback
+            );
+        },
+        
         sendMessage: function(roomId, input, sendCallback) {
             // Store the command in the history
             $rootScope.$broadcast("commandHistory:BROADCAST_NEW_HISTORY_ITEM(item)",
@@ -592,7 +601,8 @@ function(matrixService, $rootScope, $q, $timeout, $filter, mPresence, notificati
                     room_id: roomId,
                     type: "m.room.message",
                     user_id: matrixService.config().user_id,
-                    echo_msg_state: "messagePending"     // Add custom field to indicate the state of this fake message to HTML
+                    __echo_original_input: input,
+                    __echo_msg_state: "messagePending"     // Add custom field to indicate the state of this fake message to HTML
                 };
                 modelService.getRoom(roomId).addMessageEvent(echoMessage);
                 sendCallback.onSendEcho(echoMessage);
@@ -622,7 +632,7 @@ function(matrixService, $rootScope, $q, $timeout, $filter, mPresence, notificati
                         if (echoMessage) {
                             // Mark the message as unsent for the rest of the page life
                             echoMessage.origin_server_ts = "Unsent";
-                            echoMessage.echo_msg_state = "messageUnSent";
+                            echoMessage.__echo_msg_state = "messageUnSent";
                         }
                     }
                 );

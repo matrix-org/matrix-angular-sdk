@@ -475,6 +475,17 @@ angular.module('RoomController', ['ngSanitize', 'matrixFilter', 'mFileInput', 'a
                     }
                 });
             }
+            else if (action === "resend") {
+                // NB: Resend the original, NOT the copy.
+                console.log("Resending "+content);
+                eventHandlerService.resendMessage(content, {
+                    onSendEcho: function(echoMessage) {},
+                    onSent: function(response, isEcho) {},
+                    onError: function(error) {
+                        dialogService.showError(error);
+                    }
+                });
+            }
         }, function() {
             // any dismiss code
         });
@@ -503,14 +514,17 @@ angular.module('RoomController', ['ngSanitize', 'matrixFilter', 'mFileInput', 'a
     };
 
 }])
-.controller('EventInfoController', function($scope, $modalInstance, modelService) {
+.controller('EventInfoController', function($scope, $modalInstance) {
     console.log("Displaying modal dialog for >>>> " + JSON.stringify($scope.event_selected));
     $scope.redact = function() {
-        console.log("User level = "+modelService.getUserPowerLevel($scope.room_id, $scope.state.user_id)+
-                    " Redact level = "+$scope.room.current_room_state.state_events["m.room.power_levels"].content.redact);
+        console.log("Redact level = "+$scope.room.current_room_state.state_events["m.room.power_levels"].content.redact);
         console.log("Redact event >> " + JSON.stringify($scope.event_selected));
         $modalInstance.close("redact");
     };
+    $scope.resend = function() {
+        $modalInstance.close("resend");
+    };
+    
     $scope.dismiss = $modalInstance.dismiss;
 })
 .controller('RoomInfoController', function($scope, $location, $modalInstance, matrixService, dialogService) {
