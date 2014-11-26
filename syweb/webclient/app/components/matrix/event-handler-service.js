@@ -648,8 +648,7 @@ function(matrixService, $rootScope, $q, $timeout, $filter, mPresence, notificati
                     matrixService.join(roomIdOrAlias).then(function() {
                         matrixService.roomInitialSync(roomId, 0).then(function(response) {
                             var room = modelService.getRoom(roomId);
-                            room.current_room_state.storeStateEvents(response.data.state);
-                            room.old_room_state.storeStateEvents(response.data.state);
+                            eventHandlerService.handleRoomInitialSync(room, response.data);
                             var presence = response.data.presence;
                             eventHandlerService.handleEvents(presence, false);
                             console.log("joinRoom: Joined room "+roomId);

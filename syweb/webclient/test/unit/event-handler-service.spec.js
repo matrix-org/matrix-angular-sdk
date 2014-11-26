@@ -1,7 +1,7 @@
 describe('EventHandlerService', function() {
     var scope, q, timeout;
     
-    var testContainsBingWords, testPresenceState; // mPresence, notificationService
+    var testContainsBingWords, testPresenceState, testRoomName; // mPresence, mRoomNameFilter, notificationService
     var testUserId, testDisplayName, testBingWords; // matrixService.config
     var testResolvedRoomId, testJoinSuccess, testRoomState; // matrixService
     var testNowState, testOldState, testEvents; // modelService
@@ -130,6 +130,12 @@ describe('EventHandlerService', function() {
     var commandsService = {
         processInput: function(roomId, input) {}
     };
+    
+    var mRoomNameFilter = function(){
+        return function() {
+            return testRoomName;
+        }
+    };
 
     // setup the service and mocked dependencies
     beforeEach(function() {
@@ -141,6 +147,7 @@ describe('EventHandlerService', function() {
         testDisplayName = "Me";
         testBingWords = [];
         
+        testRoomName = "Room Name";
         testJoinSuccess = true;
         testResolvedRoomId = "!foo:matrix.org";
         testRoomState = [];
@@ -212,6 +219,7 @@ describe('EventHandlerService', function() {
             $provide.value('notificationService', notificationService);
             $provide.value('mPresence', mPresence);
             $provide.value('commandsService', commandsService);
+            $provide.factory('mRoomNameFilter', mRoomNameFilter);
         });
         
         // tested service
