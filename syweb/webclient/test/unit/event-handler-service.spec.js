@@ -1,9 +1,9 @@
 describe('EventHandlerService', function() {
     var scope, q, timeout;
     
-    var testContainsBingWords, testPresenceState; // mPresence, notificationService
+    var testContainsBingWords, testPresenceState, testRoomName; // mPresence, mRoomNameFilter, notificationService
     var testUserId, testDisplayName, testBingWords; // matrixService.config
-    var testResolvedRoomId, testJoinSuccess, testRoomState; // matrixService
+    var testResolvedRoomId, testJoinSuccess, testRoomInitialSync; // matrixService
     var testNowState, testOldState, testEvents; // modelService
     
     var modelService = {
@@ -81,11 +81,8 @@ describe('EventHandlerService', function() {
         },
         roomInitialSync: function(roomId) {
             var defer = q.defer();
-            if (testRoomState) {
-                defer.resolve({ data: {
-                    state: testRoomState,
-                    presence: []
-                }});
+            if (testRoomInitialSync) {
+                defer.resolve({ data: testRoomInitialSync });
             }
             else {
                 defer.reject({ data: { error: "some roomState error", errcode: "M_UNKNOWN" } });
@@ -130,6 +127,12 @@ describe('EventHandlerService', function() {
     var commandsService = {
         processInput: function(roomId, input) {}
     };
+    
+    var mRoomNameFilter = function(){
+        return function() {
+            return testRoomName;
+        }
+    };
 
     // setup the service and mocked dependencies
     beforeEach(function() {
@@ -141,9 +144,18 @@ describe('EventHandlerService', function() {
         testDisplayName = "Me";
         testBingWords = [];
         
+        testRoomName = "Room Name";
         testJoinSuccess = true;
         testResolvedRoomId = "!foo:matrix.org";
-        testRoomState = [];
+        testRoomInitialSync = {
+            state: [],
+            messages: {
+                chunk: [],
+                start: "s",
+                end: "e"
+            },
+            presence: []
+        };
         testEvents = [];
         testSendMessage = {
             event_id: "foobar"
@@ -212,6 +224,7 @@ describe('EventHandlerService', function() {
             $provide.value('notificationService', notificationService);
             $provide.value('mPresence', mPresence);
             $provide.value('commandsService', commandsService);
+            $provide.factory('mRoomNameFilter', mRoomNameFilter);
         });
         
         // tested service
@@ -228,7 +241,7 @@ describe('EventHandlerService', function() {
     function(eventHandlerService) {
         eventHandlerService.handleInitialSyncDone(testInitialSync);
         var roomId = "!foobar:matrix.org";
-        testRoomState = [
+        testRoomInitialSync.state = [
             {
                 event_id: "a",
                 user_id: "@bob:matrix.org",
@@ -264,7 +277,7 @@ describe('EventHandlerService', function() {
     function(eventHandlerService) {
         eventHandlerService.handleInitialSyncDone(testInitialSync);
         var roomAlias = "#flibble:matrix.org";
-        testRoomState = [
+        testRoomInitialSync.state = [
             {
                 event_id: "a",
                 user_id: "@bob:matrix.org",
@@ -294,8 +307,68 @@ describe('EventHandlerService', function() {
         scope.$digest(); // resolve stuff
         expect(matrixService.resolveRoomAlias).toHaveBeenCalledWith(roomAlias);
         expect(matrixService.roomInitialSync).toHaveBeenCalledWith(testResolvedRoomId, jasmine.any(Number));
-        expect(testNowState.storeStateEvents).toHaveBeenCalledWith(testRoomState);
+        expect(testNowState.storeStateEvents).toHaveBeenCalledWith(testRoomInitialSync.state);
         expect(promiseResult).toEqual(testResolvedRoomId);
+    }));
+    
+    // SYWEB-181
+    it('should inject events into a room when joining if there are some.', inject(
+    function(eventHandlerService) {
+        eventHandlerService.handleInitialSyncDone(testInitialSync);
+        var roomId = "!foobar:matrix.org";
+        testRoomInitialSync.state = [
+            {
+                event_id: "a",
+                user_id: "@bob:matrix.org",
+                state_key: "@bob:matrix.org",
+                room_id: roomId,
+                content: { membership: "join" },
+                type: "m.room.member"
+            },
+            {
+                event_id: "b",
+                user_id: testUserId,
+                state_key: testUserId,
+                room_id: roomId,
+                content: { membership: "join" },
+                type: "m.room.member"
+            }
+        
+        ];
+        testRoomInitialSync.messages.chunk = [
+            {
+                event_id: "c",
+                user_id: "@bob:matrix.org",
+                room_id: roomId,
+                content: { 
+                    msgtype: "m.text",
+                    body: "Hello1"
+                },
+                type: "m.room.message"
+            },
+            {
+                event_id: "d",
+                user_id: "@bob:matrix.org",
+                room_id: roomId,
+                content: { 
+                    msgtype: "m.text",
+                    body: "Hello2"
+                },
+                type: "m.room.message"
+            }
+        ];
+        
+        var promiseResult = undefined;
+        eventHandlerService.joinRoom(roomId).then(function(r) {
+            promiseResult = r;
+        }, function(err) {
+            promiseResult = err;
+        });
+        scope.$digest(); // resolve stuff
+        
+        expect(testEvents).toEqual(testRoomInitialSync.messages.chunk);
+        
+        expect(promiseResult).toEqual(roomId);
     }));
     
     it('should NOT join a room that has been joined already.', inject(

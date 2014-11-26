@@ -17,8 +17,8 @@ limitations under the License.
 'use strict';
 
 angular.module('HomeController', ['matrixService', 'eventHandlerService', 'RecentsController'])
-.controller('HomeController', ['$scope', '$location', 'matrixService', 'eventHandlerService', 'modelService', 'recentsService', 'dialogService', '$modal',
-                               function($scope, $location, matrixService, eventHandlerService, modelService, recentsService, dialogService, $modal) {
+.controller('HomeController', ['$scope', '$location', 'matrixService', 'eventHandlerService', 'recentsService', 'dialogService', '$modal',
+                               function($scope, $location, matrixService, eventHandlerService, recentsService, dialogService, $modal) {
 
     $scope.config = matrixService.config();
     $scope.public_rooms = undefined;
@@ -70,7 +70,7 @@ angular.module('HomeController', ['matrixService', 'eventHandlerService', 'Recen
 
     $scope.joinAlias = function(room_alias) {
         eventHandlerService.joinRoom(room_alias).then(function(roomId) {
-            $location.url("room/" + room_alias);
+            $location.url("/room/" + room_alias);
         }, 
         function(err) {
             dialogService.showError(err);
@@ -82,12 +82,10 @@ angular.module('HomeController', ['matrixService', 'eventHandlerService', 'Recen
     $scope.messageUser = function() {
         // FIXME: create a new room every time, for now
         
-        matrixService.create(null, 'private', [$scope.newChat.user]).then(
-            function(response) { 
-                // This room has been created. Refresh the rooms list
-                var room_id = response.data.room_id;
+        eventHandlerService.createRoom(null, 'private', [$scope.newChat.user]).then(
+            function(room_id) { 
                 console.log("Created room with id: "+ room_id);
-                $scope.$parent.goToPage("/room/" + room_id);
+                $location.url("/room/" + room_id);
             },
             function(error) {
                 dialogService.showError(error);
@@ -96,10 +94,6 @@ angular.module('HomeController', ['matrixService', 'eventHandlerService', 'Recen
     };
     
     $scope.showCreateRoomDialog = function() {
-        $scope.newRoom = {
-            isPublic: false,
-            alias: ""
-        };
         var modalInstance = $modal.open({
             templateUrl: 'createRoomTemplate.html',
             controller: 'CreateRoomController',
@@ -152,6 +146,11 @@ angular.module('HomeController', ['matrixService', 'eventHandlerService', 'Recen
 }])
 .controller('CreateRoomController', ['$scope', '$location', '$modalInstance', 'eventHandlerService', 'dialogService', 
 function($scope, $location, $modalInstance, eventHandlerService, dialogService) {
+    $scope.newRoom = {
+        isPublic: false,
+        alias: ""
+    };
+
     $scope.create = function() {
         var isPublic = $scope.newRoom.isPublic ? "public" : "private";
         var alias = $scope.newRoom.alias;

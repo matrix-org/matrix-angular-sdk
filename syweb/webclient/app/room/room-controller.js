@@ -151,8 +151,8 @@ angular.module('RoomController', ['ngSanitize', 'matrixFilter', 'mFileInput', 'a
         }
     };
 
-    $scope.$on(eventHandlerService.MSG_EVENT, function(ngEvent, event, isLive) {
-        if (isLive && event.room_id === $scope.room_id) {
+    $scope.$on(modelService.LIVE_MESSAGE_EVENT, function(ngEvent, event) {
+        if (event.room_id === $scope.room_id) {
             scrollToBottom();
         }
     });
@@ -348,31 +348,12 @@ angular.module('RoomController', ['ngSanitize', 'matrixFilter', 'mFileInput', 'a
             $scope.room_id = roomId;
             $scope.room = modelService.getRoom($scope.room_id);
             
-            var messages = $scope.room.events;
-
-            if (0 === messages.length
-            || (1 === messages.length && "m.room.member" === messages[0].type && "invite" === messages[0].content.membership && $scope.state.user_id === messages[0].state_key)) {
-                // If we just joined a room, we won't have this history from initial sync, so we should try to paginate it anyway    
-                $scope.state.first_pagination = true;
-            }
-            else {
-                // There is no need to do a 1st pagination (initialSync provided enough to fill a page)
-                $scope.state.first_pagination = false;
-            }
-            
             // Make recents highlight the current room
             recentsService.setSelectedRoomId($scope.room_id);
             
             updatePresenceTimes();
 
-            // Allow pagination
             $scope.state.can_paginate = true;
-
-            // Do a first pagination only if it is required (e.g. we've JUST joined a room and have no messages to display.)
-            // FIXME: Should be no more require when initialSync/{room_id} will be available
-            if ($scope.state.first_pagination) {
-                paginate(MESSAGES_PER_PAGINATION);
-            }
             
             // Scroll down as soon as possible so that we point to the last message
             // if it already exists in memory
@@ -385,18 +366,6 @@ angular.module('RoomController', ['ngSanitize', 'matrixFilter', 'mFileInput', 'a
                 $location.url("/");	
             });
         });
-    };
-
-    $scope.leaveRoom = function() {
-        
-        matrixService.leave($scope.room_id).then(
-            function(response) {
-                console.log("Left room " + $scope.room_id);
-                $location.url("home");
-            },
-            function(error) {
-                $scope.feedback = "Failed to leave room: " + error.data.error;
-            });
     };
 
     // used to send an image based on just a URL, rather than uploading one
@@ -544,7 +513,7 @@ angular.module('RoomController', ['ngSanitize', 'matrixFilter', 'mFileInput', 'a
     };
     $scope.dismiss = $modalInstance.dismiss;
 })
-.controller('RoomInfoController', function($scope, $modalInstance, matrixService, dialogService) {
+.controller('RoomInfoController', function($scope, $location, $modalInstance, matrixService, dialogService) {
     console.log("Displaying room info.");
     
     $scope.userIDToInvite = "";
@@ -573,6 +542,20 @@ angular.module('RoomController', ['ngSanitize', 'matrixFilter', 'mFileInput', 'a
                 }
             );
         }
+    };
+    
+    $scope.leaveRoom = function() {
+        
+        matrixService.leave($scope.room_id).then(
+            function(response) {
+                console.log("Left room " + $scope.room_id);
+                $scope.dismiss();
+                $location.url("home");
+            },
+            function(error) {
+                $scope.feedback = "Failed to leave room: " + error.data.error;
+            }
+        );
     };
 
     $scope.dismiss = $modalInstance.dismiss;

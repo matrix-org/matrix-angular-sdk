@@ -819,4 +819,142 @@ describe('mUserDisplayName filter', function() {
         expect(output).toEqual("@mike :matrix.org");
     });
 });
+describe('orderRecents filter', function() {
+    var filter, orderRecents;
+    
+    var roomId = "!weufhewifu:matrix.org";
+    
+    // test state values (f.e. test)
+    var testUserId;
+    var testMembers = {
+        // room_id+user_id: member
+    };
+    var testUserCount = {
+        // room_id: userCount
+    };
+    
+    // mocked services which return the test values above.
+    var matrixService = {
+        config: function() {
+            return {
+                user_id: testUserId
+            };
+        }
+    };
+    
+    var modelService = {
+        getUserCountInRoom: function(roomId) {
+            return testUserCount[roomId];
+        },
+        
+        getMember: function(room_id, user_id) {
+            return testMembers[room_id+user_id];
+        }
+    };
+    
+    beforeEach(function() {
+        // inject mocked dependencies
+        module(function ($provide) {
+            $provide.value('matrixService', matrixService);
+            $provide.value('modelService', modelService);
+        });
+        
+        module('RecentsFilter');
+    });
+    
+    
+    beforeEach(inject(function($filter) {
+        filter = $filter;
+        orderRecents = filter("orderRecents");
+        
+        // purge the previous test values
+        testUserCount = {};
+        testMembers = {};
+        testUserId = "@me:matrix.org";
+    })); 
+
+    // helper function
+    var makeRoom = function(roomId, memberlist) {
+        var room = {
+            current_room_state: {
+                s: {
+            
+                },
+                state: function(type,key) {
+                    return this.s[key === undefined ? type : type+key];
+                }
+            },
+            now: this.current_room_state,
+            lastEvent: {},
+            room_id: roomId,
+            events: []
+        };
+
+        for (userId in memberlist) {
+            var event = {
+                content: memberlist[userId],
+                state_key: userId
+            };
+            room.current_room_state.s["m.room.member"+userId] = event;
+            testMembers[roomId+userId] = { // side-effect, dump in testMembers
+                event: event
+            };
+        }
+        return room;
+    };
+    
+    it("should sort rooms you've been invited to (no timestamp) at the top.", function() {
+        var roomA = "!aaa:localhost";
+        var roomB = "!bbb:localhost";
+        var rooms = {};
+        rooms[roomA] = makeRoom(roomA, {
+            "@me:matrix.org": {
+                membership: "join"
+            }
+        });
+        rooms[roomA].lastEvent = {
+            origin_server_ts: 200
+        };
+
+        rooms[roomB] = makeRoom(roomB, {
+            "@me:matrix.org": {
+                membership: "invite"
+            }
+        });
+        rooms[roomB].lastEvent = undefined;
+
+        var output = orderRecents(rooms);
+        expect(output.length).toBe(2);
+        expect(output[0].room_id).toEqual(roomB);
+        expect(output[1].room_id).toEqual(roomA);
+    });
+
+    it("should sort rooms based on the last message timestamp.", function() {
+        var roomA = "!aaa:localhost";
+        var roomB = "!bbb:localhost";
+        var rooms = {};
+        rooms[roomA] = makeRoom(roomA, {
+            "@me:matrix.org": {
+                membership: "join"
+            }
+        });
+        rooms[roomA].lastEvent = {
+            origin_server_ts: 200
+        };
+
+        rooms[roomB] = makeRoom(roomB, {
+            "@me:matrix.org": {
+                membership: "join"
+            }
+        });
+        rooms[roomB].lastEvent = {
+            origin_server_ts: 100
+        };
+
+        var output = orderRecents(rooms);
+        expect(output.length).toBe(2);
+        expect(output[0].room_id).toEqual(roomA);
+        expect(output[1].room_id).toEqual(roomB);
+    });
+});
 

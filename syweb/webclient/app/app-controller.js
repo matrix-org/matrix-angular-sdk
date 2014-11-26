@@ -21,8 +21,8 @@ limitations under the License.
 'use strict';
 
 angular.module('MatrixWebClientController', ['matrixService', 'mPresence', 'eventStreamService'])
-.controller('MatrixWebClientController', ['$scope', '$location', '$rootScope', '$timeout', 'matrixService', 'mPresence', 'eventStreamService', 'eventHandlerService', 'matrixPhoneService', 'modelService', 'eventReaperService',
-                               function($scope, $location, $rootScope, $timeout, matrixService, mPresence, eventStreamService, eventHandlerService, matrixPhoneService, modelService, eventReaperService) {
+.controller('MatrixWebClientController', ['$scope', '$location', '$rootScope', '$timeout', 'matrixService', 'mPresence', 'eventStreamService', 'eventHandlerService', 'matrixPhoneService', 'modelService', 'eventReaperService', 'notificationService', 'mUserDisplayNameFilter',
+                               function($scope, $location, $rootScope, $timeout, matrixService, mPresence, eventStreamService, eventHandlerService, matrixPhoneService, modelService, eventReaperService, notificationService, mUserDisplayNameFilter) {
          
     // Check current URL to avoid to display the logout button on the login page
     $scope.location = $location.path();
@@ -114,11 +114,6 @@ angular.module('MatrixWebClientController', ['matrixService', 'mPresence', 'even
             return;
         }
 
-        var roomMembers = angular.copy(modelService.getRoom($rootScope.currentCall.room_id).current_room_state.members);
-        delete roomMembers[matrixService.config().user_id];
-
-        $rootScope.currentCall.user_id = Object.keys(roomMembers)[0];
-
         // set it to the user ID until we fetch the display name
         $rootScope.currentCall.userProfile = { displayname: $rootScope.currentCall.user_id };
 
@@ -186,7 +181,26 @@ angular.module('MatrixWebClientController', ['matrixService', 'mPresence', 'even
         call.onHangup = $scope.onCallHangup;
         call.localVideoSelector  = '#localVideo';
         call.remoteVideoSelector  = '#remoteVideo';
+        
+        var roomMembers = angular.copy(modelService.getRoom(call.room_id).current_room_state.members);
+        delete roomMembers[matrixService.config().user_id];
+        call.user_id = Object.keys(roomMembers)[0];
+        
         $rootScope.currentCall = call;
+        
+        var usr = modelService.getUser(call.user_id);
+        var avatar;
+        if (usr && usr.event && usr.event.content) {
+            avatar = usr.event.content.avatar_url;
+        }
+        
+        notificationService.showNotification(
+            "Incoming "+call.type+" call", 
+            "Call from "+mUserDisplayNameFilter(call.user_id), 
+            avatar, 
+            undefined, 
+            "matrixcall"
+        );
     });
 
     $rootScope.$on(matrixPhoneService.REPLACED_CALL_EVENT, function(ngEvent, oldCall, newCall) {

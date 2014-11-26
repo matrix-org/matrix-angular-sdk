@@ -65,7 +65,7 @@ describe("SettingsController ", function() {
     );
 
     // SYWEB-157
-    it('should feedback after updating your display name.', function() {
+    it('should give feedback after updating your display name.', function() {
         spyOn(dialogService, "showSuccess");
         spyOn(matrixService, "setDisplayName").and.callFake(function(name) {
             var d = $q.defer();
@@ -83,7 +83,7 @@ describe("SettingsController ", function() {
     });
     
     // SYWEB-157
-    it('should feedback after updating your avatar url.', function() {
+    it('should give feedback after updating your avatar url.', function() {
         spyOn(dialogService, "showSuccess");
         spyOn(matrixService, "setProfilePictureUrl").and.callFake(function(name) {
             var d = $q.defer();

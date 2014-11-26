@@ -26,7 +26,9 @@ dependency.
 //     needs access to the underlying data store", rather than polluting the
 //     $rootScope.
 angular.module('modelService', [])
-.factory('modelService', ['matrixService', function(matrixService) {
+.factory('modelService', ['matrixService', '$rootScope', 
+function(matrixService, $rootScope) {
+    var LIVE_MESSAGE_EVENT = "modelService.LIVE_MESSAGE_EVENT(event)";
 
     // alias / id lookups
     var roomIdToAlias, aliasToRoomId;
@@ -68,7 +70,10 @@ angular.module('modelService', [])
         this.current_room_state = new RoomState();
         this.now = this.current_room_state; // makes html access shorter
         this.events = []; // events which can be displayed on the UI.
+        
+        // some pre-calculated cached information
         this.lastEvent = undefined;
+        this.name = room_id;
     };
     Room.prototype = {
         addMessageEvents: function addMessageEvents(events, toFront) {
@@ -96,6 +101,7 @@ angular.module('modelService', [])
             else {
                 this.events.push(event);
                 this.lastEvent = event;
+                $rootScope.$broadcast(LIVE_MESSAGE_EVENT, event);
             }
         },
         
@@ -231,6 +237,7 @@ angular.module('modelService', [])
     };
     
     return {
+        LIVE_MESSAGE_EVENT: LIVE_MESSAGE_EVENT,
     
         getRoom: function(roomId) {
             if(!rooms[roomId]) {

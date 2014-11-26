@@ -25,7 +25,7 @@ angular.module('matrixFilter', [])
 function($rootScope, matrixService, modelService, mUserDisplayNameFilter) {
     return function(room_id) {
         var roomName;
-
+        
         // If there is an alias, use it
         // TODO: only one alias is managed for now
         var alias = modelService.getRoomIdToAliasMapping(room_id);

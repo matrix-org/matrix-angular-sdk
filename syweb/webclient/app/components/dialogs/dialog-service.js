@@ -28,6 +28,7 @@ angular.module('dialogService', [])
         var dialog;
         title = escapeHtml(title);
         body = escapeHtml(body);
+        
         if (kind === "error") {
             dialog = dialogs.error(title, body);
         }
@@ -43,7 +44,7 @@ angular.module('dialogService', [])
         }
         else {
             var defer = $q.defer();
-            defer.reject(error);
+            defer.reject("Unable to display dialog");
             return defer.promise;
         }
     };
