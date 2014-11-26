@@ -52,6 +52,9 @@
         <div class="section" ng-switch="settings.notifications">
             <div ng-switch-when="granted">
                 Notifications are enabled.
+                <div>
+                    <label><input type="checkbox" ng-change="updateAudioNotification()" ng-model="settings.audioNotifications">Enable audio for notifications</label>
+                </div>
                 <div class="section">
                     <h4>Specific words to alert on:</h4>
                     <p>If blank, all messages will trigger an alert. Your username & display name always alerts.</p>

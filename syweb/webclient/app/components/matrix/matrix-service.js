@@ -721,7 +721,6 @@ angular.module('matrixService', [])
         // Set a new config (Use saveConfig to actually store it permanently)
         setConfig: function(newConfig) {
             config = newConfig;
-            console.log("new IS: "+config.identityServer);
         },
         
         // Commits config into permanent storage

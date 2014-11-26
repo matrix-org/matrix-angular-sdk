@@ -35,6 +35,19 @@ angular.module('notificationService', [])
         return null;
     };
     
+    var playAudio = function(clip) {
+        if (clip === "default") {
+            clip = "#incomingMessage";
+        }
+        var e = angular.element(clip);
+        if (e && e[0]) {
+            e = e[0];
+            e.load();
+            e.play();
+            return e;
+        }
+    };
+    
     return {
     
         containsBingWord: function(userId, displayName, bingWords, content) {
@@ -82,7 +95,7 @@ angular.module('notificationService', [])
             return false;
         },
         
-        showNotification: function(title, body, icon, onclick, tag) {
+        showNotification: function(title, body, icon, onclick, tag, audioNotification) {
             if (!tag) {
                 tag = "matrix";
             }
@@ -98,9 +111,18 @@ angular.module('notificationService', [])
             if (onclick) {
                 notification.onclick = onclick;
             }
+            
+            var audioClip;
+            
+            if (audioNotification) {
+                audioClip = playAudio(audioNotification);
+            }
 
             $timeout(function() {
                 notification.close();
+                if (audioClip) {
+                    audioClip.pause();
+                }
             }, 5 * 1000);
         }
     };

@@ -183,9 +183,16 @@ function(matrixService, $rootScope, $q, $timeout, $filter, mPresence, notificati
             }
             
             if (shouldBing && isIdle) {
-                console.log("Displaying notification for "+JSON.stringify(event));
 
                 var roomTitle = $filter("mRoomName")(event.room_id);
+                
+                var audio = undefined;
+                if (matrixService.config().audioNotifications === true) {
+                    audio = "default";
+                }
+                
+                console.log("Displaying notification "+(audio === undefined ? "" : "with audio")+" for "+JSON.stringify(event.content));
+                
                 
                 notificationService.showNotification(
                     displayname + " (" + roomTitle + ")",
@@ -194,7 +201,9 @@ function(matrixService, $rootScope, $q, $timeout, $filter, mPresence, notificati
                     function() {
                         console.log("notification.onclick() room=" + event.room_id);
                         $rootScope.goToPage('room/' + event.room_id); 
-                    }
+                    },
+                    undefined,
+                    audio
                 );
             }
         }
