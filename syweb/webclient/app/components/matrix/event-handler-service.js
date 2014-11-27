@@ -283,9 +283,6 @@ function(matrixService, $rootScope, $q, $timeout, $filter, mPresence, notificati
             }
         }
         
-        // copy in content fields from this event
-        modelService.setUser(event);
-        
         $rootScope.$broadcast(MEMBER_EVENT, event, isLiveEvent);
     };
     

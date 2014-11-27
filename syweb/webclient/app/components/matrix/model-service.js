@@ -215,10 +215,19 @@ function(matrixService, $rootScope, $q) {
             if (event.type === "m.room.member") {
                 var userId = event.state_key;
                 var rm = new RoomMember();
-                rm.event = event; // XXX: how is this used, and how does it differ from rm.user.event? --Matthew
+                rm.event = event; // XXX: this should be killed off in favour of rm.user.event surely?
                 rm.user = users[userId];
                 rm.name = event.content.displayname ? event.content.displayname : userId;
                 this.members[userId] = rm;
+                
+                // merge the info into rm.user.event
+                // XXX: this duplicates setUser() below and should be factored out
+                if (!rm.user) {
+                    rm.user = new User();
+                    rm.user.event.content = {};
+                }
+                angular.extend(rm.user.event.content, event.content);
+                rm.user.last_updated = new Date().getTime();
                 
                 // add to lookup so new m.presence events update the user
                 if (!userIdToRoomMember[userId]) {
@@ -280,7 +289,7 @@ function(matrixService, $rootScope, $q) {
 
     /***** User Object *****/
     var User = function User() {
-        this.event = {}; // the m.presence event representing the User.
+        this.event = {}; // the m.presence event representing the User (with data merged from m.room.member too).
         this.last_updated = 0; // used with last_active_ago to work out last seen times
     };
     
