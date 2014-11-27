@@ -28,7 +28,8 @@ describe("RoomController ", function() {
     
     var eventHandlerService = {
         joinRoom: function(rm){},
-        handleRoomMessages: function(room, data, live, dir){}
+        handleRoomMessages: function(room, data, live, dir){},
+        sendMessage: function(rm,input){}
     };
     var mFileUpload = {};
     var mUserDisplayNameFilter = function(roomId){ return "";};
@@ -118,7 +119,7 @@ describe("RoomController ", function() {
         routeParams.room_id_or_alias = encodeURIComponent(roomAlias);
         
         spyOn(eventHandlerService, "joinRoom").and.callFake(function(room) {
-            return resolve({});
+            return resolve("!roomid:matrix.org");
         });
         
         scope.onInit(); 
@@ -132,12 +133,28 @@ describe("RoomController ", function() {
         routeParams.room_id_or_alias = encodeURIComponent(id);
         
         spyOn(eventHandlerService, "joinRoom").and.callFake(function(room) {
-            return resolve({});
+            return resolve(id);
         });
         
         scope.onInit(); 
         rootScope.$digest();
         expect(eventHandlerService.joinRoom).toHaveBeenCalledWith(id);
         
+    });
+    
+    it('should be able to send a message.', function() {
+        // setup
+        var id = "!sdofh:matrix.org";
+        var input = "Hello world";
+        routeParams.room_id_or_alias = encodeURIComponent(id);
+        spyOn(eventHandlerService, "joinRoom").and.returnValue(resolve(id));
+        scope.onInit(); 
+        rootScope.$digest();
+        
+        
+        spyOn($.fn, "val").and.returnValue(input);
+        spyOn(eventHandlerService, "sendMessage");
+        scope.send();
+        expect(eventHandlerService.sendMessage).toHaveBeenCalledWith(id, input, jasmine.any(Object));
     });
 });
