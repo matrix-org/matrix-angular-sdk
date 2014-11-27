@@ -58,7 +58,6 @@ function(matrixService, $rootScope, $q) {
         users = {
             // user_id: <User>
         };
-        console.log("Models inited.");
     };
     
     init();

@@ -298,14 +298,12 @@ function(matrixService, $rootScope, $q, $timeout, $filter, mPresence, notificati
     };
 
     var handleRoomName = function(event, isLiveEvent) {
-        console.log("handleRoomName room_id: " + event.room_id + " - isLiveEvent: " + isLiveEvent + " - name: " + event.content.name);
         handleRoomStateEvent(event, isLiveEvent, true);
         recalculateRoomName(event.room_id);
         $rootScope.$broadcast(NAME_EVENT, event, isLiveEvent);
     };
 
     var handleRoomTopic = function(event, isLiveEvent) {
-        console.log("handleRoomTopic room_id: " + event.room_id + " - isLiveEvent: " + isLiveEvent + " - topic: " + event.content.topic);
         handleRoomStateEvent(event, isLiveEvent, true);
         $rootScope.$broadcast(TOPIC_EVENT, event, isLiveEvent);
     };
@@ -321,7 +319,6 @@ function(matrixService, $rootScope, $q, $timeout, $filter, mPresence, notificati
     var handleRedaction = function(event, isLiveEvent) {
         if (!isLiveEvent) {
             // we have nothing to remove, so just ignore it.
-            console.log("Received redacted event: "+JSON.stringify(event));
             return;
         }
 
