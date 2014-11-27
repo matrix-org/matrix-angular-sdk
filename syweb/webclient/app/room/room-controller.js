@@ -218,8 +218,6 @@ angular.module('RoomController', ['ngSanitize', 'matrixFilter', 'mFileInput', 'a
                 var table = $("#messageTable")[0];
                 if (!wrapper || !table) {
                     console.error("Cannot find table.");
-                    wrapper = null;
-                    table = null;
                     return;
                 }
                 // console.log("wrapper height=" + wrapper.clientHeight + ", table scrollHeight=" + table.scrollHeight);
@@ -238,8 +236,6 @@ angular.module('RoomController', ['ngSanitize', 'matrixFilter', 'mFileInput', 'a
                 if ($scope.state.first_pagination) {
                     scrollToBottom(true);
                     $scope.state.first_pagination = false;
-                    wrapper = null;
-                    table = null;
                 }
                 else {
                     // lock the scroll position
@@ -251,8 +247,6 @@ angular.module('RoomController', ['ngSanitize', 'matrixFilter', 'mFileInput', 'a
                         // however, this specific solution breaks because it measures the rows height before
                         // the contents are interpolated.
                         wrapper.scrollTop = originalTopRow ? (originalTopRow.offsetTop + wrapper.scrollTop) : 0;
-                        wrapper = null;
-                        table = null;
                     }, 0);
                 }
             },
