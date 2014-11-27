@@ -215,7 +215,7 @@ function(matrixService, $rootScope, $q) {
             if (event.type === "m.room.member") {
                 var userId = event.state_key;
                 var rm = new RoomMember();
-                rm.event = event;
+                rm.event = event; // XXX: how is this used, and how does it differ from rm.user.event? --Matthew
                 rm.user = users[userId];
                 rm.name = event.content.displayname ? event.content.displayname : userId;
                 this.members[userId] = rm;
@@ -339,10 +339,10 @@ function(matrixService, $rootScope, $q) {
             var usr = new User();
             usr.event = event;
             
-            // migrate old data but clobber matching keys
+            // migrate old data but clobber matching content keys
             if (users[event.content.user_id] && users[event.content.user_id].event) {
-                angular.extend(users[event.content.user_id].event, event);
                 usr = users[event.content.user_id];
+                angular.extend(usr.event.content, event.content);
             }
             else {
                 users[event.content.user_id] = usr;

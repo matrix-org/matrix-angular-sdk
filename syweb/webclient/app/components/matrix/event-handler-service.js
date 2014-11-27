@@ -283,11 +283,14 @@ function(matrixService, $rootScope, $q, $timeout, $filter, mPresence, notificati
             }
         }
         
+        // copy in content fields from this event
+        modelService.setUser(event);
+        
         $rootScope.$broadcast(MEMBER_EVENT, event, isLiveEvent);
     };
     
     var handlePresence = function(event, isLiveEvent) {
-        // presence is always current, so clobber.
+        // copy in content fields from this event
         modelService.setUser(event);
         $rootScope.$broadcast(PRESENCE_EVENT, event, isLiveEvent);
     };
