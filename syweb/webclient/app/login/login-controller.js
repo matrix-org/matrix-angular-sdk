@@ -91,8 +91,7 @@ angular.module('LoginController', ['matrixService'])
                         access_token: response.data.access_token
                     });
                     matrixService.saveConfig();
-                    $rootScope.updateHeader();
-                    eventStreamService.resume();
+                    $rootScope.onLoggedIn();
                     $location.url("home");
                 }
                 else {

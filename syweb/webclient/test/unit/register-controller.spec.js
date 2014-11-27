@@ -88,7 +88,7 @@ describe("RegisterController ", function() {
             $timeout = _$timeout_;
             scope = $rootScope.$new();
             rootScope = $rootScope;
-            rootScope.updateHeader = function(){};
+            rootScope.onLoggedIn = function(){};
             routeParams = {
                 user_matrix_id: userId
             };

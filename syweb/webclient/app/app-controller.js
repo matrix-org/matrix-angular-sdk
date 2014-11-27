@@ -21,8 +21,8 @@ limitations under the License.
 'use strict';
 
 angular.module('MatrixWebClientController', ['matrixService', 'mPresence', 'eventStreamService'])
-.controller('MatrixWebClientController', ['$scope', '$location', '$rootScope', '$timeout', 'matrixService', 'mPresence', 'eventStreamService', 'eventHandlerService', 'matrixPhoneService', 'modelService', 'eventReaperService', 'notificationService', 'mUserDisplayNameFilter',
-                               function($scope, $location, $rootScope, $timeout, matrixService, mPresence, eventStreamService, eventHandlerService, matrixPhoneService, modelService, eventReaperService, notificationService, mUserDisplayNameFilter) {
+.controller('MatrixWebClientController', ['$scope', '$location', '$rootScope', '$timeout', 'matrixService', 'mPresence', 'eventStreamService', 'eventHandlerService', 'matrixPhoneService', 'modelService', 'eventReaperService', 'notificationService', 'mUserDisplayNameFilter', 'MatrixCall',
+                               function($scope, $location, $rootScope, $timeout, matrixService, mPresence, eventStreamService, eventHandlerService, matrixPhoneService, modelService, eventReaperService, notificationService, mUserDisplayNameFilter, MatrixCall) {
          
     // Check current URL to avoid to display the logout button on the login page
     $scope.location = $location.path();
@@ -91,8 +91,13 @@ angular.module('MatrixWebClientController', ['matrixService', 'mPresence', 'even
         $scope.logout();
     });
     
-    $rootScope.updateHeader = function() {
+    $rootScope.onLoggedIn = function() {
+        // update header
         $scope.user_id = matrixService.config().user_id;
+        // start stream
+        eventStreamService.resume();
+        // refresh turn servers
+        MatrixCall.getTurnServer();
     };
 
     $rootScope.$watch('currentCall', function(newVal, oldVal) {
