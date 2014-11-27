@@ -525,7 +525,7 @@ angular.module('RoomController', ['ngSanitize', 'matrixFilter', 'mFileInput', 'a
     
     $scope.dismiss = $modalInstance.dismiss;
 })
-.controller('RoomInfoController', function($scope, $location, $modalInstance, matrixService, dialogService) {
+.controller('RoomInfoController', function($scope, $location, $modalInstance, matrixService, eventHandlerService, dialogService) {
     console.log("Displaying room info.");
     
     $scope.userIDToInvite = "";
@@ -557,15 +557,14 @@ angular.module('RoomController', ['ngSanitize', 'matrixFilter', 'mFileInput', 'a
     };
     
     $scope.leaveRoom = function() {
-        
-        matrixService.leave($scope.room_id).then(
+        eventHandlerService.leaveRoom($scope.room_id).then(
             function(response) {
                 console.log("Left room " + $scope.room_id);
                 $scope.dismiss();
                 $location.url("home");
             },
             function(error) {
-                $scope.feedback = "Failed to leave room: " + error.data.error;
+                dialogService.showError(error);
             }
         );
     };

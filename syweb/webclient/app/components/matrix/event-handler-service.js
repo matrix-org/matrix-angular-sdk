@@ -704,6 +704,21 @@ function(matrixService, $rootScope, $q, $timeout, $filter, mPresence, notificati
             
             return defer.promise;
         },
+        
+        leaveRoom: function(roomId) {
+            var d = $q.defer();
+            var eventHandlerService = this;
+            modelService.getRoom(roomId).leave().then(
+                function(response) {
+                    eventHandlerService.wipeDuplicateDetection(roomId);
+                    d.resolve(response);
+                },
+                function(error) {
+                    d.reject(error);
+                }
+            );
+            return d.promise;
+        },
 
         // Returns a promise that resolves when the initialSync request has been processed
         waitForInitialSyncCompletion: function() {
@@ -716,7 +731,8 @@ function(matrixService, $rootScope, $q, $timeout, $filter, mPresence, notificati
         
         // remove the ability to detect duplicates by removing known event IDs for this room.
         // Used in the event reaper service which nukes entire rooms: it needs to know that
-        // the initial sync it performs will not be incorrectly dupe suppressed.
+        // the initial sync it performs will not be incorrectly dupe suppressed. Also used when
+        // leaving rooms, so rejoining quickly won't suppress the sync events.
         wipeDuplicateDetection: function(roomId) {
             if (roomId in eventReapMap) {
                 delete eventReapMap[roomId];

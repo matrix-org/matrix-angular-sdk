@@ -26,8 +26,8 @@ dependency.
 //     needs access to the underlying data store", rather than polluting the
 //     $rootScope.
 angular.module('modelService', [])
-.factory('modelService', ['matrixService', '$rootScope', 
-function(matrixService, $rootScope) {
+.factory('modelService', ['matrixService', '$rootScope', '$q',
+function(matrixService, $rootScope, $q) {
     var LIVE_MESSAGE_EVENT = "modelService.LIVE_MESSAGE_EVENT(event)";
 
     // alias / id lookups
@@ -137,7 +137,17 @@ function(matrixService, $rootScope) {
         },
         
         leave: function leave() {
-            return matrixService.leave(this.room_id);
+            var d = $q.defer();
+            var roomId = this.room_id;
+            matrixService.leave(roomId).then(function(response) {
+                delete rooms[roomId];
+                d.resolve(response);
+            },
+            function(error) {
+                d.reject(error);
+            });
+            
+            return d.promise;
         }
     };
     
