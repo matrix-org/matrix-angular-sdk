@@ -87,7 +87,7 @@ function(matrixService, $rootScope, $q) {
             // that time* so things like display names display correctly.
             var stateAtTheTime = toFront ? this.old_room_state : this.current_room_state;
 
-            event.__room_member = stateAtTheTime.getStateEvent("m.room.member", event.user_id);
+            event.__room_member = stateAtTheTime.members[event.user_id];
             
             if (event.type === "m.room.member" && event.content.membership === "invite") {
                 // give information on both the inviter and invitee
@@ -138,24 +138,36 @@ function(matrixService, $rootScope, $q) {
             }
         },
         
-        mutateRoomMember: function(event, isLive) {
+        // mutate the member for the room state being modified.
+        mutateRoomMemberState: function(event, isLive) {
+            var userId = event.state_key;
             if (isLive) {
-                event.cnt = event.content;
                 this.current_room_state.storeStateEvent(event);
+                
+                // work out the new name for this user.
+                var member = this.current_room_state.members[userId];
+                member.name = member.event.content.displayname;
+                if (!member.name) {
+                    member.name = userId;
+                }
             }
             else { // old event
-                event.cnt = event.content;
-                if (event.prev_content) {
-                    // the m.room.member event we are handling is the NEW event. When
-                    // we keep going back in time, we want the PREVIOUS value for displaying
-                    // names/etc, hence the clobber here.
-                    event.cnt = event.prev_content;
-                }
+                // the m.room.member event we are handling is the NEW event. When
+                // we keep going back in time, we want the PREVIOUS value for displaying
+                // names/etc, hence the check here.
+                var targetContent = event.prev_content ? event.prev_content : event.content;
+
                 if (event.__changedKey === "membership" && event.content.membership === "join") {
                     // join has a prev_content but it doesn't contain all the info unlike the join, so use that.
-                    event.cnt = event.content;
+                    targetContent = event.content;
                 }
                 this.old_room_state.storeStateEvent(event);
+                // work out the new name for this user.
+                var member = this.old_room_state.members[userId];
+                member.name = targetContent.displayname;
+                if (!member.name) {
+                    member.name = userId;
+                }
             }
         },
         
@@ -206,6 +218,7 @@ function(matrixService, $rootScope, $q) {
                 var rm = new RoomMember();
                 rm.event = event;
                 rm.user = users[userId];
+                rm.name = event.content.displayname ? event.content.displayname : userId;
                 this.members[userId] = rm;
                 
                 // add to lookup so new m.presence events update the user

@@ -263,7 +263,7 @@ angular.module('RoomController', ['ngSanitize', 'matrixFilter', 'mFileInput', 'a
     
     $scope.appendName = function($event, event) {
         if ($event.shiftKey) {
-            var name = event.__room_member.cnt ? event.__room_member.cnt.displayname : undefined;
+            var name = event.__room_member.name;
             if (!name) {
                 name = mUserDisplayNameFilter(event.user_id);
             }

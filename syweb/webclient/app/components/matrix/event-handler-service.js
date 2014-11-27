@@ -254,7 +254,6 @@ function(matrixService, $rootScope, $q, $timeout, $filter, mPresence, notificati
     
     var handleRoomMember = function(event, isLiveEvent) {
         var room = modelService.getRoom(event.room_id);
-        
         var memberChanges = undefined;
         
         // could be a membership change, display name change, etc.
@@ -271,7 +270,7 @@ function(matrixService, $rootScope, $q, $timeout, $filter, mPresence, notificati
         // modify state before adding the message so it points to the right thing.
         // The events are copied to avoid referencing the same event when adding
         // the message (circular json structures)
-        room.mutateRoomMember(angular.copy(event), isLiveEvent);
+        room.mutateRoomMemberState(angular.copy(event), isLiveEvent);
         
         // If there was a change we want to display, dump it in the message
         // list. This has to be done after room state is updated.
