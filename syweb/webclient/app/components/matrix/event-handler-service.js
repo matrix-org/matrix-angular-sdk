@@ -256,7 +256,7 @@ function(matrixService, $rootScope, $q, $timeout, $filter, mPresence, notificati
         var room = modelService.getRoom(event.room_id);
         
         var memberChanges = undefined;
-
+        
         // could be a membership change, display name change, etc.
         // Find out which one.
         if ((event.prev_content === undefined && event.content.membership) || (event.prev_content && (event.prev_content.membership !== event.content.membership))) {
@@ -266,35 +266,12 @@ function(matrixService, $rootScope, $q, $timeout, $filter, mPresence, notificati
             memberChanges = "displayname";
         }
         // mark the key which changed
-        event.changedKey = memberChanges;
-        
+        event.__changedKey = memberChanges;
         
         // modify state before adding the message so it points to the right thing.
         // The events are copied to avoid referencing the same event when adding
         // the message (circular json structures)
-        if (isLiveEvent) {
-            var newEvent = angular.copy(event);
-            newEvent.cnt = event.content;
-            room.current_room_state.storeStateEvent(newEvent);
-        }
-        else {
-            // mutate the old room state
-            var oldEvent = angular.copy(event);
-            oldEvent.cnt = event.content;
-            if (event.prev_content) {
-                // the m.room.member event we are handling is the NEW event. When
-                // we keep going back in time, we want the PREVIOUS value for displaying
-                // names/etc, hence the clobber here.
-                oldEvent.cnt = event.prev_content;
-            }
-            
-            if (event.changedKey === "membership" && event.content.membership === "join") {
-                // join has a prev_content but it doesn't contain all the info unlike the join, so use that.
-                oldEvent.cnt = event.content;
-            }
-            
-            room.old_room_state.storeStateEvent(oldEvent);
-        }
+        room.mutateRoomMember(angular.copy(event), isLiveEvent);
         
         // If there was a change we want to display, dump it in the message
         // list. This has to be done after room state is updated.

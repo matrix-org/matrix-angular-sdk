@@ -181,10 +181,10 @@
                 </td>
                 <td class="msg" ng-class="(!msg.content.membership && ('m.room.topic' !== msg.type && 'm.room.name' !== msg.type))? (msg.content.msgtype === 'm.emote' ? 'emote text' : 'text') : 'membership text'">
                     <div class="bubble" ng-dblclick="openJson(msg)" ng-mouseover="state.showTs = 1" ng-mouseout="state.showTs = 0">
-                        <span class="msg_meta" ng-if="'join' === msg.content.membership && msg.changedKey === 'membership'">
+                        <span class="msg_meta" ng-if="'join' === msg.content.membership && msg.__changedKey === 'membership'">
                             {{ msg.content.displayname || room.now.members[msg.state_key].user.event.content.displayname || msg.state_key }} joined
                         </span>
-                        <span class="msg_meta" ng-if="'leave' === msg.content.membership && msg.changedKey === 'membership'">
+                        <span class="msg_meta" ng-if="'leave' === msg.content.membership && msg.__changedKey === 'membership'">
                             <span ng-if="msg.user_id === msg.state_key">
                                 <!-- FIXME: This seems like a synapse bug that the 'leave' content doesn't give the displayname... -->
                                 {{ msg.__room_member.cnt.displayname || room.now.members[msg.state_key].user.event.content.displayname || msg.state_key }} left
@@ -198,8 +198,8 @@
                                 </span>
                             </span>
                         </span>
-                        <span class="msg_meta" ng-if="'invite' === msg.content.membership && msg.changedKey === 'membership' || 
-                                     'ban' === msg.content.membership && msg.changedKey === 'membership'">
+                        <span class="msg_meta" ng-if="'invite' === msg.content.membership && msg.__changedKey === 'membership' || 
+                                     'ban' === msg.content.membership && msg.__changedKey === 'membership'">
                             {{ msg.__room_member.cnt.displayname || msg.user_id | mUserDisplayName:room_id:true }}
                             {{ {"invite": "invited", "ban": "banned"}[msg.content.membership] }}
                             {{ msg.__target_room_member.cnt.displayname || msg.state_key }}
@@ -207,7 +207,7 @@
                                 : {{ msg.content.reason }}
                             </span>
                         </span>                        
-                        <span class="msg_meta" ng-if="msg.changedKey === 'displayname'">
+                        <span class="msg_meta" ng-if="msg.__changedKey === 'displayname'">
                             {{ msg.user_id }} changed their display name from {{ msg.prev_content.displayname }} to {{ msg.content.displayname }}
                         </span>
                         

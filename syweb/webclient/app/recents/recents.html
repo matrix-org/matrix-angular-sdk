@@ -30,7 +30,7 @@
                     
                     <div ng-hide="room.recent.me.membership === 'invite'" ng-switch="room.lastEvent.type">
                         <div ng-switch-when="m.room.member">
-                            <span ng-switch="room.lastEvent.changedKey">
+                            <span ng-switch="room.lastEvent.__changedKey">
                                 <span ng-switch-when="membership">
                                     <span ng-if="'join' === room.lastEvent.content.membership">
                                         {{ room.lastEvent.state_key | mUserDisplayName: room.room_id }} joined

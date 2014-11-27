@@ -185,7 +185,7 @@ angular.module('RoomController', ['ngSanitize', 'matrixFilter', 'mFileInput', 'a
     };
 
     var paginate = function(numItems) {
-        if ($scope.state.paginating || !$scope.room_id) {
+        if ($scope.state.paginating || !$scope.room) {
             return;
         }
         else {

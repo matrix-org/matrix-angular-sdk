@@ -86,7 +86,9 @@ function(matrixService, $rootScope, $q) {
             // every message must reference the RoomMember which made it *at
             // that time* so things like display names display correctly.
             var stateAtTheTime = toFront ? this.old_room_state : this.current_room_state;
+
             event.__room_member = stateAtTheTime.getStateEvent("m.room.member", event.user_id);
+            
             if (event.type === "m.room.member" && event.content.membership === "invite") {
                 // give information on both the inviter and invitee
                 event.__target_room_member = stateAtTheTime.getStateEvent("m.room.member", event.state_key);
@@ -133,6 +135,27 @@ function(matrixService, $rootScope, $q) {
             var index = this.events.indexOf(event);
             if (index >= 0) {
                 this.events.splice(index, 1);
+            }
+        },
+        
+        mutateRoomMember: function(event, isLive) {
+            if (isLive) {
+                event.cnt = event.content;
+                this.current_room_state.storeStateEvent(event);
+            }
+            else { // old event
+                event.cnt = event.content;
+                if (event.prev_content) {
+                    // the m.room.member event we are handling is the NEW event. When
+                    // we keep going back in time, we want the PREVIOUS value for displaying
+                    // names/etc, hence the clobber here.
+                    event.cnt = event.prev_content;
+                }
+                if (event.__changedKey === "membership" && event.content.membership === "join") {
+                    // join has a prev_content but it doesn't contain all the info unlike the join, so use that.
+                    event.cnt = event.content;
+                }
+                this.old_room_state.storeStateEvent(event);
             }
         },
         
@@ -237,14 +260,18 @@ function(matrixService, $rootScope, $q) {
         this.event = {}; // the m.room.member event representing the RoomMember.
         this.power_level_norm = 0;
         this.power_level = 0;
-        this.user = undefined; // the User
+        // the calculated name of this member depending on the room state
+        this.name = undefined;
+        // the User: the current up-to-date info for this member
+        this.user = undefined; 
     };
-    
+
     /***** User Object *****/
     var User = function User() {
         this.event = {}; // the m.presence event representing the User.
         this.last_updated = 0; // used with last_active_ago to work out last seen times
     };
+    
     
     return {
         LIVE_MESSAGE_EVENT: LIVE_MESSAGE_EVENT,
