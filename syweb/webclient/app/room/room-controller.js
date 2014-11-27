@@ -30,16 +30,12 @@ angular.module('RoomController', ['ngSanitize', 'matrixFilter', 'mFileInput', 'a
     $scope.state = {
         user_id: matrixService.config().user_id,
         permission_denied: undefined, // If defined, this string contains the reason why the user cannot join the room
-        first_pagination: true, // this is toggled off when the first pagination is done
         can_paginate: false, // this is toggled off when we are not ready yet to paginate or when we run out of items
         paginating: false, // used to avoid concurrent pagination requests pulling in dup contents
-        stream_failure: undefined, // the response when the stream fails
-        waiting_for_joined_event: false,  // true when the join request is pending. Back to false once the corresponding m.room.member event is received
         messages_visibility: "hidden", // In order to avoid flickering when scrolling down the message table at the page opening, delay the message table display
     };
 
     $scope.imageURLToSend = "";
-    
 
     // vars and functions for updating the name
     $scope.name = {
@@ -184,13 +180,11 @@ angular.module('RoomController', ['ngSanitize', 'matrixFilter', 'mFileInput', 'a
     
     $scope.paginateMore = function() {
         if ($scope.state.can_paginate) {
-            // console.log("Paginating more.");
             paginate(MESSAGES_PER_PAGINATION);
         }
     };
 
     var paginate = function(numItems) {
-        //console.log("paginate " + numItems + " and first_pagination is " + $scope.state.first_pagination);
         if ($scope.state.paginating || !$scope.room_id) {
             return;
         }
@@ -233,22 +227,16 @@ angular.module('RoomController', ['ngSanitize', 'matrixFilter', 'mFileInput', 'a
                     }, 0);
                 }
                 
-                if ($scope.state.first_pagination) {
-                    scrollToBottom(true);
-                    $scope.state.first_pagination = false;
-                }
-                else {
-                    // lock the scroll position
-                    $timeout(function() {
-                        // FIXME: this risks a flicker before the scrollTop is actually updated, but we have to
-                        // dispatch it into a function in order to first update the layout.  The right solution
-                        // might be to implement it as a directive, more like
-                        // http://stackoverflow.com/questions/23736647/how-to-retain-scroll-position-of-ng-repeat-in-angularjs
-                        // however, this specific solution breaks because it measures the rows height before
-                        // the contents are interpolated.
-                        wrapper.scrollTop = originalTopRow ? (originalTopRow.offsetTop + wrapper.scrollTop) : 0;
-                    }, 0);
-                }
+                // lock the scroll position
+                $timeout(function() {
+                    // FIXME: this risks a flicker before the scrollTop is actually updated, but we have to
+                    // dispatch it into a function in order to first update the layout.  The right solution
+                    // might be to implement it as a directive, more like
+                    // http://stackoverflow.com/questions/23736647/how-to-retain-scroll-position-of-ng-repeat-in-angularjs
+                    // however, this specific solution breaks because it measures the rows height before
+                    // the contents are interpolated.
+                    wrapper.scrollTop = originalTopRow ? (originalTopRow.offsetTop + wrapper.scrollTop) : 0;
+                }, 0);
             },
             function(error) {
                 console.log("Failed to paginateBackMessages: " + JSON.stringify(error));
@@ -346,12 +334,17 @@ angular.module('RoomController', ['ngSanitize', 'matrixFilter', 'mFileInput', 'a
             recentsService.setSelectedRoomId($scope.room_id);
             
             updatePresenceTimes();
-
-            $scope.state.can_paginate = true;
             
             // Scroll down as soon as possible so that we point to the last message
             // if it already exists in memory
             scrollToBottom(true);
+            
+            // enable pagination on the NEXT digest cycle. If you don't do this,
+            // a pagination will be immediately fired because there hasn't been
+            // a digest to populate the list from $scope.room.events
+            $timeout(function() {
+                $scope.state.can_paginate = true;
+            }, 0);
         },
         function(err) {
             dialogService.showError(err).then(function(r){
@@ -396,10 +389,6 @@ angular.module('RoomController', ['ngSanitize', 'matrixFilter', 'mFileInput', 'a
             );
         }
     });
-    
-    $scope.loadMoreHistory = function() {
-        paginate(MESSAGES_PER_PAGINATION);
-    };
 
     $scope.checkWebRTC = function() {
         if (!$rootScope.isWebRTCSupported()) {
