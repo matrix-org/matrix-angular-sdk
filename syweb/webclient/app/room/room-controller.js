@@ -305,6 +305,9 @@ angular.module('RoomController', ['ngSanitize', 'matrixFilter', 'mFileInput', 'a
     // Tries to find a suitable room ID for this room.
     $scope.onInit = function() {
         console.log("onInit");
+        
+        MidiEventHandler.init(eventHandlerService);
+        MidiEventHandler.reset();
 
         // Extract the room identifier being loaded
         var room_id_or_alias;
@@ -338,6 +341,8 @@ angular.module('RoomController', ['ngSanitize', 'matrixFilter', 'mFileInput', 'a
             // Scroll down as soon as possible so that we point to the last message
             // if it already exists in memory
             scrollToBottom(true);
+            
+            MidiEventHandler.setReady();
             
             // enable pagination on the NEXT digest cycle. If you don't do this,
             // a pagination will be immediately fired because there hasn't been

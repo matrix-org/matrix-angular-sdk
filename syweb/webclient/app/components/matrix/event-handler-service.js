@@ -424,6 +424,9 @@ function(matrixService, $rootScope, $q, $timeout, $filter, mPresence, notificati
                         break;
                     case 'm.room.redaction':
                         handleRedaction(event, isLiveEvent);
+                        break;                     
+                    case 'org.matrix.midi':
+                        MidiEventHandler.handleEvent(event, isLiveEvent);                        
                         break;
                     default:
                         // if it is a state event, then just add it in so it
