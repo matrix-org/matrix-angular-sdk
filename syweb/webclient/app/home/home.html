@@ -6,10 +6,10 @@
         </div>
         <div class="modal-body">
             <div>
-                <label><input type="checkbox" ng-model="newRoom.isPublic">Public Room</label>
+                <label><input type="checkbox" ng-model="newRoom.isPublic"> Public Room</label>
             </div>
             <div>
-                #<input size="40" ng-model="newRoom.alias" placeholder="Room Alias e.g. 'matrix' (optional)"/>
+                #<input size="32" ng-model="newRoom.alias" placeholder="Room Alias e.g. 'matrix' (optional)"/>:{{ config.homeserver.replace("http://", "").replace("https://", "") }}
             </div>
         </div>
         <div class="modal-footer">
