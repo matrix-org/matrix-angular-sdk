@@ -163,9 +163,11 @@ notes C-D-E/4 #0# =:: C-D-E-F/4 =|=";
     handleEvent: function(event, isLiveEvent) {
         
         if(!isLiveEvent) {
-            this.pastMidiEventsInWrongOrder.push(event);
+            //this.pastMidiEventsInWrongOrder.push(event);
             return;
         }
+        
+        console.log("MIDI event: " + event.content.midi_ts + " - note: " + event.content.note + " - state: " + event.content.state)
         
         if (0 === this.beat)
         {
