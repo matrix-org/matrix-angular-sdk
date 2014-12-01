@@ -231,4 +231,57 @@ describe('ModelService', function() {
         var num = modelService.getUserCountInRoom(roomId);
         expect(num).toEqual(2);
     }));
+    
+    it('should update existing room members with their latest power level. (m.room.member THEN m.room.power_levels)', inject(
+    function(modelService) {
+        var roomId = "!foo:matrix.org";
+        
+        var room = modelService.getRoom(roomId);
+        room.current_room_state.storeStateEvent({
+            content: { membership: "join" },
+            user_id: "@adam:matrix.org",
+            state_key: "@adam:matrix.org",
+            type: "m.room.member"
+        });
+        room.current_room_state.storeStateEvent({
+            content: {
+                users: {
+                    "@adam:matrix.org": 70
+                },
+                "users_default": 50
+            },
+            user_id: "@adam:matrix.org",
+            type: "m.room.power_levels"
+        });
+        
+        var roomMember = modelService.getMember(roomId, "@adam:matrix.org");
+        expect(roomMember.power_level).toEqual(70);
+        expect(roomMember.power_level_norm).toEqual(100);
+    }));
+    
+    it('should update new room members with their latest power level. (m.room.power_levels THEN m.room.member)', inject(
+    function(modelService) {
+        var roomId = "!foo:matrix.org";
+        
+        var room = modelService.getRoom(roomId);
+        room.current_room_state.storeStateEvent({
+            content: {
+                users: {
+                    "@adam:matrix.org": 70
+                },
+                "users_default": 50
+            },
+            user_id: "@adam:matrix.org",
+            type: "m.room.power_levels"
+        });
+        room.current_room_state.storeStateEvent({
+            content: { membership: "join" },
+            user_id: "@adam:matrix.org",
+            state_key: "@adam:matrix.org",
+            type: "m.room.member"
+        });
+        var roomMember = modelService.getMember(roomId, "@adam:matrix.org");
+        expect(roomMember.power_level).toEqual(70);
+        expect(roomMember.power_level_norm).toEqual(100);
+    }));
 });

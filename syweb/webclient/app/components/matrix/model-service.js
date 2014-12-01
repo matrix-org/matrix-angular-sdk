@@ -220,6 +220,12 @@ function(matrixService, $rootScope, $q) {
                 rm.name = event.content.displayname ? event.content.displayname : userId;
                 this.members[userId] = rm;
                 
+                // work out power level for this room member
+                var powerLevelEvent = this.state_events["m.room.power_levels"];
+                if (powerLevelEvent) {
+                    this.calculatePowerLevel(powerLevelEvent, rm);
+                }
+                
                 // add to lookup so new m.presence events update the user
                 if (!userIdToRoomMember[userId]) {
                     userIdToRoomMember[userId] = [];
@@ -230,27 +236,37 @@ function(matrixService, $rootScope, $q) {
                 setRoomIdToAliasMapping(event.room_id, event.content.aliases[0]);
             }
             else if (event.type === "m.room.power_levels") {
-                // normalise power levels: find the max first.
-                var maxPowerLevel = 0;
-                
-                var userList = event.content.users;
-                
-                for (var user_id in userList) {
-                    if (!userList.hasOwnProperty(user_id) || user_id === "hsob_ts") continue; // XXX hsob_ts on some old rooms :(
-                    maxPowerLevel = Math.max(maxPowerLevel, userList[user_id]);
-                }
-                // set power level f.e room member
-                var defaultPowerLevel = event.content.users_default === undefined ? 0 : event.content.users_default;
                 for (var user_id in this.members) {
                     if (!this.members.hasOwnProperty(user_id)) continue;
                     var rm = this.members[user_id];
                     if (!rm) {
                         continue;
                     }
-                    rm.power_level = userList[user_id] === undefined ? defaultPowerLevel : userList[user_id];
-                    rm.power_level_norm = (rm.power_level * 100) / maxPowerLevel;
+                    this.calculatePowerLevel(event, rm);
                 }
             }
+        },
+        
+        getMaxPowerLevel: function(powerLevelEvent) {
+            var maxPowerLevel = 0;
+            var userList = powerLevelEvent.content.users;
+            
+            for (var user_id in userList) {
+                if (!userList.hasOwnProperty(user_id) || user_id === "hsob_ts") continue; // XXX hsob_ts on some old rooms :(
+                maxPowerLevel = Math.max(maxPowerLevel, userList[user_id]);
+            }
+            return maxPowerLevel;
+        },
+        
+        calculatePowerLevel: function(powerLevelEvent, roomMember) {
+            var user_id = roomMember.event.state_key;
+            // normalise power levels: find the max first.
+            var maxPowerLevel = this.getMaxPowerLevel(powerLevelEvent);
+            // set power level f.e room member
+            var defaultPowerLevel = powerLevelEvent.content.users_default === undefined ? 0 : powerLevelEvent.content.users_default;
+            
+            roomMember.power_level = powerLevelEvent.content.users[user_id] === undefined ? defaultPowerLevel : powerLevelEvent.content.users[user_id];
+            roomMember.power_level_norm = (roomMember.power_level * 100) / maxPowerLevel;
         },
         
         storeStateEvents: function storeState(events) {
