@@ -435,7 +435,7 @@ angular.module('MatrixCall', [])
     };
 
     MatrixCall.prototype.getUserMediaFailed = function() {
-        this.onError("Couldn't start capturing! Is your microphone set up?");
+        this.onError("Couldn't start capturing media! Is your microphone set up and does this app have permission?");
         this.hangup();
     };
 
