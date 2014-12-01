@@ -287,7 +287,7 @@ function(matrixService, $rootScope, $q, $timeout, $filter, mPresence, notificati
     };
     
     var handlePresence = function(event, isLiveEvent) {
-        // copy in content fields from this event
+        // presence is always current, so clobber.
         modelService.setUser(event);
         $rootScope.$broadcast(PRESENCE_EVENT, event, isLiveEvent);
     };
