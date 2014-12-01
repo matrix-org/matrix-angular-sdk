@@ -44,10 +44,16 @@ angular.module('matrixWebClient')
     return function(members) {
         var filtered = [];
 
-        var displayNames = {};
-        angular.forEach(members, function(value, key) {
-            value["id"] = key;
-            filtered.push( value );
+        angular.forEach(members, function(member, key) {
+            member["id"] = key;
+            
+            // do not add members who have left.
+            var ignoreList = ["leave", "kick", "ban"];
+            if (ignoreList.indexOf(member.event.content.membership) != -1) {
+                return;
+            }
+            
+            filtered.push(member);
         });
 
         filtered.sort(function (a, b) {
