@@ -44,8 +44,14 @@ angular.module('matrixService', [])
 
     var doRequest = function(method, path, params, data, $httpParams) {
         if (!config) {
-            console.warn("No config exists. Cannot perform request to "+path);
-            return;
+            // try to load it
+            loadConfig();
+            if (!config) {
+                console.error("No config exists. Cannot perform request to "+path);
+                var defer = $q.defer();
+                defer.reject("No config");
+                return defer.promise;
+            }
         }
     
         // Inject the access token
@@ -157,6 +163,27 @@ angular.module('matrixService', [])
         data.type = loginType;
         console.log("doRegisterLogin >>> " + loginType);
         return doRequest("POST", path, undefined, data);
+    };
+    
+    var loadConfig = function() {
+        if (!config) {
+            config = localStorage.getItem("config");
+            if (config) {
+                config = JSON.parse(config);
+
+                // Reset the cache if the version loaded is not the expected one
+                if (configVersion !== config.version) {
+                    config = undefined;
+                    saveConfig();
+                }
+            }
+        }
+        return config;
+    };
+    
+    var storeConfig = function() {
+        config.version = configVersion;
+        localStorage.setItem("config", JSON.stringify(config));
     };
 
     return {
@@ -703,31 +730,17 @@ angular.module('matrixService', [])
         
         // Returns the current config
         config: function() {
-            if (!config) {
-                config = localStorage.getItem("config");
-                if (config) {
-                    config = JSON.parse(config);
-
-                    // Reset the cache if the version loaded is not the expected one
-                    if (configVersion !== config.version) {
-                        config = undefined;
-                        this.saveConfig();
-                    }
-                }
-            }
-            return config;
+            return loadConfig();
         },
         
         // Set a new config (Use saveConfig to actually store it permanently)
         setConfig: function(newConfig) {
             config = newConfig;
-            console.log("new IS: "+config.identityServer);
         },
         
         // Commits config into permanent storage
         saveConfig: function() {
-            config.version = configVersion;
-            localStorage.setItem("config", JSON.stringify(config));
+            storeConfig();
         },
             
         /**

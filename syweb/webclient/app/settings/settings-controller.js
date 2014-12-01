@@ -194,7 +194,16 @@ angular.module('SettingsController', ['matrixService', 'mFileUpload', 'mFileInpu
     /*** Desktop notifications section ***/
     $scope.settings = {
         notifications: undefined,
+        audioNotifications: matrixService.config().audioNotifications,
         bingWords: matrixService.config().bingWords
+    };
+    
+    $scope.updateAudioNotification = function() {
+        console.log("Play audio with notifications: "+$scope.settings.audioNotifications);
+        var config = matrixService.config();
+        config.audioNotifications = $scope.settings.audioNotifications;
+        matrixService.setConfig(config);
+        matrixService.saveConfig();
     };
     
     $scope.saveBingWords = function() {

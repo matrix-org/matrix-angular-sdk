@@ -157,9 +157,15 @@ function($scope, $location, $modalInstance, eventHandlerService, dialogService) 
         if (alias.trim().length == 0) {
             alias = undefined;
         }
+        if (alias) {
+            var colonIndex = alias.indexOf(":");
+            if (colonIndex != -1) {
+                alias = alias.substr(0, colonIndex);
+            }
+        }
         eventHandlerService.createRoom(alias, isPublic).then(
             function(roomId) { 
-                console.log("aaaaCreated room with id: "+ roomId);
+                console.log("Created room with id: "+ roomId);
                 $modalInstance.dismiss();
                 $location.url("/room/" + roomId);
             },

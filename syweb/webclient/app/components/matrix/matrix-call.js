@@ -245,6 +245,11 @@ angular.module('MatrixCall', [])
             forAllTracksOnStream(this.localAVStream, function(t) {
                 if (t.stop) t.stop();
             });
+            // also call stop on the main stream so firefox will stop sharing
+            // the mic
+            if (this.localAVStream.stop) {
+                this.localAVStream.stop();
+            }
         }
         if (this.remoteAVStream) {
             forAllTracksOnStream(this.remoteAVStream, function(t) {

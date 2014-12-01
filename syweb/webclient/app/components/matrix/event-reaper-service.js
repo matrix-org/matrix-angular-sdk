@@ -73,9 +73,10 @@ function($rootScope, modelService, recentsService, matrixService, eventHandlerSe
     
     $rootScope.$on(eventHandlerService.MSG_EVENT, 
     function(ngEvent, event, isLive) {
-        if (!enabled || event.room_id === viewingRoom) {
+        if (!enabled || event.room_id === viewingRoom || !isLive) {
             return;
         }
+
         var room = modelService.getRoom(event.room_id);
         if (room.events.length > MAX_EVENTS) {
             reapRoom(event.room_id);

@@ -110,10 +110,7 @@ angular.module('RegisterController', ['matrixService'])
                 // And permanently save it
                 matrixService.saveConfig();
                 
-                // Update the global scoped used_id var (used in the app header)
-                $rootScope.updateHeader();
-                
-                eventStreamService.resume();
+                $rootScope.onLoggedIn();
                 
                 if ($scope.account.displayName) {
                     // FIXME: handle errors setting displayName

@@ -183,9 +183,16 @@ function(matrixService, $rootScope, $q, $timeout, $filter, mPresence, notificati
             }
             
             if (shouldBing && isIdle) {
-                console.log("Displaying notification for "+JSON.stringify(event));
 
                 var roomTitle = $filter("mRoomName")(event.room_id);
+                
+                var audio = undefined;
+                if (matrixService.config().audioNotifications === true) {
+                    audio = "default";
+                }
+                
+                console.log("Displaying notification "+(audio === undefined ? "" : "with audio")+" for "+JSON.stringify(event.content));
+                
                 
                 notificationService.showNotification(
                     displayname + " (" + roomTitle + ")",
@@ -194,7 +201,9 @@ function(matrixService, $rootScope, $q, $timeout, $filter, mPresence, notificati
                     function() {
                         console.log("notification.onclick() room=" + event.room_id);
                         $rootScope.goToPage('room/' + event.room_id); 
-                    }
+                    },
+                    undefined,
+                    audio
                 );
             }
         }
@@ -245,9 +254,8 @@ function(matrixService, $rootScope, $q, $timeout, $filter, mPresence, notificati
     
     var handleRoomMember = function(event, isLiveEvent) {
         var room = modelService.getRoom(event.room_id);
-        
         var memberChanges = undefined;
-
+        
         // could be a membership change, display name change, etc.
         // Find out which one.
         if ((event.prev_content === undefined && event.content.membership) || (event.prev_content && (event.prev_content.membership !== event.content.membership))) {
@@ -257,35 +265,12 @@ function(matrixService, $rootScope, $q, $timeout, $filter, mPresence, notificati
             memberChanges = "displayname";
         }
         // mark the key which changed
-        event.changedKey = memberChanges;
-        
+        event.__changedKey = memberChanges;
         
         // modify state before adding the message so it points to the right thing.
         // The events are copied to avoid referencing the same event when adding
         // the message (circular json structures)
-        if (isLiveEvent) {
-            var newEvent = angular.copy(event);
-            newEvent.cnt = event.content;
-            room.current_room_state.storeStateEvent(newEvent);
-        }
-        else {
-            // mutate the old room state
-            var oldEvent = angular.copy(event);
-            oldEvent.cnt = event.content;
-            if (event.prev_content) {
-                // the m.room.member event we are handling is the NEW event. When
-                // we keep going back in time, we want the PREVIOUS value for displaying
-                // names/etc, hence the clobber here.
-                oldEvent.cnt = event.prev_content;
-            }
-            
-            if (event.changedKey === "membership" && event.content.membership === "join") {
-                // join has a prev_content but it doesn't contain all the info unlike the join, so use that.
-                oldEvent.cnt = event.content;
-            }
-            
-            room.old_room_state.storeStateEvent(oldEvent);
-        }
+        room.mutateRoomMemberState(angular.copy(event), isLiveEvent);
         
         // If there was a change we want to display, dump it in the message
         // list. This has to be done after room state is updated.
@@ -313,14 +298,12 @@ function(matrixService, $rootScope, $q, $timeout, $filter, mPresence, notificati
     };
 
     var handleRoomName = function(event, isLiveEvent) {
-        console.log("handleRoomName room_id: " + event.room_id + " - isLiveEvent: " + isLiveEvent + " - name: " + event.content.name);
         handleRoomStateEvent(event, isLiveEvent, true);
         recalculateRoomName(event.room_id);
         $rootScope.$broadcast(NAME_EVENT, event, isLiveEvent);
     };
 
     var handleRoomTopic = function(event, isLiveEvent) {
-        console.log("handleRoomTopic room_id: " + event.room_id + " - isLiveEvent: " + isLiveEvent + " - topic: " + event.content.topic);
         handleRoomStateEvent(event, isLiveEvent, true);
         $rootScope.$broadcast(TOPIC_EVENT, event, isLiveEvent);
     };
@@ -336,7 +319,6 @@ function(matrixService, $rootScope, $q, $timeout, $filter, mPresence, notificati
     var handleRedaction = function(event, isLiveEvent) {
         if (!isLiveEvent) {
             // we have nothing to remove, so just ignore it.
-            console.log("Received redacted event: "+JSON.stringify(event));
             return;
         }
 
@@ -549,6 +531,15 @@ function(matrixService, $rootScope, $q, $timeout, $filter, mPresence, notificati
             initialSyncDeferred.resolve("");
         },
         
+        resendMessage: function(echoMessage, sendCallback) {
+            modelService.getRoom(echoMessage.room_id).removeEchoEvent(echoMessage);
+            return this.sendMessage(
+                echoMessage.room_id, 
+                echoMessage.__echo_original_input, 
+                sendCallback
+            );
+        },
+        
         sendMessage: function(roomId, input, sendCallback) {
             // Store the command in the history
             $rootScope.$broadcast("commandHistory:BROADCAST_NEW_HISTORY_ITEM(item)",
@@ -583,7 +574,8 @@ function(matrixService, $rootScope, $q, $timeout, $filter, mPresence, notificati
                     room_id: roomId,
                     type: "m.room.message",
                     user_id: matrixService.config().user_id,
-                    echo_msg_state: "messagePending"     // Add custom field to indicate the state of this fake message to HTML
+                    __echo_original_input: input,
+                    __echo_msg_state: "messagePending"     // Add custom field to indicate the state of this fake message to HTML
                 };
                 modelService.getRoom(roomId).addMessageEvent(echoMessage);
                 sendCallback.onSendEcho(echoMessage);
@@ -613,7 +605,7 @@ function(matrixService, $rootScope, $q, $timeout, $filter, mPresence, notificati
                         if (echoMessage) {
                             // Mark the message as unsent for the rest of the page life
                             echoMessage.origin_server_ts = "Unsent";
-                            echoMessage.echo_msg_state = "messageUnSent";
+                            echoMessage.__echo_msg_state = "messageUnSent";
                         }
                     }
                 );
@@ -685,6 +677,21 @@ function(matrixService, $rootScope, $q, $timeout, $filter, mPresence, notificati
             
             return defer.promise;
         },
+        
+        leaveRoom: function(roomId) {
+            var d = $q.defer();
+            var eventHandlerService = this;
+            modelService.getRoom(roomId).leave().then(
+                function(response) {
+                    eventHandlerService.wipeDuplicateDetection(roomId);
+                    d.resolve(response);
+                },
+                function(error) {
+                    d.reject(error);
+                }
+            );
+            return d.promise;
+        },
 
         // Returns a promise that resolves when the initialSync request has been processed
         waitForInitialSyncCompletion: function() {
@@ -697,7 +704,8 @@ function(matrixService, $rootScope, $q, $timeout, $filter, mPresence, notificati
         
         // remove the ability to detect duplicates by removing known event IDs for this room.
         // Used in the event reaper service which nukes entire rooms: it needs to know that
-        // the initial sync it performs will not be incorrectly dupe suppressed.
+        // the initial sync it performs will not be incorrectly dupe suppressed. Also used when
+        // leaving rooms, so rejoining quickly won't suppress the sync events.
         wipeDuplicateDetection: function(roomId) {
             if (roomId in eventReapMap) {
                 delete eventReapMap[roomId];

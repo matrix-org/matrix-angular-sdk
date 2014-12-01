@@ -17,8 +17,8 @@
 'use strict';
 
 angular.module('RecentsController', ['matrixService', 'matrixFilter'])
-.controller('RecentsController', ['$rootScope', '$scope', 'modelService', 'recentsService', 'eventHandlerService',
-                               function($rootScope, $scope, modelService, recentsService, eventHandlerService) {
+.controller('RecentsController', ['$rootScope', '$scope', 'modelService', 'recentsService', 'eventHandlerService', 'dialogService',
+                               function($rootScope, $scope, modelService, recentsService, eventHandlerService, dialogService) {
 
     $scope.doneInitialSync = false;
     eventHandlerService.waitForInitialSyncCompletion().then(function() {
@@ -56,6 +56,16 @@ angular.module('RecentsController', ['matrixService', 'matrixFilter'])
     $scope.selectRoom = function(room) {
         recentsService.markAsRead(room.room_id);
         $rootScope.goToPage('room/' + (room.room_alias ? room.room_alias : room.room_id) );
+    };
+
+    $scope.leave = function(roomId) {
+        eventHandlerService.leaveRoom(roomId).then(function(response) {
+            // refresh room list
+            $scope.rooms = modelService.getRooms();
+        },
+        function(error) {
+            dialogService.showError(error);
+        });
     };
 
 }]);

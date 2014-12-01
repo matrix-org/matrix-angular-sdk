@@ -26,8 +26,8 @@ dependency.
 //     needs access to the underlying data store", rather than polluting the
 //     $rootScope.
 angular.module('modelService', [])
-.factory('modelService', ['matrixService', '$rootScope', 
-function(matrixService, $rootScope) {
+.factory('modelService', ['matrixService', '$rootScope', '$q',
+function(matrixService, $rootScope, $q) {
     var LIVE_MESSAGE_EVENT = "modelService.LIVE_MESSAGE_EVENT(event)";
 
     // alias / id lookups
@@ -58,7 +58,6 @@ function(matrixService, $rootScope) {
         users = {
             // user_id: <User>
         };
-        console.log("Models inited.");
     };
     
     init();
@@ -86,7 +85,9 @@ function(matrixService, $rootScope) {
             // every message must reference the RoomMember which made it *at
             // that time* so things like display names display correctly.
             var stateAtTheTime = toFront ? this.old_room_state : this.current_room_state;
-            event.__room_member = stateAtTheTime.getStateEvent("m.room.member", event.user_id);
+
+            event.__room_member = stateAtTheTime.members[event.user_id];
+            
             if (event.type === "m.room.member" && event.content.membership === "invite") {
                 // give information on both the inviter and invitee
                 event.__target_room_member = stateAtTheTime.getStateEvent("m.room.member", event.state_key);
@@ -136,8 +137,51 @@ function(matrixService, $rootScope) {
             }
         },
         
+        // mutate the member for the room state being modified.
+        mutateRoomMemberState: function(event, isLive) {
+            var userId = event.state_key;
+            if (isLive) {
+                this.current_room_state.storeStateEvent(event);
+                
+                // work out the new name for this user.
+                var member = this.current_room_state.members[userId];
+                member.name = member.event.content.displayname;
+                if (!member.name) {
+                    member.name = userId;
+                }
+            }
+            else { // old event
+                // the m.room.member event we are handling is the NEW event. When
+                // we keep going back in time, we want the PREVIOUS value for displaying
+                // names/etc, hence the check here.
+                var targetContent = event.prev_content ? event.prev_content : event.content;
+
+                if (event.__changedKey === "membership" && event.content.membership === "join") {
+                    // join has a prev_content but it doesn't contain all the info unlike the join, so use that.
+                    targetContent = event.content;
+                }
+                this.old_room_state.storeStateEvent(event);
+                // work out the new name for this user.
+                var member = this.old_room_state.members[userId];
+                member.name = targetContent.displayname;
+                if (!member.name) {
+                    member.name = userId;
+                }
+            }
+        },
+        
         leave: function leave() {
-            return matrixService.leave(this.room_id);
+            var d = $q.defer();
+            var roomId = this.room_id;
+            matrixService.leave(roomId).then(function(response) {
+                delete rooms[roomId];
+                d.resolve(response);
+            },
+            function(error) {
+                d.reject(error);
+            });
+            
+            return d.promise;
         }
     };
     
@@ -173,7 +217,14 @@ function(matrixService, $rootScope) {
                 var rm = new RoomMember();
                 rm.event = event;
                 rm.user = users[userId];
+                rm.name = event.content.displayname ? event.content.displayname : userId;
                 this.members[userId] = rm;
+                
+                // work out power level for this room member
+                var powerLevelEvent = this.state_events["m.room.power_levels"];
+                if (powerLevelEvent) {
+                    this.calculatePowerLevel(powerLevelEvent, rm);
+                }
                 
                 // add to lookup so new m.presence events update the user
                 if (!userIdToRoomMember[userId]) {
@@ -185,27 +236,37 @@ function(matrixService, $rootScope) {
                 setRoomIdToAliasMapping(event.room_id, event.content.aliases[0]);
             }
             else if (event.type === "m.room.power_levels") {
-                // normalise power levels: find the max first.
-                var maxPowerLevel = 0;
-                
-                var userList = event.content.users;
-                
-                for (var user_id in userList) {
-                    if (!userList.hasOwnProperty(user_id) || user_id === "hsob_ts") continue; // XXX hsob_ts on some old rooms :(
-                    maxPowerLevel = Math.max(maxPowerLevel, userList[user_id]);
-                }
-                // set power level f.e room member
-                var defaultPowerLevel = event.content.users_default === undefined ? 0 : event.content.users_default;
                 for (var user_id in this.members) {
                     if (!this.members.hasOwnProperty(user_id)) continue;
                     var rm = this.members[user_id];
                     if (!rm) {
                         continue;
                     }
-                    rm.power_level = userList[user_id] === undefined ? defaultPowerLevel : userList[user_id];
-                    rm.power_level_norm = (rm.power_level * 100) / maxPowerLevel;
+                    this.calculatePowerLevel(event, rm);
                 }
             }
+        },
+        
+        getMaxPowerLevel: function(powerLevelEvent) {
+            var maxPowerLevel = 0;
+            var userList = powerLevelEvent.content.users;
+            
+            for (var user_id in userList) {
+                if (!userList.hasOwnProperty(user_id) || user_id === "hsob_ts") continue; // XXX hsob_ts on some old rooms :(
+                maxPowerLevel = Math.max(maxPowerLevel, userList[user_id]);
+            }
+            return maxPowerLevel;
+        },
+        
+        calculatePowerLevel: function(powerLevelEvent, roomMember) {
+            var user_id = roomMember.event.state_key;
+            // normalise power levels: find the max first.
+            var maxPowerLevel = this.getMaxPowerLevel(powerLevelEvent);
+            // set power level f.e room member
+            var defaultPowerLevel = powerLevelEvent.content.users_default === undefined ? 0 : powerLevelEvent.content.users_default;
+            
+            roomMember.power_level = powerLevelEvent.content.users[user_id] === undefined ? defaultPowerLevel : powerLevelEvent.content.users[user_id];
+            roomMember.power_level_norm = (roomMember.power_level * 100) / maxPowerLevel;
         },
         
         storeStateEvents: function storeState(events) {
@@ -227,14 +288,20 @@ function(matrixService, $rootScope) {
         this.event = {}; // the m.room.member event representing the RoomMember.
         this.power_level_norm = 0;
         this.power_level = 0;
-        this.user = undefined; // the User
+        // the calculated name of this member depending on the room state
+        this.name = undefined;
+        // the User: the current up-to-date info for this member
+        this.user = undefined; 
     };
-    
+
     /***** User Object *****/
     var User = function User() {
-        this.event = {}; // the m.presence event representing the User.
-        this.last_updated = 0; // used with last_active_ago to work out last seen times
+        // the m.presence event representing the User globally (not specific to any room)
+        this.event = {};
+        // used with last_active_ago to work out last seen times
+        this.last_updated = 0;
     };
+    
     
     return {
         LIVE_MESSAGE_EVENT: LIVE_MESSAGE_EVENT,
@@ -290,10 +357,10 @@ function(matrixService, $rootScope) {
             var usr = new User();
             usr.event = event;
             
-            // migrate old data but clobber matching keys
+            // migrate old data but clobber matching content keys
             if (users[event.content.user_id] && users[event.content.user_id].event) {
-                angular.extend(users[event.content.user_id].event, event);
                 usr = users[event.content.user_id];
+                angular.extend(usr.event.content, event.content);
             }
             else {
                 users[event.content.user_id] = usr;

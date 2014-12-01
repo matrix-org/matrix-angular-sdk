@@ -301,240 +301,92 @@ describe('orderMembersList filter', function() {
         orderMembersList = filter("orderMembersList");
     }));
     
+    var makeMember = function(lastActive, lastUpdated, membership, presence) {
+        return {
+            event: {
+                content: {
+                    membership: membership
+                }
+            },
+            user: {
+                event: {
+                    content: {
+                        presence: presence,
+                        last_active_ago: lastActive
+                    }
+                },
+                last_updated: lastUpdated
+            }
+        };
+    };
+    
+    var makeMemberWithId = function(id, lastActive, lastUpdated, membership, presence) {
+        return {
+            id: id,
+            event: {
+                content: {
+                    membership: membership
+                }
+            },
+            user: {
+                event: {
+                    content: {
+                        presence: presence,
+                        last_active_ago: lastActive
+                    }
+                },
+                last_updated: lastUpdated
+            }
+        };
+    };
+    
+    
     it("should sort a single entry", function() {
         var output = orderMembersList({
-            "@a:example.com": {
-                user: {
-                    event: {
-                        content: {
-                            last_active_ago: 50
-                        }
-                    },
-                    last_updated: 1415266943964
-                }
-            }
+            "@a:example.com": makeMember(50, 1415266943964, "join")
         });
-        expect(output).toEqual([{
-                id: "@a:example.com",
-                user: {
-                    event: {
-                        content: {
-                            last_active_ago: 50
-                        }
-                    },
-                    last_updated: 1415266943964
-                }
-        }]);
+        expect(output).toEqual([
+            makeMemberWithId("@a:example.com", 50, 1415266943964, "join")
+        ]);
     });
     
     it("should sort by taking last_active_ago into account", function() {
         var output = orderMembersList({
-            "@a:example.com": {
-                user: {
-                    event: {
-                        content: {
-                            last_active_ago: 1000
-                        }
-                    },
-                    last_updated: 1415266943964
-                }
-            },
-            "@b:example.com": {
-                user: {
-                    event: {
-                        content: {
-                            last_active_ago: 50
-                        }
-                    },
-                    last_updated: 1415266943964
-                }
-            },
-            "@c:example.com": {
-                user: {
-                    event: {
-                        content: {
-                            last_active_ago: 99999
-                        }
-                    },
-                    last_updated: 1415266943964
-                }
-            }
+            "@a:example.com": makeMember(1000, 1415266943964, "join"),
+            "@b:example.com": makeMember(50, 1415266943964, "join"),
+            "@c:example.com": makeMember(99999, 1415266943964, "join")
         });
         expect(output).toEqual([
-            {
-                id: "@b:example.com",
-                user: {
-                    event: {
-                        content: {
-                            last_active_ago: 50
-                        }
-                    },
-                    last_updated: 1415266943964
-                }
-            },
-            {
-                id: "@a:example.com",
-                user: {
-                    event: {
-                        content: {
-                            last_active_ago: 1000
-                        }
-                    },
-                    last_updated: 1415266943964
-                }
-            },
-            {
-                id: "@c:example.com",
-                user: {
-                    event: {
-                        content: {
-                            last_active_ago: 99999
-                        }
-                    },
-                    last_updated: 1415266943964
-                }
-            },
+            makeMemberWithId("@b:example.com", 50, 1415266943964, "join"),
+            makeMemberWithId("@a:example.com", 1000, 1415266943964, "join"),
+            makeMemberWithId("@c:example.com", 99999, 1415266943964, "join")
         ]);
     });
     
     it("should sort by taking last_updated into account", function() {
         var output = orderMembersList({
-            "@a:example.com": {
-                user: {
-                    event: {
-                        content: {
-                            last_active_ago: 1000
-                        }
-                    },
-                    last_updated: 1415266943964
-                }
-            },
-            "@b:example.com": {
-                user: {
-                    event: {
-                        content: {
-                            last_active_ago: 1000
-                        }
-                    },
-                    last_updated: 1415266900000
-                }
-            },
-            "@c:example.com": {
-                user: {
-                    event: {
-                        content: {
-                            last_active_ago: 1000
-                        }
-                    },
-                    last_updated: 1415266943000
-                }
-            }
+            "@a:example.com": makeMember(1000, 1415266943964, "join"),
+            "@b:example.com": makeMember(1000, 1415266900000, "join"),
+            "@c:example.com": makeMember(1000, 1415266943000, "join")
         });
         expect(output).toEqual([
-            {
-                id: "@a:example.com",
-                user: {
-                    event: {
-                        content: {
-                            last_active_ago: 1000
-                        }
-                    },
-                    last_updated: 1415266943964
-                }
-            },
-            {
-                id: "@c:example.com",
-                user: {
-                    event: {
-                        content: {
-                            last_active_ago: 1000
-                        }
-                    },
-                    last_updated: 1415266943000
-                }
-            },
-            {
-                id: "@b:example.com",
-                user: {
-                    event: {
-                        content: {
-                            last_active_ago: 1000
-                        }
-                    },
-                    last_updated: 1415266900000
-                }
-            },
+            makeMemberWithId("@a:example.com", 1000, 1415266943964, "join"),
+            makeMemberWithId("@c:example.com", 1000, 1415266943000, "join"),
+            makeMemberWithId("@b:example.com", 1000, 1415266900000, "join")
         ]);
     });
     
     it("should sort by taking last_updated and last_active_ago into account", 
     function() {
         var output = orderMembersList({
-            "@a:example.com": {
-                user: {
-                    event: {
-                        content: {
-                            last_active_ago: 1000
-                        }
-                    },
-                    last_updated: 1415266943000
-                }
-            },
-            "@b:example.com": {
-                user: {
-                    event: {
-                        content: {
-                            last_active_ago: 100000
-                        }
-                    },
-                    last_updated: 1415266943900
-                }
-            },
-            "@c:example.com": {
-                user: {
-                    event: {
-                        content: {
-                            last_active_ago: 1000
-                        }
-                    },
-                    last_updated: 1415266943964
-                }
-            }
+            "@a:example.com": makeMember(1000, 1415266943000, "join"),
+            "@b:example.com": makeMember(100000, 1415266943900, "join"),
+            "@c:example.com": makeMember(1000, 1415266943964, "join")
         });
         expect(output).toEqual([
-            {
-                id: "@c:example.com",
-                user: {
-                    event: {
-                        content: {
-                            last_active_ago: 1000
-                        }
-                    },
-                    last_updated: 1415266943964
-                }
-            },
-            {
-                id: "@a:example.com",
-                user: {
-                    event: {
-                        content: {
-                            last_active_ago: 1000
-                        }
-                    },
-                    last_updated: 1415266943000
-                }
-            },
-            {
-                id: "@b:example.com",
-                user: {
-                    event: {
-                        content: {
-                            last_active_ago: 100000
-                        }
-                    },
-                    last_updated: 1415266943900
-                }
-            },
+            makeMemberWithId("@c:example.com", 1000, 1415266943964, "join"),
+            makeMemberWithId("@a:example.com", 1000, 1415266943000, "join"),
+            makeMemberWithId("@b:example.com", 100000, 1415266943900, "join"),
         ]);
     });
     
@@ -543,61 +395,14 @@ describe('orderMembersList filter', function() {
     function() {
         // single undefined entry
         var output = orderMembersList({
-            "@a:example.com": {
-                user: {
-                    event: {
-                        content: {
-                            last_active_ago: 1000
-                        }
-                    },
-                    last_updated: 1415266943964
-                }
-            },
-            "@b:example.com": {
-                user: {
-                    event: {
-                        content: {
-                            last_active_ago: 100000
-                        }
-                    },
-                    last_updated: 1415266943964
-                }
-            },
-            "@c:example.com": {
-                user: {
-                    last_updated: 1415266943964
-                }
-            }
+            "@a:example.com": makeMember(1000, 1415266943964, "join"),
+            "@c:example.com": makeMember(undefined, 1415266943964, "join"),
+            "@b:example.com": makeMember(100000, 1415266943964, "join")
         });
         expect(output).toEqual([
-            {
-                id: "@a:example.com",
-                user: {
-                    event: {
-                        content: {
-                            last_active_ago: 1000
-                        }
-                    },
-                    last_updated: 1415266943964
-                }
-            },
-            {
-                id: "@b:example.com",
-                user: {
-                    event: {
-                        content: {
-                            last_active_ago: 100000
-                        }
-                    },
-                    last_updated: 1415266943964
-                }
-            },
-            {
-                id: "@c:example.com",
-                user: {
-                    last_updated: 1415266943964
-                }
-            },
+            makeMemberWithId("@a:example.com", 1000, 1415266943964, "join"),
+            makeMemberWithId("@b:example.com", 100000, 1415266943964, "join"),
+            makeMemberWithId("@c:example.com", undefined, 1415266943964, "join")
         ]);
     });
     
@@ -605,77 +410,41 @@ describe('orderMembersList filter', function() {
     function() {
         // single undefined entry
         var output = orderMembersList({
-            "@a:example.com": {
-                user: {
-                    event: {
-                        content: {
-                            presence: "unavailable",
-                            last_active_ago: undefined
-                        }
-                    },
-                    last_updated: 1415266943964
-                }
-            },
-            "@b:example.com": {
-                user: {
-                    event: {
-                        content: {
-                            presence: "online",
-                            last_active_ago: undefined
-                        }
-                    },
-                    last_updated: 1415266943964,
-                }
-            },
-            "@c:example.com": {
-                user: {
-                    event: {
-                        content: {
-                            presence: "offline",
-                            last_active_ago: undefined
-                        }
-                    },
-                    last_updated: 1415266943964
-                }
-            }
+            "@a:example.com": makeMember(undefined, 1415266943964, "join", "unavailable"),
+            "@b:example.com": makeMember(undefined, 1415266943964, "join", "online"),
+            "@c:example.com": makeMember(undefined, 1415266943964, "join", "offline")
         });
         expect(output).toEqual([
-            {
-                id: "@b:example.com",
-                user: {
-                    event: {
-                        content: {
-                            presence: "online",
-                            last_active_ago: undefined
-                        }
-                    },
-                    last_updated: 1415266943964
-                }
-            },
-            {
-                id: "@a:example.com",
-                user: {
-                    event: {
-                        content: {
-                            presence: "unavailable",
-                            last_active_ago: undefined
-                        }
-                    },
-                    last_updated: 1415266943964
-                }
-            },
-            {
-                id: "@c:example.com",
-                user: {
-                    event: {
-                        content: {
-                            presence: "offline",
-                            last_active_ago: undefined
-                        }
-                    },
-                    last_updated: 1415266943964
-                }
-            },
+            makeMemberWithId("@b:example.com", undefined, 1415266943964, "join", "online"),
+            makeMemberWithId("@a:example.com", undefined, 1415266943964, "join", "unavailable"),
+            makeMemberWithId("@c:example.com", undefined, 1415266943964, "join", "offline")
+        ]);
+    });
+    
+    it("should remove members who have left the room.", 
+    function() {
+        // single undefined entry
+        var output = orderMembersList({
+            "@a:example.com": makeMember(100000, 1415266943964, "invite"),
+            "@b:example.com": makeMember(1000, 1415266943964, "join"),
+            "@c:example.com": makeMember(10, 1415266943964, "leave")
+        });
+        expect(output).toEqual([
+            makeMemberWithId("@b:example.com", 1000, 1415266943964, "join"),
+            makeMemberWithId("@a:example.com", 100000, 1415266943964, "invite"),
+        ]);
+    });
+    
+    it("should remove members who have been kicked or banned from the room.", 
+    function() {
+        // single undefined entry
+        var output = orderMembersList({
+            "@a:example.com": makeMember(100000, 1415266943964, "join"),
+            "@b:example.com": makeMember(1000, 1415266943964, "ban"),
+            "@c:example.com": makeMember(10, 1415266943964, "kick")
+        });
+        expect(output).toEqual([
+            makeMemberWithId("@a:example.com", 100000, 1415266943964, "join"),
         ]);
     });
 });
