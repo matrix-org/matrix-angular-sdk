@@ -218,8 +218,9 @@ textarea, input {
     margin-top: 13px;
 }
 
-#feedback {
+.feedback {
     color: #800;
+    font-size: 12px;
 }
 
 .mouse-pointer {
