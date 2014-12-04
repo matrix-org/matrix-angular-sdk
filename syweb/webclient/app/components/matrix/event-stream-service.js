@@ -107,10 +107,12 @@ angular.module('eventStreamService', [])
             deferred = $q.defer();
         }
 
-        // Initial sync: get all information and the last 30 messages of all rooms of the user
-        // 30 messages should be enough to display a full page of messages in a room
-        // without requiring to make an additional request
-        matrixService.initialSync(30, false).then(
+        // Initial sync: get all information and the last 8 messages of all rooms of the user
+        // 8 messages isn't enough for a full page, but we'll do another request if they view
+        // that room. 8 is required though: any less and some rooms may not give any messages
+        // to display (e.g. if only 5, you may get room alias / room create / power level 
+        // / join rules / room member join, which contains no messages for the recents list..
+        matrixService.initialSync(8, false).then(
             function(response) {
                 eventHandlerService.handleInitialSyncDone(response);
 
