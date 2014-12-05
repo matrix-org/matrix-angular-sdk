@@ -38,6 +38,22 @@ angular.module('eventStreamService', [])
     
     var timeout = $q.defer();
     
+    var killConnection = function(reason) {
+        console.log("killConnection -> "+reason);
+        timeout.resolve(reason);
+        timeout = $q.defer();
+    };
+    
+    // we need to monitor the specified timeout client-side (SYWEB-219) as we
+    // cannot trust that the connection will in fact be ended remotely after 
+    // SERVER_TIMEOUT_MS
+    var startConnectionTimer = function() {
+        return $timeout(function() {
+            killConnection("timed out");
+        }, SERVER_TIMEOUT_MS + (1000 * 2)); // buffer period
+    };
+    
+    
     // interrupts the stream. Only valid if there is a stream conneciton 
     // open.
     var interrupt = function(shouldPoll) {
@@ -45,8 +61,7 @@ angular.module('eventStreamService', [])
                     JSON.stringify(settings));
         settings.shouldPoll = shouldPoll;
         settings.isActive = false;
-        timeout.resolve("interrupted.");
-        timeout = $q.defer();
+        killConnection("interrupted");
     };
 
     var doEventStream = function(deferred) {
@@ -55,8 +70,10 @@ angular.module('eventStreamService', [])
         deferred = deferred || $q.defer();
 
         // run the stream from the latest token
+        var connTimer = startConnectionTimer();
         matrixService.getEventStream(settings.from, SERVER_TIMEOUT_MS, timeout.promise).then(
             function(response) {
+                $timeout.cancel(connTimer);
                 if (!settings.isActive) {
                     console.log("[EventStream] Got response but now inactive. Dropping data.");
                     return;
@@ -82,6 +99,7 @@ angular.module('eventStreamService', [])
                 }
             },
             function(error) {
+                $timeout.cancel(connTimer);
                 if (error.status === 403) {
                     settings.shouldPoll = false;
                 }
