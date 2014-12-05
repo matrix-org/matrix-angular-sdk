@@ -395,19 +395,22 @@ angular.module('RoomController', ['ngSanitize', 'matrixFilter', 'mFileInput', 'a
     $scope.$watch("fileToSend", function(newValue, oldValue) {
         if ($scope.fileToSend) {
             // Upload this file
+            dialogService.showProgress("Uploading file...", "", 100);
             mFileUpload.uploadFileAndThumbnail($scope.fileToSend, THUMBNAIL_SIZE).then(
                 function(fileMessage) {
+                    $rootScope.$broadcast('dialogs.wait.complete');
                     // fileMessage is complete message structure, send it as is
                     matrixService.sendMessage($scope.room_id, undefined, fileMessage).then(
                         function() {
                             console.log("File message sent");
                         },
                         function(error) {
-                            $scope.feedback = "Failed to send file message: " + error.data.error;
+                            dialogService.showError(error);
                         });
                 },
                 function(error) {
-                    $scope.feedback = "Can't upload file";
+                    $rootScope.$broadcast('dialogs.wait.complete');
+                    dialogService.showError(error);
                 }
             );
         }
