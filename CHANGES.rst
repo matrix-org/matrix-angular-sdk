@@ -1,3 +1,21 @@
+Changes in Matrix Angular SDK 0.5.3 (2014-12-05)
+================================================
+
+Bug fixes:
+ - Fixed a bug where the display name was not always displaying on emotes.
+ - Fixed a bug which caused avatar pictures on calls to not load at all.
+ - Rooms will now paginate until a scrollbar appears, ensuring pagination can happen.
+
+Features:
+ - Screen reader support (courtesy of ndarilek, pull request #2)
+
+Improvements:
+ - Display an error dialog if a call fails due to rejecting permission to the mic.
+ - Modify button colours.
+ - Decreased the size of the global initial sync, and lazy load more messages when a room opens.
+ - Display desktop notifications for incoming room invitations.
+ - Auto-focus the close button on dialogs.
+
 Changes in Matrix Angular SDK 0.5.2 (2014-12-01)
 ================================================
 

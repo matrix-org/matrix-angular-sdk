@@ -21,8 +21,8 @@ limitations under the License.
 'use strict';
 
 angular.module('MatrixWebClientController', ['matrixService', 'mPresence', 'eventStreamService'])
-.controller('MatrixWebClientController', ['$scope', '$location', '$rootScope', '$timeout', 'matrixService', 'mPresence', 'eventStreamService', 'eventHandlerService', 'matrixPhoneService', 'modelService', 'eventReaperService', 'notificationService', 'mUserDisplayNameFilter', 'MatrixCall',
-                               function($scope, $location, $rootScope, $timeout, matrixService, mPresence, eventStreamService, eventHandlerService, matrixPhoneService, modelService, eventReaperService, notificationService, mUserDisplayNameFilter, MatrixCall) {
+.controller('MatrixWebClientController', ['$scope', '$location', '$rootScope', '$timeout', 'matrixService', 'mPresence', 'eventStreamService', 'eventHandlerService', 'matrixPhoneService', 'modelService', 'eventReaperService', 'notificationService', 'mUserDisplayNameFilter', 'MatrixCall', 'dialogService',
+                               function($scope, $location, $rootScope, $timeout, matrixService, mPresence, eventStreamService, eventHandlerService, matrixPhoneService, modelService, eventReaperService, notificationService, mUserDisplayNameFilter, MatrixCall, dialogService) {
          
     // Check current URL to avoid to display the logout button on the login page
     $scope.location = $location.path();
@@ -112,15 +112,11 @@ angular.module('MatrixWebClientController', ['matrixService', 'mPresence', 'even
         // set it to the user ID until we fetch the display name
         $rootScope.currentCall.userProfile = { displayname: $rootScope.currentCall.user_id };
 
-        matrixService.getProfile($rootScope.currentCall.user_id).then(
-            function(response) {
-                if (response.data.displayname) $rootScope.currentCall.userProfile.displayname = response.data.displayname;
-                if (response.data.avatar_url) $rootScope.currentCall.userProfile.avatar_url = response.data.avatar_url;
-            },
-            function(error) {
-                $scope.feedback = "Can't load user profile";
-            }
-        );
+        var user = modelService.getUser($rootScope.currentCall.user_id);
+        if (user && user.event && user.event.content) {
+            $rootScope.currentCall.userProfile.avatar_url = user.event.content.avatar_url;
+        }
+        $rootScope.currentCall.userProfile.displayname = mUserDisplayNameFilter($rootScope.currentCall.user_id);
     });
     $rootScope.$watch('currentCall.state', function(newVal, oldVal) {
         if (newVal == 'ringing') {
@@ -214,7 +210,7 @@ angular.module('MatrixWebClientController', ['matrixService', 'mPresence', 'even
     };
     
     $rootScope.onCallError = function(errStr) {
-        $scope.feedback = errStr;
+        dialogService.showError(errStr);
     };
 
     $rootScope.onCallHangup = function(call) {

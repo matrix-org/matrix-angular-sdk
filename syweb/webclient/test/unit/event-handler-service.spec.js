@@ -1,5 +1,5 @@
 describe('EventHandlerService', function() {
-    var scope, q, timeout;
+    var scope, q, timeout, _window;
     
     var testContainsBingWords, testPresenceState, testRoomName; // mPresence, mRoomNameFilter, notificationService
     var testUserId, testDisplayName, testBingWords; // matrixService.config
@@ -44,7 +44,8 @@ describe('EventHandlerService', function() {
                     if (index >= 0) {
                         this.events.splice(index, 1);
                     }
-                }
+                },
+                mutateRoomMemberState: function(){}
             };
         },
         createRoomIdToAliasMapping: function(roomId, alias) {
@@ -131,6 +132,12 @@ describe('EventHandlerService', function() {
     var mRoomNameFilter = function(){
         return function() {
             return testRoomName;
+        }
+    };
+    
+    var mUserDisplayNameFilter = function() {
+        return function(input) {
+            return input;
         }
     };
 
@@ -225,16 +232,18 @@ describe('EventHandlerService', function() {
             $provide.value('mPresence', mPresence);
             $provide.value('commandsService', commandsService);
             $provide.factory('mRoomNameFilter', mRoomNameFilter);
+            $provide.factory('mUserDisplayNameFilter', mUserDisplayNameFilter);
         });
         
         // tested service
         module('eventHandlerService');
     });
     
-    beforeEach(inject(function($rootScope, $q, $timeout) {
+    beforeEach(inject(function($rootScope, $q, $timeout, $window) {
         scope = $rootScope;
         q = $q;
         timeout = $timeout;
+        _window = $window;
     }));
 
     it('should be able to join a room from a room ID.', inject(
@@ -676,6 +685,26 @@ describe('EventHandlerService', function() {
         // should not suppress since it forgot about it.
         eventHandlerService.handleEvent(dupeEvent, true);
         expect(testEvents.length).toEqual(2);
+    }));
+    
+    it('should display a notification for incoming invites.', inject(
+    function(eventHandlerService) {
+        eventHandlerService.handleInitialSyncDone(testInitialSync);
+        
+        var event = {
+            content: {
+                membership: "invite"
+            },
+            user_id: "@someone:matrix.org",
+            room_id: "!foobar:matrix.org",
+            state_key: testUserId,
+            type: "m.room.member",
+            event_id: "wf"
+        };
+        spyOn(notificationService, "showNotification");
+        _window.Notification = true;
+        eventHandlerService.handleEvent(event, true);
+        expect(notificationService.showNotification).toHaveBeenCalled();
     }));
     
     /* TODO

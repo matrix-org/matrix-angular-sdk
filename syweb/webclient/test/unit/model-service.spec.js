@@ -284,4 +284,75 @@ describe('ModelService', function() {
         expect(roomMember.power_level).toEqual(70);
         expect(roomMember.power_level_norm).toEqual(100);
     }));
+    
+    it('should set __room_member when a live message is added.', inject(
+    function(modelService) {
+        var roomId = "!wefiohwefuiow:matrix.org";
+        var userId = "@bob:matrix.org";
+        
+        modelService.getRoom(roomId).current_room_state.storeStateEvent({
+            type: "m.room.member",
+            id: "fwefw:matrix.org",
+            user_id: userId,
+            state_key: userId,
+            room_id: roomId,
+            content: {
+                membership: "join"
+            }
+        });
+        
+        var event = {
+            content: {
+                body: "Hello",
+                msgtype: "m.text"
+            },
+            user_id: userId,
+            room_id: roomId,
+            type: "m.room.message"
+        };
+        
+        modelService.getRoom(roomId).addMessageEvent(event, false);
+        expect(event.__room_member).toBeDefined();
+    }));
+    
+    it('should set __room_member when a live message clobbers a local echoed message.', inject(
+    function(modelService) {
+        var roomId = "!wefiohwefuiow:matrix.org";
+        var userId = "@bob:matrix.org";
+        
+        modelService.getRoom(roomId).current_room_state.storeStateEvent({
+            type: "m.room.member",
+            id: "fwefw:matrix.org",
+            user_id: userId,
+            state_key: userId,
+            room_id: roomId,
+            content: {
+                membership: "join"
+            }
+        });
+        
+        var echoEvent = {
+            content: {
+                body: "Hello",
+                msgtype: "m.text"
+            },
+            user_id: userId,
+            room_id: roomId,
+            type: "m.room.message"
+        };
+        modelService.getRoom(roomId).addMessageEvent(echoEvent, false);
+        
+        var event = {
+            content: {
+                body: "Hello",
+                msgtype: "m.text"
+            },
+            user_id: userId,
+            room_id: roomId,
+            type: "m.room.message"
+        };
+        
+        modelService.getRoom(roomId).addOrReplaceMessageEvent(event, false);
+        expect(event.__room_member).toBeDefined();
+    }));
 });

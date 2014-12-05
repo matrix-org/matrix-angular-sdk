@@ -214,18 +214,6 @@ angular.module('RoomController', ['ngSanitize', 'matrixFilter', 'mFileInput', 'a
                     console.error("Cannot find table.");
                     return;
                 }
-                // console.log("wrapper height=" + wrapper.clientHeight + ", table scrollHeight=" + table.scrollHeight);
-                
-                if ($scope.state.can_paginate) {
-                    // check we don't have to pull in more messages
-                    // n.b. we dispatch through a timeout() to allow the digest to run otherwise the .height methods are stale
-                    $timeout(function() {
-                        if (table.scrollHeight < wrapper.clientHeight) {
-                            paginate(MESSAGES_PER_PAGINATION);
-                            scrollToBottom();                            
-                        }
-                    }, 0);
-                }
                 
                 // lock the scroll position
                 $timeout(function() {
@@ -237,10 +225,18 @@ angular.module('RoomController', ['ngSanitize', 'matrixFilter', 'mFileInput', 'a
                     // the contents are interpolated.
                     wrapper.scrollTop = originalTopRow ? (originalTopRow.offsetTop + wrapper.scrollTop) : 0;
                 }, 0);
+                
+                // may need multiple paginations to fill the window, so check
+                // it again here.
+                paginateForWindowSize();
             },
             function(error) {
                 console.log("Failed to paginateBackMessages: " + JSON.stringify(error));
                 $scope.state.paginating = false;
+                if (error.status > 0) {
+                    console.error("Stopping pagination due to code "+error.status);
+                    $scope.state.can_paginate = false;
+                }
             }
         );
     };
@@ -344,6 +340,7 @@ angular.module('RoomController', ['ngSanitize', 'matrixFilter', 'mFileInput', 'a
             // a digest to populate the list from $scope.room.events
             $timeout(function() {
                 $scope.state.can_paginate = true;
+                paginateForWindowSize();
             }, 0);
         },
         function(err) {
@@ -353,6 +350,25 @@ angular.module('RoomController', ['ngSanitize', 'matrixFilter', 'mFileInput', 'a
                 $location.url("/");	
             });
         });
+    };
+    
+    var paginateForWindowSize = function() {
+        // check if we need to pull in more messages to fully populate the
+        // window.
+        // n.b. we dispatch through a timeout() to allow the digest 
+        // to run otherwise the .height methods are stale
+        var wrapper = $("#messageTableWrapper")[0];
+        var table = $("#messageTable")[0];
+        if (!wrapper || !table) {
+            console.error("Cannot find table.");
+            return;
+        }
+        
+        $timeout(function() {
+            if (table.scrollHeight < wrapper.clientHeight) {
+                paginate(MESSAGES_PER_PAGINATION);
+            }
+        }, 0);
     };
 
     // used to send an image based on just a URL, rather than uploading one

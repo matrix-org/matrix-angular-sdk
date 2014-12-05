@@ -26,8 +26,8 @@ Typically, this service will store events and broadcast them to any listeners
 (e.g. controllers) via $broadcast. 
 */
 angular.module('eventHandlerService', [])
-.factory('eventHandlerService', ['matrixService', '$rootScope', '$q', '$timeout', '$filter', 'mPresence', 'notificationService', 'modelService', 'commandsService',
-function(matrixService, $rootScope, $q, $timeout, $filter, mPresence, notificationService, modelService, commandsService) {
+.factory('eventHandlerService', ['matrixService', '$rootScope', '$window', '$q', '$timeout', '$filter', 'mPresence', 'notificationService', 'modelService', 'commandsService',
+function(matrixService, $rootScope, $window, $q, $timeout, $filter, mPresence, notificationService, modelService, commandsService) {
     var ROOM_CREATE_EVENT = "ROOM_CREATE_EVENT";
     var MSG_EVENT = "MSG_EVENT";
     var MEMBER_EVENT = "MEMBER_EVENT";
@@ -134,7 +134,7 @@ function(matrixService, $rootScope, $q, $timeout, $filter, mPresence, notificati
     };
     
     var displayNotification = function(event) {
-        if (window.Notification && event.user_id != matrixService.config().user_id) {
+        if ($window.Notification && event.user_id != matrixService.config().user_id) {
             var member = modelService.getMember(event.room_id, event.user_id);
             var displayname = $filter("mUserDisplayName")(event.user_id, event.room_id);
             var message;
@@ -151,11 +151,16 @@ function(matrixService, $rootScope, $q, $timeout, $filter, mPresence, notificati
                 }
             }
             else if (event.type == "m.room.member") {
-                // Notify when another user joins only
+                // Notify when another user joins
                 if (event.state_key !== matrixService.config().user_id  && "join" === event.content.membership) {
                     member = modelService.getMember(event.room_id, event.state_key);
                     displayname = $filter("mUserDisplayName")(event.state_key, event.room_id);
                     message = displayname + " joined";
+                    shouldBing = true;
+                }
+                // notify when you are invited
+                else if (event.state_key === matrixService.config().user_id  && "invite" === event.content.membership) {
+                    message = displayname + " invited you to a room";
                     shouldBing = true;
                 }
                 else {
@@ -178,12 +183,11 @@ function(matrixService, $rootScope, $q, $timeout, $filter, mPresence, notificati
             // We need a way to let people get notifications for everything, if they so desire.  The way to do this
             // is to specify zero bingwords.
             var bingWords = matrixService.config().bingWords;
-            if (bingWords === undefined || bingWords.length === 0) {
+            if ("m.room.message" === event.type && (bingWords === undefined || bingWords.length === 0)) {
                 shouldBing = true;
             }
             
             if (shouldBing && isIdle) {
-
                 var roomTitle = $filter("mRoomName")(event.room_id);
                 
                 var audio = undefined;
