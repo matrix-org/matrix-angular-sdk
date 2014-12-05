@@ -75,7 +75,7 @@ angular.module('SettingsController', ['matrixService', 'mFileUpload', 'mFileInpu
                     $scope.profile.avatarUrl = url;
                 },
                 function(error) {
-                    $scope.feedback = "Can't upload image";
+                    dialogService.showError(error);
                 } 
             );
         }

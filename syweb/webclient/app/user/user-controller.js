@@ -17,8 +17,8 @@ limitations under the License.
 'use strict';
 
 angular.module('UserController', ['matrixService'])
-.controller('UserController', ['$scope', '$routeParams', 'matrixService',
-                              function($scope, $routeParams, matrixService) {                 
+.controller('UserController', ['$scope', '$routeParams', 'matrixService', 'dialogService',
+                              function($scope, $routeParams, matrixService, dialogService) {                 
     $scope.user = {
         id: $routeParams.user_matrix_id,
         displayname: "",
@@ -60,7 +60,7 @@ angular.module('UserController', ['matrixService'])
                     });
             },
             function(error) {
-                $scope.feedback = "Failure: " + JSON.stringify(error.data);
+                dialogService.showError(error);
             });                
     };
     

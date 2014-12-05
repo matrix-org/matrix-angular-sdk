@@ -387,7 +387,7 @@ angular.module('RoomController', ['ngSanitize', 'matrixFilter', 'mFileInput', 'a
                 console.log("Image sent");
             },
             function(error) {
-                $scope.feedback = "Failed to send image: " + error.data.error;
+                dialogService.showError(error);
             });
     };
     
@@ -544,7 +544,7 @@ angular.module('RoomController', ['ngSanitize', 'matrixFilter', 'mFileInput', 'a
         matrixService.invite($scope.room_id, $scope.userIDToInvite).then(
             function() {
                 console.log("Invited.");
-                $scope.feedback = "Invite successfully sent to " + $scope.userIDToInvite;
+                dialogService.showSuccess("Invited", "Invite successfully sent to " + $scope.userIDToInvite);
                 $scope.userIDToInvite = "";
             },
             function(reason) {
