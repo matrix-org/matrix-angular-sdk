@@ -7,7 +7,7 @@ Bug fixes:
  - Rooms will now paginate until a scrollbar appears, ensuring pagination can happen.
 
 Features:
- - Screen reader support (PR #2)
+ - Screen reader support (courtesy of ndarilek, pull request #2)
 
 Improvements:
  - Display an error dialog if a call fails due to rejecting permission to the mic.
