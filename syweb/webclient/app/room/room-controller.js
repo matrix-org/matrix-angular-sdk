@@ -179,13 +179,11 @@ angular.module('RoomController', ['ngSanitize', 'matrixFilter', 'mFileInput', 'a
     };
     
     $scope.paginateMore = function() {
-        if ($scope.state.can_paginate) {
-            paginate(MESSAGES_PER_PAGINATION);
-        }
+        paginate(MESSAGES_PER_PAGINATION);
     };
 
     var paginate = function(numItems) {
-        if ($scope.state.paginating || !$scope.room) {
+        if ($scope.state.paginating || !$scope.room || !$scope.state.can_paginate) {
             return;
         }
         else {
