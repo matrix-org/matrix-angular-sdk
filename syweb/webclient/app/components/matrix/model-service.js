@@ -29,6 +29,7 @@ angular.module('modelService', [])
 .factory('modelService', ['matrixService', '$rootScope', '$q',
 function(matrixService, $rootScope, $q) {
     var LIVE_MESSAGE_EVENT = "modelService.LIVE_MESSAGE_EVENT(event)";
+    var NEW_ROOM = "modelService.NEW_ROOM(room)";
 
     // alias / id lookups
     var roomIdToAlias, aliasToRoomId;
@@ -83,7 +84,6 @@ function(matrixService, $rootScope, $q) {
         
         addMessageEvent: function addMessageEvent(event, toFront) {
             this.setMessageMemberInfo(event, toFront);
-                        
             if (toFront) {
                 this.events.unshift(event);
                 if (!this.lastEvent) {
@@ -310,10 +310,12 @@ function(matrixService, $rootScope, $q) {
     
     return {
         LIVE_MESSAGE_EVENT: LIVE_MESSAGE_EVENT,
+        NEW_ROOM: NEW_ROOM,
     
         getRoom: function(roomId) {
             if(!rooms[roomId]) {
                 rooms[roomId] = new Room(roomId);
+                $rootScope.$emit(NEW_ROOM, rooms[roomId]);
             }
             return rooms[roomId];
         },
