@@ -72,7 +72,10 @@
         </div>
     </div>
 
-    <div id="header">
+    <div ng-class="isBadConnection ? 'header badConnection' : 'header goodConnection'">
+        <div id="headerBadConnection" ng-show="isBadConnection">
+            Connection Lost
+        </div>
         <!-- Do not show buttons on the login page -->
         <div id="headerContent" ng-hide="'/login' == location || '/register' == location">
             <div id="callBar" ng-show="currentCall">

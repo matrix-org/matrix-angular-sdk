@@ -91,6 +91,10 @@ angular.module('MatrixWebClientController', ['matrixService', 'mPresence', 'even
         $scope.logout();
     });
     
+    $rootScope.$on(eventStreamService.BROADCAST_BAD_CONNECTION, function(ngEvent, isBad) {
+        $rootScope.isBadConnection = isBad;
+    });
+    
     $rootScope.onLoggedIn = function() {
         // update header
         $scope.user_id = matrixService.config().user_id;

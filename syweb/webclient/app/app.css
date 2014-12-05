@@ -50,14 +50,29 @@ textarea, input {
     text-align: center;
 }
 
-#header
+.header
 {
     position: absolute;
     z-index: 2;
     top: 0px;
     width: 100%;
-    background-color: #333;
     height: 32px;
+}
+
+.badConnection {
+    background-color: #cd0000;
+}
+
+.goodConnection {
+    background-color: #333;
+}
+
+#headerBadConnection {
+    float: left;
+    height: 32px;
+    line-height: 32px;
+    position: relative;
+    margin-left: 10px;
 }
 
 #callBar {
