@@ -58,6 +58,7 @@ angular.module('RegisterController', ['matrixService'])
         pwd2: "",
         displayName : ""
     };
+    $scope.registering = false;
     
     $scope.register = function() {
         // Set the urls
@@ -77,14 +78,17 @@ angular.module('RegisterController', ['matrixService'])
 
         if ($scope.account.email) {
             $scope.clientSecret = generateClientSecret();
+            $scope.registering = true;
             matrixService.linkEmail($scope.account.email, $scope.clientSecret, 1).then(
                 function(response) {
                     $scope.wait_3pid_code = true;
                     $scope.sid = response.data.sid;
                     $scope.feedback = "";
+                    $scope.registering = false;
                 },
-                function(response) {
+                function(error) {
                     dialogService.showError(error);
+                    $scope.registering = false;
                 }
             );
         } else {
@@ -93,8 +97,10 @@ angular.module('RegisterController', ['matrixService'])
     };
 
     $scope.registerWithMxidAndPassword = function(mxid, password, threepidCreds) {
+        $scope.registering = true;
         matrixService.register(mxid, password, threepidCreds, useCaptcha).then(
             function(response) {
+                $scope.registering = false;
                 $scope.feedback = "Success";
                 if (useCaptcha) {
                     Recaptcha.destroy();
@@ -121,6 +127,7 @@ angular.module('RegisterController', ['matrixService'])
                 $location.url("home");
             },
             function(error) {
+                $scope.registering = false;
                 console.error("Registration error: "+JSON.stringify(error));
                 if (useCaptcha) {
                     Recaptcha.reload();

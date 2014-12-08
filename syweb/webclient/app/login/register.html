@@ -29,12 +29,13 @@
 
                     <div id="regcaptcha" ng-init="init()" />
 
-                    <button ng-show="!wait_3pid_code" ng-click="register()" ng-disabled="!account.desired_user_id || !account.homeserver || !account.pwd1 || !account.pwd2 || account.pwd1 !== account.pwd2">Sign up</button>
+                    <button ng-show="!wait_3pid_code && !registering" ng-click="register()" ng-disabled="!account.desired_user_id || !account.homeserver || !account.pwd1 || !account.pwd2 || account.pwd1 !== account.pwd2">Sign up</button>
+                    <div class="spinner" us-spinner ng-show="registering"> </div>
 
                     <div ng-show="wait_3pid_code">
-                    <span>Please enter the verification code sent to {{ account.email }}</span><br />
-                    <input id="threepidtoken" size="32" type="text" ng-focus="true" ng-model="account.threepidtoken" placeholder="Verification Code"/><br />
-                    <button ng-click="verifyToken()" ng-disabled="!account.threepidtoken">Validate</button>
+                        <span>Please enter the verification code sent to {{ account.email }}</span><br />
+                        <input id="threepidtoken" size="32" type="text" ng-focus="true" ng-model="account.threepidtoken" placeholder="Verification Code"/><br />
+                        <button ng-click="verifyToken()" ng-disabled="!account.threepidtoken">Validate</button>
                     </div>
                     <br/><br/>
                 </div>
