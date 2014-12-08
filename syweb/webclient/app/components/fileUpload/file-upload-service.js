@@ -20,8 +20,8 @@
 /*
  * Upload an HTML5 file to a server
  */
-angular.module('mFileUpload', ['matrixService', 'mUtilities'])
-.service('mFileUpload', ['$q', 'matrixService', 'mUtilities', function ($q, matrixService, mUtilities) {
+angular.module('mFileUpload', ['matrixService', 'mUtilities', 'angularFileUpload'])
+.service('mFileUpload', ['$q', 'matrixService', 'mUtilities', '$upload', function ($q, matrixService, mUtilities, $upload) {
         
     /*
      * Upload an HTML5 file or blob to a server and returned a promise
@@ -30,18 +30,27 @@ angular.module('mFileUpload', ['matrixService', 'mUtilities'])
      */
     this.uploadFile = function(file) {
         var deferred = $q.defer();
-        console.log("Uploading " + file.name + "... to /_matrix/content");
-        matrixService.uploadContent(file).then(
-            function(response) {
-                var content_url = response.data.content_token;
-                console.log("   -> Successfully uploaded! Available at " + content_url);
-                deferred.resolve(content_url);
-            },
-            function(error) {
-                console.log("   -> Failed to upload "  + file.name);
-                deferred.reject(error);
-            }
-        );
+        var url = matrixService.getContentUrl();
+        console.log("Uploading " + file.name + " to "+url.path);
+        
+        $upload.http({
+            url: url.base + url.path,
+            params: url.params,
+            headers: {'Content-Type': file.type},
+            file: file,
+            data: file,
+            transformRequest: angular.identity
+        }).progress(function(evt) {
+            console.log('progress: ' + evt.loaded + " / " + evt.total + ' file :'+ evt.config.file.name);
+            deferred.notify(evt);
+        }).success(function(data, status, headers, config) {
+            var content_url = data.content_token;
+            console.log("   -> Successfully uploaded! Available at " + content_url);
+            deferred.resolve(content_url);
+        }).error(function(data, status, headers, config) {
+            console.error("Failed to upload file: "+file.name+" status:"+status);
+            deferred.reject({ data: data, status: status });
+        });
         
         return deferred.promise;
     };
@@ -116,6 +125,9 @@ angular.module('mFileUpload', ['matrixService', 'mUtilities'])
                             function(error) {
                                 console.log("      -> Can't upload image");
                                 deferred.reject(error); 
+                            },
+                            function(evt) {
+                                deferred.notify(evt);
                             }
                         );
                     };
@@ -198,6 +210,9 @@ angular.module('mFileUpload', ['matrixService', 'mUtilities'])
                 function(error) {
                     console.log("      -> Can't upload file");
                     deferred.reject(error); 
+                },
+                function(evt) {
+                    deferred.notify(evt);
                 }
             );
         }

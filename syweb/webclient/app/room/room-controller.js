@@ -395,7 +395,8 @@ angular.module('RoomController', ['ngSanitize', 'matrixFilter', 'mFileInput', 'a
     $scope.$watch("fileToSend", function(newValue, oldValue) {
         if ($scope.fileToSend) {
             // Upload this file
-            dialogService.showProgress("Uploading file...", "", 100);
+            var progressAmount = 0;
+            dialogService.showProgress("Uploading file...", "", progressAmount);
             mFileUpload.uploadFileAndThumbnail($scope.fileToSend, THUMBNAIL_SIZE).then(
                 function(fileMessage) {
                     $rootScope.$broadcast('dialogs.wait.complete');
@@ -410,7 +411,12 @@ angular.module('RoomController', ['ngSanitize', 'matrixFilter', 'mFileInput', 'a
                 },
                 function(error) {
                     $rootScope.$broadcast('dialogs.wait.complete');
+                    console.error("Got : "+JSON.stringify(error));
                     dialogService.showError(error);
+                },
+                function(evt) {
+                    progressAmount = 100.0 * (evt.loaded / evt.total);
+                    $rootScope.$broadcast('dialogs.wait.progress', {'progress': progressAmount});
                 }
             );
         }

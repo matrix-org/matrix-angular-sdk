@@ -648,13 +648,11 @@ angular.module('matrixService', [])
         },
         
         uploadContent: function(file) {
-            var path = "/_matrix/content";
             var headers = {
                 "Content-Type": undefined // undefined means angular will figure it out
             };
-            var params = {
-                access_token: config.access_token
-            };
+            
+            var url = this.getContentUrl();
 
             // If the file is actually a Blob object, prevent $http from JSON-stringified it before sending
             // (Equivalent to jQuery ajax processData = false)
@@ -665,7 +663,27 @@ angular.module('matrixService', [])
                 };
             }
 
-            return doBaseRequest(config.homeserver, "POST", path, params, file, headers, $httpParams);
+            return doBaseRequest(url.base, "POST", url.path, url.params, file, headers, $httpParams);
+        },
+        
+        /**
+         * Get the content repository url with query parameters. This is useful
+         * if you would prefer to upload content in a different way to 
+         * matrixService.uploadContent(file) (e.g. for progress bars).
+         * @returns An object with a 'base', 'path' and 'params' for base URL, 
+         *          path and query parameters respectively.
+         */
+        getContentUrl: function() {
+            var path = "/_matrix/content";
+            
+            var params = {
+                access_token: config.access_token
+            };
+            return {
+                base: config.homeserver,
+                path: path,
+                params: params
+            };
         },
 
         /**
