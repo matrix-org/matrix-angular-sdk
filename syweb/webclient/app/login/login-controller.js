@@ -99,7 +99,12 @@ angular.module('LoginController', ['matrixService'])
                 }
             },
             function(error) {
-                dialogService.showError(error);
+                if (error.status != 403) {
+                    dialogService.showError(error);
+                }
+                else {
+                    dialogService.showError("Incorrect username or password.");
+                }
             }
         );
     };
