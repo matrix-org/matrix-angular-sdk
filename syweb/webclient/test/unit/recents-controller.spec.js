@@ -81,7 +81,7 @@ describe("RecentsController ", function() {
         spyOn(recentsService, "markAsRead");
         expect(recentsService.markAsRead).not.toHaveBeenCalled();
         var roomId = "!bbb:localhost";
-        scope.selectRoom({
+        scope.selectRoom({}, {
             room_id: roomId
         });
         expect(recentsService.markAsRead).toHaveBeenCalledWith(roomId);
