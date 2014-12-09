@@ -25,13 +25,15 @@ describe("RoomController ", function() {
             return resolve(testPaginationChunk, true);
         },
         setName: function(rm,name){},
-        setTopic: function(rm,topic){}
+        setTopic: function(rm,topic){},
+        redactEvent: function(roomId, eventId){}
     };
     
     var eventHandlerService = {
         joinRoom: function(rm){},
         handleRoomMessages: function(room, data, live, dir){},
-        sendMessage: function(rm,input){}
+        sendMessage: function(rm,input){},
+        resendMessage: function(event, cb){}
     };
     var mFileUpload = {};
     var mUserDisplayNameFilter = function(roomId){ return "";};
@@ -47,6 +49,9 @@ describe("RoomController ", function() {
         processInput: function(roomId, input){}
     };
     var MatrixCall = {};
+    var modal = {
+        open: function(){}
+    };
     
     beforeEach(function() {
         module('matrixWebClient');
@@ -111,7 +116,8 @@ describe("RoomController ", function() {
                 'MatrixCall': MatrixCall,
                 'mFileUpload': mFileUpload,
                 'dialogService': dialogService,
-                '$routeParams': routeParams
+                '$routeParams': routeParams,
+                '$modal': modal
             });
         })
     );
@@ -204,5 +210,216 @@ describe("RoomController ", function() {
         spyOn(matrixService, "setName").and.returnValue(resolve({}));
         scope.name.updateName();
         expect(matrixService.setName).toHaveBeenCalledWith(roomId, newRoomName);
+    });
+    
+    it('should be able to edit the room topic.', function() {
+        var roomId = "!wefweui:matrix.org";
+        var roomTopic = "Room Topic";
+        var newRoomTopic = "New Room Topic";
+        scope.room_id = roomId;
+        scope.room = testRoom;
+        testRoom.current_room_state.state_events["m.room.topic"] = {
+            content: {
+                topic: roomTopic
+            },
+            user_id: "@a:b",
+            room_id: roomId,
+            type: "m.room.topic",
+            event_id: "a"
+        };
+        
+        expect(scope.topic.isEditing).toBe(false);
+        scope.topic.editTopic(); //e.g. double click
+        expect(scope.topic.isEditing).toBe(true);
+        expect(scope.topic.newTopicText).toEqual(roomTopic); // pre-fill current topic
+        scope.topic.newTopicText = newRoomTopic; // simulate user input
+        spyOn(matrixService, "setTopic").and.returnValue(resolve({}));
+        scope.topic.updateTopic();
+        expect(matrixService.setTopic).toHaveBeenCalledWith(roomId, newRoomTopic);
+    });
+    
+    it('should lock the room when banned.', function() {
+        var roomId = "!wefweui:matrix.org";
+        scope.room_id = roomId;
+        scope.room = testRoom;
+        
+        expect(scope.state.permission_denied).toBeUndefined();
+        
+        scope.$broadcast(eventHandlerService.MEMBER_EVENT, {
+            content: {
+                membership: "ban"
+            },
+            state_key: userId,
+            user_id: "@a:b",
+            room_id: roomId,
+            event_id: "a",
+            type: "m.room.member"
+        }, true);
+        
+        expect(scope.state.permission_denied).toBeDefined();
+    });
+    
+    it('should lock the room when they leave.', function() {
+        var roomId = "!wefweui:matrix.org";
+        scope.room_id = roomId;
+        scope.room = testRoom;
+        
+        expect(scope.state.permission_denied).toBeUndefined();
+        
+        scope.$broadcast(eventHandlerService.MEMBER_EVENT, {
+            content: {
+                membership: "leave"
+            },
+            state_key: userId,
+            user_id: userId,
+            room_id: roomId,
+            event_id: "a",
+            type: "m.room.member"
+        }, true);
+        
+        expect(scope.state.permission_denied).toBeDefined();
+    });
+    
+    it('should lock the room when they are kicked.', function() {
+        var roomId = "!wefweui:matrix.org";
+        scope.room_id = roomId;
+        scope.room = testRoom;
+        
+        expect(scope.state.permission_denied).toBeUndefined();
+        
+        scope.$broadcast(eventHandlerService.MEMBER_EVENT, {
+            content: {
+                membership: "leave"
+            },
+            state_key: userId,
+            user_id: "@a:b",
+            room_id: roomId,
+            event_id: "a",
+            type: "m.room.member"
+        }, true);
+        
+        expect(scope.state.permission_denied).toBeDefined();
+    });
+    
+    it('should be able to open the event info dialog.', function() {
+        var roomId = "!wefweui:matrix.org";
+        scope.room_id = roomId;
+        scope.room = testRoom;
+        
+        var event = {
+            content: {
+                body: "something naughty",
+                msgtype: "m.text"
+            },
+            user_id: userId,
+            type: "m.room.message",
+            event_id: "aa"
+        };
+        
+        var defer = $q.defer();
+        spyOn(modal, "open").and.callFake(function() {
+            return {
+                result: defer.promise
+            };
+        });
+        expect(scope.event_selected).toBeUndefined();
+        scope.openJson(event);
+        expect(modal.open).toHaveBeenCalled();
+        expect(scope.event_selected).toEqual(jasmine.objectContaining(event));
+    });
+    
+    it('should be able to redact an event on the event info dialog.', function() {
+        var roomId = "!wefweui:matrix.org";
+        var eventId = "aaa";
+        scope.room_id = roomId;
+        scope.room = testRoom;
+        
+        var event = {
+            content: {
+                body: "something naughty",
+                msgtype: "m.text"
+            },
+            user_id: userId,
+            type: "m.room.message",
+            room_id: roomId,
+            event_id: eventId
+        };
+        
+        // open the dialog
+        var defer = $q.defer();
+        spyOn(modal, "open").and.callFake(function() {
+            return {
+                result: defer.promise
+            };
+        });
+        scope.openJson(event);
+        
+        
+        // hit the redact button
+        var redactDefer = $q.defer();
+        spyOn(matrixService, "redactEvent").and.callFake(function() {
+            return redactDefer.promise;
+        });
+        defer.resolve("redact");
+        scope.$digest();
+        expect(matrixService.redactEvent).toHaveBeenCalledWith(roomId, eventId);  
+    });
+    
+    it('should be able to resend an event on the event info dialog.', function() {
+        var roomId = "!wefweui:matrix.org";
+        var eventId = "aaa";
+        scope.room_id = roomId;
+        scope.room = testRoom;
+        
+        var event = {
+            content: {
+                body: "something naughty",
+                msgtype: "m.text"
+            },
+            user_id: userId,
+            type: "m.room.message",
+            room_id: roomId,
+            event_id: eventId,
+            __echo_msg_state: "messageUnSent"
+        };
+        
+        // open the dialog
+        var defer = $q.defer();
+        spyOn(modal, "open").and.callFake(function() {
+            return {
+                result: defer.promise
+            };
+        });
+        scope.openJson(event);
+        
+        
+        // hit the resend button
+        var resendDefer = $q.defer();
+        spyOn(eventHandlerService, "resendMessage").and.callFake(function() {
+            return resendDefer.promise;
+        });
+        defer.resolve("resend");
+        scope.$digest();
+        expect(eventHandlerService.resendMessage).toHaveBeenCalledWith(
+            event, 
+            jasmine.any(Object)
+        );  
+    });
+    
+    it('should be able to open the room info dialog.', function() {
+        var roomId = "!wefweui:matrix.org";
+        var eventId = "aaa";
+        scope.room_id = roomId;
+        scope.room = testRoom;
+        
+        // open the dialog
+        var defer = $q.defer();
+        spyOn(modal, "open").and.callFake(function() {
+            return {
+                result: defer.promise
+            };
+        });
+        scope.openRoomInfo();
+        expect(modal.open).toHaveBeenCalled();
     });
 });
