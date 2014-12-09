@@ -1,5 +1,9 @@
-Matrix Angular SDK
+Matrix Angular SDK 
 ==================
+
+.. image:: http://matrix.org/jenkins/buildStatus/icon?job=SynapseWebClient
+   :target: http://matrix.org/jenkins/job/SynapseWebClient/
+
 This project provides AngularJS services for implementing the `Client-Server API`_
 on Matrix_ : an open standard for interoperable Instant Messaging and VoIP. It 
 comes shipped with Synapse_ : a home server reference implementation.
