@@ -107,6 +107,7 @@ describe('EventHandlerService', function() {
             }
             return defer.promise;
         },
+        create: function(){},
         presence: { unavailable: "unavailable", online: "online" }
     };
     
@@ -140,6 +141,23 @@ describe('EventHandlerService', function() {
             return input;
         }
     };
+    
+    // helper function
+    var mkEvent = function(evType, content, rmId, stateKey, usrId) {
+        var eventId = Math.random().toString(36);
+        if (!usrId) {
+            usrId = testUserId;
+        }
+        return {
+            event_id: eventId,
+            user_id: usrId,
+            state_key: stateKey,
+            room_id: rmId,
+            content: content,
+            type: evType
+        };
+    };
+    
 
     // setup the service and mocked dependencies
     beforeEach(function() {
@@ -246,7 +264,7 @@ describe('EventHandlerService', function() {
         _window = $window;
     }));
 
-    it('should be able to join a room from a room ID.', inject(
+    it('joinRoom: should be able to join a room from a room ID.', inject(
     function(eventHandlerService) {
         eventHandlerService.handleInitialSyncDone(testInitialSync);
         var roomId = "!foobar:matrix.org";
@@ -282,7 +300,7 @@ describe('EventHandlerService', function() {
         expect(promiseResult).toEqual(roomId);
     }));
     
-    it('should be able to join a room from a room alias.', inject(
+    it('joinRoom: should be able to join a room from a room alias.', inject(
     function(eventHandlerService) {
         eventHandlerService.handleInitialSyncDone(testInitialSync);
         var roomAlias = "#flibble:matrix.org";
@@ -707,10 +725,105 @@ describe('EventHandlerService', function() {
         expect(notificationService.showNotification).toHaveBeenCalled();
     }));
     
-    /* TODO
-    it('should be able to store and process initial sync data.', inject(
+    
+    it('should be able to create a room and do an initial sync on the room.', inject(
     function(eventHandlerService) {
+        var alias = "bob";
+        var isPublic = true;
+        var invitee = "@alicia:matrix.org";
+        var roomId = "!avauyga:matrix.org";
+        var defer = q.defer();
+        spyOn(matrixService, "create").and.returnValue(defer.promise);
+        spyOn(matrixService, "roomInitialSync").and.callThrough();
+        
+        var promise = eventHandlerService.createRoom(alias, isPublic, invitee);
+        
+        expect(matrixService.create).toHaveBeenCalled();
+        defer.resolve({data:{room_id:roomId}});
+        scope.$digest();
+        expect(matrixService.roomInitialSync).toHaveBeenCalledWith(
+            roomId, 
+            jasmine.any(Number)
+        );
+    })); 
+    
+    it('should be able to handle global initial sync data', inject(
+    function(eventHandlerService) {
+        // a joined room with messages
+        var roomId = "!rooma:matrix.org";
+        var theRoom = {
+            current_room_state: {
+                storeStateEvents: function(){}
+            },
+            old_room_state: {
+                storeStateEvents: function(){}
+            },
+            room_id: roomId,
+            addMessageEvent: function(){},
+            addOrReplaceMessageEvent: function(){},
+            mutateRoomMemberState: function(){}
+        };
+        testInitialSync.data.rooms.push(angular.copy(testRoomInitialSync));
+        
+        var roomAmember = "@roomamember:matrix.org";
+        testInitialSync.data.rooms[0].state = [
+            mkEvent("m.room.member", {membership:"join"}, roomId, testUserId),
+            mkEvent("m.room.member", {membership:"join"}, roomId, roomAmember, roomAmember)
+        ];
+        testInitialSync.data.rooms[0].messages.chunk = [
+            mkEvent("m.room.member", {membership:"join"}, roomId, testUserId),
+            mkEvent("m.room.member", {membership:"join"}, roomId, roomAmember, roomAmember),
+            mkEvent("m.room.message", {body:"hi",msgtype:"m.text"}, roomId),
+            mkEvent("m.room.message", {body:"bye",msgtype:"m.text"}, roomId, undefined, roomAmember)
+        ];
+        testInitialSync.data.rooms[0].room_id = roomId;
+        spyOn(modelService, "getRoom").and.returnValue(theRoom);
+        spyOn(theRoom.current_room_state, "storeStateEvents");
+        spyOn(theRoom.old_room_state, "storeStateEvents");
+        spyOn(theRoom, "addOrReplaceMessageEvent");
+        spyOn(theRoom, "addMessageEvent");
+        
+        // an invited room
+        var inviterUserId = "@inviter:matrix.org";
+        var inviteRoomId = "!invite:matrix.org";
+        testInitialSync.data.rooms.push({
+            inviter: inviterUserId,
+            room_id: inviteRoomId,
+            membership: "invite"
+        });
+        
+        // some presence
+        testInitialSync.data.presence.push({
+            content: {status:"online"},
+            user_id: roomAmember,
+            type: "m.presence"
+        });
+        spyOn(modelService, "setUser");
+    
         eventHandlerService.handleInitialSyncDone(testInitialSync);
-    })); */
+        
+        // expect injected fake invite event
+        expect(testInitialSync.data.rooms[1].state.length).toEqual(1);
+        
+        // expect presence stuff
+        expect(modelService.setUser).toHaveBeenCalledWith(
+            testInitialSync.data.presence[0]
+        );
+        
+        // expect room state & msgs stored
+        expect(theRoom.current_room_state.storeStateEvents).toHaveBeenCalledWith(
+            testInitialSync.data.rooms[0].state
+        );
+        // addOrReplace since it was sent by us and we may need to replace local echo
+        expect(theRoom.addOrReplaceMessageEvent).toHaveBeenCalledWith(
+            testInitialSync.data.rooms[0].messages.chunk[2],
+            true
+        );
+        // add since it wasn't sent by us and so doesn't need to replace a local echo
+        expect(theRoom.addMessageEvent).toHaveBeenCalledWith(
+            testInitialSync.data.rooms[0].messages.chunk[3],
+            true
+        );
+    }));
     
 });
