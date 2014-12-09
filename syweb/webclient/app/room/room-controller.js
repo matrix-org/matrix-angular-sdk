@@ -338,9 +338,7 @@ angular.module('RoomController', ['ngSanitize', 'matrixFilter', 'mFileInput', 'a
             
             updatePresenceTimes();
             
-            // Scroll down as soon as possible so that we point to the last message
-            // if it already exists in memory
-            scrollToBottom(true);
+            
             
             // enable pagination on the NEXT digest cycle. If you don't do this,
             // a pagination will be immediately fired because there hasn't been
@@ -348,6 +346,10 @@ angular.module('RoomController', ['ngSanitize', 'matrixFilter', 'mFileInput', 'a
             $timeout(function() {
                 $scope.state.can_paginate = true;
                 paginateForWindowSize();
+                
+                // Scroll down as soon as possible so that we point to the last message
+                // if it already exists in memory
+                scrollToBottom(true);
             }, 0);
         },
         function(err) {
