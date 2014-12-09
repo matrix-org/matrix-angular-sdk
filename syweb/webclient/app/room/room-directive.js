@@ -81,14 +81,17 @@ angular.module('RoomController')
                     var expansion;
                     
                     // FIXME: could do better than linear search here
-                    angular.forEach(scope.room.now.members, function(item, name) {
+                    var sortedKeys = Object.keys(scope.room.now.members).sort();
+                    for (var i=0; i<sortedKeys.length; i++) {
+                        var item = scope.room.now.members[sortedKeys[i]];
                         if (item.event.content.displayname && searchIndex < targetIndex) {
                             if (item.event.content.displayname.toLowerCase().indexOf(search[1].toLowerCase()) === 0) {
                                 expansion = item.event.content.displayname;
                                 searchIndex++;
                             }
                         }
-                    });
+                    }
+                    
                     if (searchIndex < targetIndex) { // then search raw mxids
                         angular.forEach(scope.room.now.members, function(item, name) {
                             if (searchIndex < targetIndex) {
@@ -150,7 +153,7 @@ angular.module('RoomController')
     };
 }])
 // A directive which stores text sent into it and restores it via up/down arrows
-.directive('commandHistory', [ function() {
+.directive('commandHistory', [ "$window", function($window) {
     var BROADCAST_NEW_HISTORY_ITEM = "commandHistory:BROADCAST_NEW_HISTORY_ITEM(item)";
 
     // Manage history of typed messages
@@ -173,7 +176,7 @@ angular.module('RoomController')
         init: function(element, roomId) {
             this.roomId = roomId;
             this.element = element;
-            var data = sessionStorage.getItem("history_" + this.roomId);
+            var data = $window.sessionStorage.getItem("history_" + this.roomId);
             if (data) {
                 this.data = JSON.parse(data);
             }
@@ -184,7 +187,10 @@ angular.module('RoomController')
             this.data.unshift(message);
 
             // Update the session storage
-            sessionStorage.setItem("history_" + this.roomId, JSON.stringify(this.data));
+            $window.sessionStorage.setItem(
+                "history_" + this.roomId, 
+                JSON.stringify(this.data)
+            );
 
             // Reset history position
             this.position = -1;
@@ -193,7 +199,6 @@ angular.module('RoomController')
 
         // Move in the history
         go: function(offset) {
-
             if (-1 === this.position) {
                 // User starts to go to into the history, save the current line
                 this.typingMessage = this.element.val();
