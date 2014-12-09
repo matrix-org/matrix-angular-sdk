@@ -21,7 +21,8 @@
  * Any state change will be sent to the Home Server.
  */
 angular.module('mPresence', [])
-.service('mPresence', ['$timeout', 'matrixService', function ($timeout, matrixService) {
+.service('mPresence', ['$timeout', '$document', 'matrixService', 
+function ($timeout, $document, matrixService) {
 
     // Time in ms after that a user is considered as unavailable/away
     var UNAVAILABLE_TIME = 3 * 60000; // 3 mins
@@ -39,8 +40,8 @@ angular.module('mPresence', [])
     this.start = function() {
         if (undefined === state) {
             // The user is online if he moves the mouser or press a key
-            document.onmousemove = resetTimer;
-            document.onkeypress = resetTimer;
+            $document[0].onmousemove = resetTimer;
+            $document[0].onkeypress = resetTimer;
             
             resetTimer();
         }
