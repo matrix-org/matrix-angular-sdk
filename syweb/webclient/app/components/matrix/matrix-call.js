@@ -36,15 +36,8 @@ var forAllTracksOnStream = function(s, f) {
 }
 
 angular.module('MatrixCall', [])
-.factory('MatrixCall', ['matrixService', 'matrixPhoneService', 'modelService', '$rootScope', '$timeout', function MatrixCallFactory(matrixService, matrixPhoneService, modelService, $rootScope, $timeout) {
-    $rootScope.isWebRTCSupported = function () {
-        navigator.getUserMedia = navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia;
-        window.RTCPeerConnection = window.RTCPeerConnection || window.webkitRTCPeerConnection; // but not mozRTCPeerConnection because its interface is not compatible
-        window.RTCSessionDescription = window.RTCSessionDescription || window.webkitRTCSessionDescription || window.mozRTCSessionDescription;
-        window.RTCIceCandidate = window.RTCIceCandidate || window.webkitRTCIceCandidate || window.mozRTCIceCandidate;
-
-        return !!(navigator.getUserMedia || window.RTCPeerConnection || window.RTCSessionDescription || window.RTCIceCandidate);
-    };
+.factory('MatrixCall', ['webRtcService', 'matrixService', 'matrixPhoneService', 'modelService', '$rootScope', '$timeout', 
+function MatrixCallFactory(webRtcService, matrixService, matrixPhoneService, modelService, $rootScope, $timeout) {
 
     var MatrixCall = function(room_id) {
         this.room_id = room_id;
@@ -89,44 +82,8 @@ angular.module('MatrixCall', [])
     MatrixCall.FALLBACK_STUN_SERVER = 'stun:stun.l.google.com:19302';
 
     MatrixCall.prototype.createPeerConnection = function() {
-        var pc;
-        if (window.mozRTCPeerConnection) {
-            var iceServers = [];
-            // https://github.com/EricssonResearch/openwebrtc/issues/85
-            if (MatrixCall.turnServer /*&& !this.isOpenWebRTC()*/) {
-                if (MatrixCall.turnServer.uris) {
-                    for (var i = 0; i < MatrixCall.turnServer.uris.length; i++) {
-                        iceServers.push({
-                            'url': MatrixCall.turnServer.uris[i],
-                            'username': MatrixCall.turnServer.username,
-                            'credential': MatrixCall.turnServer.password,
-                        });
-                    }
-                } else {
-                    console.log("No TURN server: using fallback STUN server");
-                    iceServers.push({ 'url' : MatrixCall.FALLBACK_STUN_SERVER });
-                }
-            }
-          
-            pc = new window.mozRTCPeerConnection({"iceServers":iceServers});
-        } else {
-            var iceServers = [];
-            // https://github.com/EricssonResearch/openwebrtc/issues/85
-            if (MatrixCall.turnServer && !this.isOpenWebRTC()) {
-                if (MatrixCall.turnServer.uris) {
-                    iceServers.push({
-                        'urls': MatrixCall.turnServer.uris,
-                        'username': MatrixCall.turnServer.username,
-                        'credential': MatrixCall.turnServer.password,
-                    });
-                } else {
-                    console.log("No TURN server: using fallback STUN server");
-                    iceServers.push({ 'urls' : MatrixCall.FALLBACK_STUN_SERVER });
-                }
-            }
-          
-            pc = new window.RTCPeerConnection({"iceServers":iceServers});
-        }
+        var pc = webRtcService.createPeerConnection(MatrixCall.turnServer);
+        
         var self = this;
         pc.oniceconnectionstatechange = function() { self.onIceConnectionStateChanged(); };
         pc.onsignalingstatechange = function() { self.onSignallingStateChanged(); };
@@ -164,7 +121,12 @@ angular.module('MatrixCall', [])
     MatrixCall.prototype.placeCallWithConstraints = function(constraints) {
         var self = this;
         matrixPhoneService.callPlaced(this);
-        navigator.getUserMedia(constraints, function(s) { self.gotUserMediaForInvite(s); }, function(e) { self.getUserMediaFailed(e); });
+        webRtcService.getUserMedia(constraints).then(function(s) {
+            self.gotUserMediaForInvite(s);
+        },
+        function(e) {
+            self.getUserMediaFailed(e);
+        });
         this.state = 'wait_local_media';
         this.direction = 'outbound';
         this.config = constraints;
@@ -173,7 +135,7 @@ angular.module('MatrixCall', [])
     MatrixCall.prototype.initWithInvite = function(event) {
         this.msg = event.content;
         this.peerConn = this.createPeerConnection();
-        this.peerConn.setRemoteDescription(new RTCSessionDescription(this.msg.offer), this.onSetRemoteDescriptionSuccess, this.onSetRemoteDescriptionError);
+        this.peerConn.setRemoteDescription(webRtcService.newRTCSessionDescription(this.msg.offer), this.onSetRemoteDescriptionSuccess, this.onSetRemoteDescriptionError);
         this.state = 'ringing';
         this.direction = 'inbound';
 
@@ -231,7 +193,12 @@ angular.module('MatrixCall', [])
         }
 
         if (!this.localAVStream && !this.waitForLocalAVStream) {
-            navigator.getUserMedia(this.getUserMediaVideoContraints(this.type), function(s) { self.gotUserMediaForAnswer(s); }, function(e) { self.getUserMediaFailed(e); });
+            webRtcService.getUserMedia(this.getUserMediaVideoContraints(this.type)).then(function(s) {
+                self.gotUserMediaForAnswer(s);
+            },
+            function(e) {
+                self.getUserMediaFailed(e);
+            });
             this.state = 'wait_local_media';
         } else if (this.localAVStream) {
             this.gotUserMediaForAnswer(this.localAVStream);
@@ -369,13 +336,13 @@ angular.module('MatrixCall', [])
             return;
         }
         console.log("Got remote ICE "+cand.sdpMid+" candidate: "+cand.candidate);
-        this.peerConn.addIceCandidate(new RTCIceCandidate(cand), function() {}, function(e) {});
+        this.peerConn.addIceCandidate(webRtcService.newIceCandidate(cand), function() {}, function(e) {});
     };
 
     MatrixCall.prototype.receivedAnswer = function(msg) {
         if (this.state == 'ended') return;
 
-        this.peerConn.setRemoteDescription(new RTCSessionDescription(msg.answer), this.onSetRemoteDescriptionSuccess, this.onSetRemoteDescriptionError);
+        this.peerConn.setRemoteDescription(webRtcService.newRTCSessionDescription(msg.answer), this.onSetRemoteDescriptionSuccess, this.onSetRemoteDescriptionError);
         this.state = 'connecting';
     };
 
@@ -504,7 +471,7 @@ angular.module('MatrixCall', [])
                 var vel = self.getRemoteVideoElement();
                 if (vel.play) vel.play();
                 // OpenWebRTC does not support oniceconnectionstatechange yet
-                if (self.isOpenWebRTC()) self.state = 'connected';
+                if (webRtcService.isOpenWebRTC()) self.state = 'connected';
             });
         }
     };
@@ -652,16 +619,6 @@ angular.module('MatrixCall', [])
             if (t.length) return t[0];
         }
         return null;
-    };
-
-    MatrixCall.prototype.isOpenWebRTC = function() {
-        var scripts = angular.element('script');
-        for (var i = 0; i < scripts.length; i++) {
-            if (scripts[i].src.indexOf("owr.js") > -1) {
-                return true;
-            }
-        }
-        return false;
     };
 
     return MatrixCall;

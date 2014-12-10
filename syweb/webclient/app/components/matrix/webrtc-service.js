@@ -20,15 +20,98 @@ limitations under the License.
  * This service wraps calls to web RTC and provides promises for async ops.
  */
 angular.module('webRtcService', [])
-.service('webRtcService', ['$window', function ($window) {
+.service('webRtcService', ['$window', '$q', function ($window, $q) {
 
-    var getUserMedia = $window.navigator.getUserMedia || $window.navigator.webkitGetUserMedia || $window.navigator.mozGetUserMedia;
-    var rtcPeerConnection = $window.RTCPeerConnection || $window.webkitRTCPeerConnection; // but not mozRTCPeerConnection because its interface is not compatible
-    var rtcSessionDescription = $window.RTCSessionDescription || $window.webkitRTCSessionDescription || $window.mozRTCSessionDescription;
-    var rtcIceCandidate = $window.RTCIceCandidate || $window.webkitRTCIceCandidate || $window.mozRTCIceCandidate;
+    var FALLBACK_STUN_SERVER = 'stun:stun.l.google.com:19302';
+
+    var webRtcGetUserMedia = $window.navigator.getUserMedia || $window.navigator.webkitGetUserMedia || $window.navigator.mozGetUserMedia;
+    var webRtcRtcPeerConnection = $window.RTCPeerConnection || $window.webkitRTCPeerConnection; // but not mozRTCPeerConnection because its interface is not compatible
+    var webRtcRtcSessionDescription = $window.RTCSessionDescription || $window.webkitRTCSessionDescription || $window.mozRTCSessionDescription;
+    var webRtcRtcIceCandidate = $window.RTCIceCandidate || $window.webkitRTCIceCandidate || $window.mozRTCIceCandidate;
 
     this.isWebRTCSupported = function () {
-        return !!(getUserMedia || rtcPeerConnection || rtcSessionDescription ||rtcIceCandidate);
+        return !!(webRtcGetUserMedia || webRtcRtcPeerConnection || webRtcRtcSessionDescription || webRtcRtcIceCandidate);
+    };
+    
+    this.isOpenWebRTC = function() {
+        var scripts = angular.element('script');
+        for (var i = 0; i < scripts.length; i++) {
+            if (scripts[i].src.indexOf("owr.js") > -1) {
+                return true;
+            }
+        }
+        return false;
+    };
+    
+    /*
+     * Creates a new peer connection.
+     *
+     * @param Object : An object with an Array of 'uris', a 'username' String and a 'password' String
+     */
+    this.createPeerConnection = function(turnServers) {
+        console.log("createPeerConnection: "+JSON.stringify(turnServers));
+        if (window.mozRTCPeerConnection) {
+            var iceServers = [];
+            // https://github.com/EricssonResearch/openwebrtc/issues/85
+            if (turnServers /*&& !webRtcService.isOpenWebRTC()*/) {
+                if (turnServers.uris) {
+                    for (var i = 0; i < turnServers.uris.length; i++) {
+                        iceServers.push({
+                            'url': turnServers.uris[i],
+                            'username': turnServers.username,
+                            'credential': turnServers.password,
+                        });
+                    }
+                } 
+                else {
+                    console.log("No TURN server: using fallback STUN server");
+                    iceServers.push({ 'url' : FALLBACK_STUN_SERVER });
+                }
+            }
+          
+            return new window.mozRTCPeerConnection({"iceServers":iceServers});
+        } 
+        else {
+            var iceServers = [];
+            // https://github.com/EricssonResearch/openwebrtc/issues/85
+            if (turnServers && !this.isOpenWebRTC()) {
+                if (turnServers.uris) {
+                    iceServers.push({
+                        'urls': turnServers.uris,
+                        'username': turnServers.username,
+                        'credential': turnServers.password,
+                    });
+                } else {
+                    console.log("No TURN server: using fallback STUN server");
+                    iceServers.push({ 'urls' : FALLBACK_STUN_SERVER });
+                }
+            }
+          
+            return new window.RTCPeerConnection({"iceServers":iceServers});
+        }
+    };
+    
+    this.getUserMedia = function(constraints) {
+        console.log("getUserMedia: "+JSON.stringify(constraints));
+        var defer = $q.defer();
+        
+        webRtcGetUserMedia.call($window.navigator, constraints, function(s) {
+            defer.resolve(s);
+        }, function(e) {
+            defer.reject(e);
+        });
+        
+        return defer.promise;
+    };
+    
+    this.newIceCandidate = function(cand) {
+        console.log("newIceCandidate: "+JSON.stringify(cand));
+        return new webRtcRtcIceCandidate(cand);
+    };
+    
+    this.newRTCSessionDescription = function(answer) {
+        console.log("newRTCSessionDescription: "+JSON.stringify(answer));
+        return new webRtcRtcSessionDescription(answer);
     };
 
 }]);

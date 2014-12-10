@@ -21,11 +21,14 @@ limitations under the License.
 'use strict';
 
 angular.module('MatrixWebClientController', ['matrixService', 'mPresence', 'eventStreamService'])
-.controller('MatrixWebClientController', ['$scope', '$location', '$rootScope', '$timeout', 'matrixService', 'mPresence', 'eventStreamService', 'eventHandlerService', 'matrixPhoneService', 'modelService', 'eventReaperService', 'notificationService', 'mUserDisplayNameFilter', 'MatrixCall', 'dialogService',
-                               function($scope, $location, $rootScope, $timeout, matrixService, mPresence, eventStreamService, eventHandlerService, matrixPhoneService, modelService, eventReaperService, notificationService, mUserDisplayNameFilter, MatrixCall, dialogService) {
+.controller('MatrixWebClientController', ['$scope', '$location', '$rootScope', '$timeout', 'matrixService', 'mPresence', 'eventStreamService', 'eventHandlerService', 'matrixPhoneService', 'modelService', 'eventReaperService', 'notificationService', 'mUserDisplayNameFilter', 'MatrixCall', 'dialogService', 'webRtcService',
+                               function($scope, $location, $rootScope, $timeout, matrixService, mPresence, eventStreamService, eventHandlerService, matrixPhoneService, modelService, eventReaperService, notificationService, mUserDisplayNameFilter, MatrixCall, dialogService, webRtcService) {
          
     // Check current URL to avoid to display the logout button on the login page
     $scope.location = $location.path();
+    
+    
+    $rootScope.isWebRTCSupported = webRtcService.isWebRTCSupported;
 
     // Update the location state when the ng location changed
     $rootScope.$on('$routeChangeSuccess', function (event, current, previous) {
