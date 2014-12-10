@@ -135,7 +135,7 @@ function(matrixService, $rootScope, $q) {
             }
         },
         
-        removeEchoEvent: function(event) {
+        removeEvent: function(event) {
             var index = this.events.indexOf(event);
             if (index >= 0) {
                 this.events.splice(index, 1);

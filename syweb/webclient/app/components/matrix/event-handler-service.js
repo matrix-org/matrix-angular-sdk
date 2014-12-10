@@ -536,7 +536,7 @@ function(matrixService, $rootScope, $window, $q, $timeout, $filter, mPresence, n
         },
         
         resendMessage: function(echoMessage, sendCallback) {
-            modelService.getRoom(echoMessage.room_id).removeEchoEvent(echoMessage);
+            modelService.getRoom(echoMessage.room_id).removeEvent(echoMessage);
             return this.sendMessage(
                 echoMessage.room_id, 
                 echoMessage.__echo_original_input, 
@@ -594,7 +594,7 @@ function(matrixService, $rootScope, $window, $q, $timeout, $filter, mPresence, n
                             var exists = modelService.getRoom(roomId).getEvent(eventId);
                             if (exists) {
                                 // kill the echo message, we have the real one already
-                                modelService.getRoom(roomId).removeEchoEvent(echoMessage);
+                                modelService.getRoom(roomId).removeEvent(echoMessage);
                             }
                             else {
                                 // Mark this fake message event with its allocated event_id
