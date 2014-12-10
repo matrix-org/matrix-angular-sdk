@@ -532,7 +532,6 @@ angular.module('RoomController', ['ngSanitize', 'matrixFilter', 'mFileInput', 'a
 .controller('EventInfoController', function($scope, $modalInstance) {
     console.log("Displaying modal dialog for >>>> " + JSON.stringify($scope.event_selected));
     $scope.redact = function() {
-        console.log("Redact level = "+$scope.room.current_room_state.state_events["m.room.power_levels"].content.redact);
         console.log("Redact event >> " + JSON.stringify($scope.event_selected));
         $modalInstance.close("redact");
     };
@@ -548,7 +547,6 @@ angular.module('RoomController', ['ngSanitize', 'matrixFilter', 'mFileInput', 'a
     $scope.userIDToInvite = "";
     
     $scope.inviteUser = function() {
-        
         matrixService.invite($scope.room_id, $scope.userIDToInvite).then(
             function() {
                 console.log("Invited.");

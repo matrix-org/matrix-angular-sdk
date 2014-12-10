@@ -54,7 +54,7 @@ describe("RoomController ", function() {
     };
     
     beforeEach(function() {
-        module('matrixWebClient');
+        module('RoomController');
         
         // reset test vars
         testRoom = {
@@ -347,19 +347,13 @@ describe("RoomController ", function() {
         
         // open the dialog
         var defer = $q.defer();
-        spyOn(modal, "open").and.callFake(function() {
-            return {
-                result: defer.promise
-            };
-        });
+        spyOn(modal, "open").and.returnValue({result: defer.promise});
         scope.openJson(event);
         
         
         // hit the redact button
         var redactDefer = $q.defer();
-        spyOn(matrixService, "redactEvent").and.callFake(function() {
-            return redactDefer.promise;
-        });
+        spyOn(matrixService, "redactEvent").and.returnValue(redactDefer.promise);
         defer.resolve("redact");
         scope.$digest();
         expect(matrixService.redactEvent).toHaveBeenCalledWith(roomId, eventId);  
@@ -421,5 +415,186 @@ describe("RoomController ", function() {
         });
         scope.openRoomInfo();
         expect(modal.open).toHaveBeenCalled();
+    });
+});
+describe("RoomInfoController ", function() {
+    var rootScope, scope, location, ctrl, $q;
+    
+    var roomId = "!foo:bar.com";
+    
+    var matrixService = {
+        invite: function(){},
+        sendStateEvent: function(){}
+    };
+    
+    var eventHandlerService = {
+        leaveRoom: function(){}
+    };
+    
+    var dialogService = {
+        showSuccess: jasmine.createSpy("dialogService.showSuccess"),
+        showError: jasmine.createSpy("dialogService.showError")
+    };
+    
+    var modalInstance = {
+        dismiss: jasmine.createSpy("modalInstance.dismiss")
+    };
+    
+    var location = {
+        url: jasmine.createSpy("location.url")
+    };
+    
+    beforeEach(module("RoomController"));
+    
+    beforeEach(inject(function($rootScope, $injector, $controller, _$q_) {
+            $q = _$q_;
+            scope = $rootScope.$new();
+            scope.room_id = roomId;
+            rootScope = $rootScope;
+            routeParams = {
+            
+            };
+            ctrl = $controller('RoomInfoController', {
+                '$scope': scope,
+                '$location': location,
+                'matrixService': matrixService,
+                'eventHandlerService': eventHandlerService,
+                'dialogService': dialogService,
+                '$modalInstance': modalInstance
+            });
+        })
+    );
+    
+    it('should be able to invite a user.', function() {
+        var invitee = "@invitee:matrix.org";
+        var inviteDefer = $q.defer();
+        spyOn(matrixService, "invite").and.returnValue(inviteDefer.promise);
+        
+        scope.userIDToInvite = invitee;
+        scope.inviteUser();
+        
+        expect(matrixService.invite).toHaveBeenCalledWith(roomId, invitee);
+        inviteDefer.resolve({data:{}});
+        scope.$digest();
+        
+        expect(dialogService.showSuccess).toHaveBeenCalled();
+    });
+    
+    it('should display an error if it cannot invite a user.', function() {
+        var invitee = "@invitee:matrix.org";
+        var inviteDefer = $q.defer();
+        spyOn(matrixService, "invite").and.returnValue(inviteDefer.promise);
+        
+        scope.userIDToInvite = invitee;
+        scope.inviteUser();
+        
+        expect(matrixService.invite).toHaveBeenCalledWith(roomId, invitee);
+        inviteDefer.reject({status:0, data:{}});
+        scope.$digest();
+        
+        expect(dialogService.showError).toHaveBeenCalled();
+    });
+    
+    it('should be able to submit a new event.', function() {
+        var event = {
+            content: {
+                foo: "bar"
+            },
+            state_key: "bar",
+            type: "m.foo",
+        };
+        var eventDefer = $q.defer();
+        spyOn(matrixService, "sendStateEvent").and.returnValue(eventDefer.promise);
+        
+        scope.submit(event);
+        
+        expect(matrixService.sendStateEvent).toHaveBeenCalledWith(roomId, event.type, event.content, event.state_key);
+        eventDefer.resolve({data:{event_id:"foooo"}});
+        scope.$digest();
+        
+        expect(modalInstance.dismiss).toHaveBeenCalled();
+    });
+    
+    it('should display an error if it is unable to submit a new event.', function() {
+        var event = {
+            content: {
+                foo: "bar"
+            },
+            state_key: "bar",
+            type: "m.foo",
+        };
+        var eventDefer = $q.defer();
+        spyOn(matrixService, "sendStateEvent").and.returnValue(eventDefer.promise);
+        
+        scope.submit(event);
+        
+        expect(matrixService.sendStateEvent).toHaveBeenCalledWith(roomId, event.type, event.content, event.state_key);
+        eventDefer.reject({status: 403, data:{}});
+        scope.$digest();
+        
+        expect(dialogService.showError).toHaveBeenCalled();
+    });
+    
+    it('should be able to leave a room.', function() {
+        var leaveDefer = $q.defer();
+        spyOn(eventHandlerService, "leaveRoom").and.returnValue(leaveDefer.promise);
+        
+        scope.leaveRoom();
+        
+        expect(eventHandlerService.leaveRoom).toHaveBeenCalledWith(roomId);
+        leaveDefer.resolve({data:{}});
+        scope.$digest();
+        expect(modalInstance.dismiss).toHaveBeenCalled();
+        expect(location.url).toHaveBeenCalled();
+    });
+    
+    it('should display an error if it cannot leave a room.', function() {
+        var leaveDefer = $q.defer();
+        spyOn(eventHandlerService, "leaveRoom").and.returnValue(leaveDefer.promise);
+        
+        scope.leaveRoom();
+        
+        expect(eventHandlerService.leaveRoom).toHaveBeenCalledWith(roomId);
+        leaveDefer.reject({status:0, data:{}});
+        scope.$digest();
+        
+        expect(dialogService.showError).toHaveBeenCalled();
+    });
+});
+describe("EventInfoController ", function() {
+    var rootScope, scope, ctrl, $q;
+
+    var modalInstance = {
+        close: jasmine.createSpy("modalInstance.dismiss")
+    };
+    
+    beforeEach(module("RoomController"));
+    
+    beforeEach(inject(function($rootScope, $injector, $controller, _$q_) {
+        var testEvent = {
+            content: {
+                foo: "bar"
+            },
+            type: "m.foobar"
+        };
+    
+        $q = _$q_;
+        scope = $rootScope.$new();
+        scope.event_selected = testEvent;
+        rootScope = $rootScope;
+        ctrl = $controller('EventInfoController', {
+            '$scope': scope,
+            '$modalInstance': modalInstance
+        });
+    }));
+    
+    it('should return "redact" if the redact button was hit.', function() {
+        scope.redact();
+        expect(modalInstance.close).toHaveBeenCalledWith("redact");
+    });
+    
+    it('should return "resend" if the resend button was hit.', function() {
+        scope.resend();
+        expect(modalInstance.close).toHaveBeenCalledWith("resend");
     });
 });
