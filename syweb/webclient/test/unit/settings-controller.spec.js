@@ -37,7 +37,10 @@ describe("SettingsController ", function() {
             return d.promise;
         },
         setDisplayName: function(name){},
-        setProfilePictureUrl: function(url){}
+        setProfilePictureUrl: function(url){},
+        linkEmail: function(){},
+        bindEmail: function(){},
+        authEmail: function(){}
     };
     
     var eventStreamService = {};
@@ -125,6 +128,38 @@ describe("SettingsController ", function() {
         expect(scope.profileOnServer.avatarUrl).toEqual(avatar);
     });
     
+    it('should display a text error (no dialog) if failed to load your displayname.', function() {
+        var oldFeedback = angular.copy(scope.feedback);
+        var nameDefer = $q.defer();
+        spyOn(matrixService, "getDisplayName").and.returnValue(nameDefer.promise);
+        spyOn(dialogService, "showError");
+        
+        scope.onInit();
+        
+        nameDefer.reject({status:0, data:{}});
+        scope.$digest();
+        
+        expect(scope.feedback).not.toEqual(oldFeedback);
+        expect(dialogService.showError).not.toHaveBeenCalled();
+    });
+    
+    it('should display a text error (no dialog) if failed to load your avatar url.', function() {
+        var oldFeedback = angular.copy(scope.feedback);
+        var avatar = "somepic.jpg";
+        var picDefer = $q.defer();
+        spyOn(matrixService, "getProfilePictureUrl").and.returnValue(picDefer.promise);
+        spyOn(dialogService, "showError");
+        
+        scope.onInit();
+        expect(matrixService.getProfilePictureUrl).toHaveBeenCalled();
+        
+        picDefer.reject({status:0, data:{}});
+        scope.$digest();
+        
+        expect(scope.feedback).not.toEqual(oldFeedback);
+        expect(dialogService.showError).not.toHaveBeenCalled();
+    });
+    
     it('should upload a new avatar when it is changed.', function() {
         var defer = $q.defer();
         spyOn(mFileUpload, "uploadFile").and.returnValue(defer.promise);
@@ -132,6 +167,18 @@ describe("SettingsController ", function() {
         scope.profile.avatarFile = "foo.jpg";
         scope.$digest();
         expect(mFileUpload.uploadFile).toHaveBeenCalledWith(scope.profile.avatarFile);
+    });
+    
+    it('should show an error if it fails to upload a new avatar.', function() {
+        var defer = $q.defer();
+        spyOn(mFileUpload, "uploadFile").and.returnValue(defer.promise);
+        spyOn(dialogService, "showError");
+        scope.profile.avatarFile = "foo.jpg";
+        
+        defer.reject({status:0, data:{}});
+        scope.$digest();
+        
+        expect(dialogService.showError).toHaveBeenCalled();
     });
     
     it('should upload diffs when saving profile info.', function() {
@@ -203,5 +250,138 @@ describe("SettingsController ", function() {
         
         expect(matrixService.setProfilePictureUrl).toHaveBeenCalledWith(scope.profile.avatarUrl);
         expect(dialogService.showError).toHaveBeenCalled();
+    });
+    
+    it('should be able to link an email address to the account.', function() {
+        var linkDefer = $q.defer();
+        var authDefer = $q.defer();
+        var bindDefer = $q.defer();
+        spyOn(matrixService, "linkEmail").and.returnValue(linkDefer.promise);
+        spyOn(matrixService, "authEmail").and.returnValue(authDefer.promise);
+        spyOn(matrixService, "bindEmail").and.returnValue(bindDefer.promise);
+        
+        var email = "foo@bar.com";
+        expect(scope.linkedEmails.linkedEmailList).toBeUndefined();
+        scope.linkEmail(email);
+        
+        expect(matrixService.linkEmail).toHaveBeenCalledWith(email, jasmine.any(String), jasmine.any(Number));
+        var sessionId = "session_id_here";
+        linkDefer.resolve({data:{success:true, sid:sessionId}});
+        scope.$digest();
+        
+        scope.linkedEmails.emailCode = "123456";
+        scope.submitEmailCode();
+        expect(matrixService.authEmail).toHaveBeenCalledWith(jasmine.any(String), jasmine.any(String), "123456");
+        authDefer.resolve({data:{}});
+        scope.$digest();
+        
+        expect(matrixService.bindEmail).toHaveBeenCalled();
+        bindDefer.resolve({data:{}});
+        scope.$digest();
+        
+        expect(scope.linkedEmails.linkedEmailList[email]).toBeDefined();   
+    });
+    
+    it('should display an error if it fails to bind the email.', function() {
+        var oldFeedback = angular.copy(scope.emailFeedback);
+        var linkDefer = $q.defer();
+        var authDefer = $q.defer();
+        var bindDefer = $q.defer();
+        spyOn(matrixService, "linkEmail").and.returnValue(linkDefer.promise);
+        spyOn(matrixService, "authEmail").and.returnValue(authDefer.promise);
+        spyOn(matrixService, "bindEmail").and.returnValue(bindDefer.promise);
+        
+        var email = "foo@bar.com";
+        expect(scope.linkedEmails.linkedEmailList).toBeUndefined();
+        scope.linkEmail(email);
+        
+        expect(matrixService.linkEmail).toHaveBeenCalledWith(email, jasmine.any(String), jasmine.any(Number));
+        var sessionId = "session_id_here";
+        linkDefer.resolve({data:{success:true, sid:sessionId}});
+        scope.$digest();
+        
+        scope.linkedEmails.emailCode = "123456";
+        scope.submitEmailCode();
+        expect(matrixService.authEmail).toHaveBeenCalledWith(jasmine.any(String), jasmine.any(String), "123456");
+        authDefer.resolve({data:{}});
+        scope.$digest();
+        
+        // rejected here
+        expect(matrixService.bindEmail).toHaveBeenCalled();
+        bindDefer.reject({status:0, data:{}});
+        scope.$digest();
+        
+        expect(scope.emailFeedback).not.toEqual(oldFeedback);   
+    });
+    
+    it('should display an error if it fails to auth the email.', function() {
+        var oldFeedback = angular.copy(scope.emailFeedback);
+        var linkDefer = $q.defer();
+        var authDefer = $q.defer();
+        spyOn(matrixService, "linkEmail").and.returnValue(linkDefer.promise);
+        spyOn(matrixService, "authEmail").and.returnValue(authDefer.promise);
+        
+        var email = "foo@bar.com";
+        expect(scope.linkedEmails.linkedEmailList).toBeUndefined();
+        scope.linkEmail(email);
+        
+        expect(matrixService.linkEmail).toHaveBeenCalledWith(email, jasmine.any(String), jasmine.any(Number));
+        var sessionId = "session_id_here";
+        linkDefer.resolve({data:{success:true, sid:sessionId}});
+        scope.$digest();
+        
+        // rejected here
+        scope.linkedEmails.emailCode = "123456";
+        scope.submitEmailCode();
+        expect(matrixService.authEmail).toHaveBeenCalledWith(jasmine.any(String), jasmine.any(String), "123456");
+        authDefer.reject({status:0, data:{}});
+        scope.$digest();
+        
+        expect(scope.emailFeedback).not.toEqual(oldFeedback);   
+    });
+    
+    it('should display an error if it fails to link the email.', function() {
+        var oldFeedback = angular.copy(scope.emailFeedback);
+        var linkDefer = $q.defer();
+        spyOn(matrixService, "linkEmail").and.returnValue(linkDefer.promise);
+        
+        var email = "foo@bar.com";
+        expect(scope.linkedEmails.linkedEmailList).toBeUndefined();
+        scope.linkEmail(email);
+        
+        // rejected here
+        expect(matrixService.linkEmail).toHaveBeenCalledWith(email, jasmine.any(String), jasmine.any(Number));
+        var sessionId = "session_id_here";
+        linkDefer.reject({status:0, data:{}});
+        scope.$digest();
+        
+        expect(scope.emailFeedback).not.toEqual(oldFeedback);   
+    });
+    
+    it('should persist audio notification settings.', function() {
+        spyOn(matrixService, "saveConfig");
+        spyOn(matrixService, "setConfig");
+    
+        scope.settings.audioNotifications = true;
+        scope.updateAudioNotification();
+        
+        expect(matrixService.setConfig).toHaveBeenCalledWith(jasmine.objectContaining({
+            audioNotifications: true
+        }));
+        expect(matrixService.saveConfig).toHaveBeenCalled();  
+    });
+    
+    it('should persist bing word settings.', function() {
+        var bings = "hi, bye";
+        spyOn(matrixService, "saveConfig");
+        spyOn(matrixService, "setConfig");
+    
+        scope.settings.bingWords = bings;
+        scope.saveBingWords();
+        
+        expect(matrixService.setConfig).toHaveBeenCalledWith(jasmine.objectContaining({
+            bingWords: bings
+        }));
+        expect(matrixService.saveConfig).toHaveBeenCalled();  
     });
 });

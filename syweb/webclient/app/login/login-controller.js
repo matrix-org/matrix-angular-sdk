@@ -15,8 +15,8 @@
  */
  
 angular.module('LoginController', ['matrixService'])
-.controller('LoginController', ['$scope', '$rootScope', '$location', 'matrixService', 'eventStreamService', 'dialogService',
-                                    function($scope, $rootScope, $location, matrixService, eventStreamService, dialogService) {
+.controller('LoginController', ['$scope', '$rootScope', '$location', 'matrixService', 'dialogService',
+                                    function($scope, $rootScope, $location, matrixService, dialogService) {
     'use strict';
     
     
