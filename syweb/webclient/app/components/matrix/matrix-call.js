@@ -75,9 +75,6 @@ function MatrixCallFactory(webRtcService, matrixService, matrixPhoneService, mod
         });
     }
 
-    // FIXME: we should prevent any calls from being placed or accepted before this has finished
-    MatrixCall.getTurnServer();
-
     MatrixCall.CALL_TIMEOUT = 60000;
     MatrixCall.FALLBACK_STUN_SERVER = 'stun:stun.l.google.com:19302';
 

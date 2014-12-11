@@ -34,17 +34,6 @@ angular.module('MatrixWebClientController', ['matrixService', 'mPresence', 'even
     $rootScope.$on('$routeChangeSuccess', function (event, current, previous) {
         $scope.location = $location.path();
     });
-
-    if (matrixService.isUserLoggedIn()) {
-        eventStreamService.resume();
-        mPresence.start();
-    }
-
-    $scope.user_id;
-    var config = matrixService.config();
-    if (config) {
-        $scope.user_id = matrixService.config().user_id;
-    }
     
     eventReaperService.setEnabled(true);
     
@@ -103,9 +92,14 @@ angular.module('MatrixWebClientController', ['matrixService', 'mPresence', 'even
         $scope.user_id = matrixService.config().user_id;
         // start stream
         eventStreamService.resume();
+        mPresence.start();
         // refresh turn servers
         MatrixCall.getTurnServer();
     };
+    
+    if (matrixService.isUserLoggedIn()) {
+        $rootScope.onLoggedIn();
+    }
 
     $rootScope.$watch('currentCall', function(newVal, oldVal) {
         if (!$rootScope.currentCall) {
