@@ -17,7 +17,8 @@ limitations under the License.
 'use strict';
 
 angular.module('matrixPhoneService', [])
-.factory('matrixPhoneService', ['$rootScope', '$injector', 'matrixService', 'eventHandlerService', function MatrixPhoneService($rootScope, $injector, matrixService, eventHandlerService) {
+.factory('matrixPhoneService', ['$rootScope', '$injector', 'webRtcService', 'matrixService', 'eventHandlerService', 
+function MatrixPhoneService($rootScope, $injector, webRtcService, matrixService, eventHandlerService) {
     var matrixPhoneService = function() {
     };
 
@@ -60,7 +61,7 @@ angular.module('matrixPhoneService', [])
             var MatrixCall = $injector.get('MatrixCall');
             var call = new MatrixCall(event.room_id);
 
-            if (!$rootScope.isWebRTCSupported()) {
+            if (!webRtcService.isWebRTCSupported()) {
                 console.log("Incoming call ID "+msg.call_id+" but this browser doesn't support WebRTC");
                 // don't hang up the call: there could be other clients connected that do support WebRTC and declining the
                 // the call on their behalf would be really annoying.
