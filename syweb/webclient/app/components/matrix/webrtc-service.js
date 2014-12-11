@@ -20,7 +20,7 @@ limitations under the License.
  * This service wraps calls to web RTC and provides callbacks inside defers (and as a result are $digested).
  */
 angular.module('webRtcService', [])
-.service('webRtcService', ['$window', '$q', '$rootScope', function ($window, $q, $rootScope) {
+.service('webRtcService', ['$window', '$q', '$timeout', function ($window, $q, $timeout) {
 
     var FALLBACK_STUN_SERVER = 'stun:stun.l.google.com:19302';
 
@@ -96,25 +96,30 @@ angular.module('webRtcService', [])
         pc.ngonicecandidate = function(){};
         pc.ngonaddstream = function(){};
         
+        // use $timeout instead of $apply because we cannot guarantee that these callbacks will
+        // be invoked from outside angular. For example, firefox likes to invoke oniceconnectionstatechange
+        // when you hit pc.close(), which is typically done when you press the Hangup button, which will be
+        // inside a digest(!) resulting in an "already in progress" bug. To avoid all this, $timeout will
+        // work inside a digest and just schedule to the next tick.
         pc.oniceconnectionstatechange = function() {
-            $rootScope.$apply(function() {
+            $timeout(function() {
                 pc.ngoniceconnectionstatechange(); 
-            });
+            }, 0);
         };
         pc.onsignalingstatechange = function() { 
-            $rootScope.$apply(function() {
+            $timeout(function() {
                 pc.ngonsignalingstatechange(); 
-            });
+            }, 0);
         };
         pc.onicecandidate = function(c) {
-            $rootScope.$apply(function() {
+            $timeout(function() {
                 pc.ngonicecandidate(c); 
-            });
+            }, 0);
         };
         pc.onaddstream = function(s) { 
-            $rootScope.$apply(function() {
+            $timeout(function() {
                 pc.ngonaddstream(s); 
-            });
+            }, 0);
         };
         
         pc.ngsetLocalDescription = function(rtcSessionDescription) {
