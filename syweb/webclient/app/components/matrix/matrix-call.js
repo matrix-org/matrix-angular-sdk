@@ -121,7 +121,7 @@ function MatrixCallFactory(webRtcService, matrixService, matrixPhoneService, mod
     MatrixCall.prototype.placeCallWithConstraints = function(constraints) {
         var self = this;
         matrixPhoneService.callPlaced(this);
-        webRtcService.getUserMedia(constraints).then(function(s) {
+        webRtcService.getUserMedia(constraints, function(s) {
             self.gotUserMediaForInvite(s);
         },
         function(e) {
@@ -193,7 +193,7 @@ function MatrixCallFactory(webRtcService, matrixService, matrixPhoneService, mod
         }
 
         if (!this.localAVStream && !this.waitForLocalAVStream) {
-            webRtcService.getUserMedia(this.getUserMediaVideoContraints(this.type)).then(function(s) {
+            webRtcService.getUserMedia(this.getUserMediaVideoContraints(this.type), function(s) {
                 self.gotUserMediaForAnswer(s);
             },
             function(e) {

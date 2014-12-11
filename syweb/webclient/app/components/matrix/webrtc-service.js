@@ -17,20 +17,21 @@ limitations under the License.
 'use strict';
 
 /*
- * This service wraps calls to web RTC and provides promises for async ops.
+ * This service wraps calls to web RTC.
  */
 angular.module('webRtcService', [])
 .service('webRtcService', ['$window', '$q', function ($window, $q) {
 
     var FALLBACK_STUN_SERVER = 'stun:stun.l.google.com:19302';
 
-    var webRtcGetUserMedia = $window.navigator.getUserMedia || $window.navigator.webkitGetUserMedia || $window.navigator.mozGetUserMedia;
-    var webRtcRtcPeerConnection = $window.RTCPeerConnection || $window.webkitRTCPeerConnection; // but not mozRTCPeerConnection because its interface is not compatible
-    var webRtcRtcSessionDescription = $window.RTCSessionDescription || $window.webkitRTCSessionDescription || $window.mozRTCSessionDescription;
-    var webRtcRtcIceCandidate = $window.RTCIceCandidate || $window.webkitRTCIceCandidate || $window.mozRTCIceCandidate;
+    var webRtc = {};
+    webRtc.GetUserMedia = $window.navigator.getUserMedia || $window.navigator.webkitGetUserMedia || $window.navigator.mozGetUserMedia;
+    webRtc.RtcPeerConnection = $window.RTCPeerConnection || $window.webkitRTCPeerConnection; // but not mozRTCPeerConnection because its interface is not compatible
+    webRtc.RtcSessionDescription = $window.RTCSessionDescription || $window.webkitRTCSessionDescription || $window.mozRTCSessionDescription;
+    webRtc.RtcIceCandidate = $window.RTCIceCandidate || $window.webkitRTCIceCandidate || $window.mozRTCIceCandidate;
 
     this.isWebRTCSupported = function () {
-        return !!(webRtcGetUserMedia || webRtcRtcPeerConnection || webRtcRtcSessionDescription || webRtcRtcIceCandidate);
+        return !!(webRtc.GetUserMedia || webRtc.RtcPeerConnection || webRtc.RtcSessionDescription || webRtc.RtcIceCandidate);
     };
     
     this.isOpenWebRTC = function() {
@@ -50,7 +51,7 @@ angular.module('webRtcService', [])
      */
     this.createPeerConnection = function(turnServers) {
         console.log("createPeerConnection: "+JSON.stringify(turnServers));
-        if (window.mozRTCPeerConnection) {
+        if ($window.mozRTCPeerConnection) {
             var iceServers = [];
             // https://github.com/EricssonResearch/openwebrtc/issues/85
             if (turnServers /*&& !webRtcService.isOpenWebRTC()*/) {
@@ -69,7 +70,7 @@ angular.module('webRtcService', [])
                 }
             }
           
-            return new window.mozRTCPeerConnection({"iceServers":iceServers});
+            return new $window.mozRTCPeerConnection({"iceServers":iceServers});
         } 
         else {
             var iceServers = [];
@@ -87,31 +88,23 @@ angular.module('webRtcService', [])
                 }
             }
           
-            return new window.RTCPeerConnection({"iceServers":iceServers});
+            return new webRtc.RtcPeerConnection({"iceServers":iceServers});
         }
     };
     
-    this.getUserMedia = function(constraints) {
+    this.getUserMedia = function(constraints, fnSuccess, fnFail) {
         console.log("getUserMedia: "+JSON.stringify(constraints));
-        var defer = $q.defer();
-        
-        webRtcGetUserMedia.call($window.navigator, constraints, function(s) {
-            defer.resolve(s);
-        }, function(e) {
-            defer.reject(e);
-        });
-        
-        return defer.promise;
+        webRtc.GetUserMedia.call($window.navigator, constraints, fnSuccess, fnFail);
     };
     
     this.newIceCandidate = function(cand) {
         console.log("newIceCandidate: "+JSON.stringify(cand));
-        return new webRtcRtcIceCandidate(cand);
+        return new webRtc.RtcIceCandidate(cand);
     };
     
     this.newRTCSessionDescription = function(answer) {
         console.log("newRTCSessionDescription: "+JSON.stringify(answer));
-        return new webRtcRtcSessionDescription(answer);
+        return new webRtc.RtcSessionDescription(answer);
     };
 
 }]);
