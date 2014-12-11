@@ -17,10 +17,10 @@ limitations under the License.
 'use strict';
 
 /*
- * This service wraps calls to web RTC.
+ * This service wraps calls to web RTC and provides callbacks inside defers (and as a result are $digested).
  */
 angular.module('webRtcService', [])
-.service('webRtcService', ['$window', '$q', function ($window, $q) {
+.service('webRtcService', ['$window', '$q', '$rootScope', function ($window, $q, $rootScope) {
 
     var FALLBACK_STUN_SERVER = 'stun:stun.l.google.com:19302';
 
@@ -51,6 +51,7 @@ angular.module('webRtcService', [])
      */
     this.createPeerConnection = function(turnServers) {
         console.log("createPeerConnection: "+JSON.stringify(turnServers));
+        var pc;
         if ($window.mozRTCPeerConnection) {
             var iceServers = [];
             // https://github.com/EricssonResearch/openwebrtc/issues/85
@@ -70,7 +71,7 @@ angular.module('webRtcService', [])
                 }
             }
           
-            return new $window.mozRTCPeerConnection({"iceServers":iceServers});
+            pc = new $window.mozRTCPeerConnection({"iceServers":iceServers});
         } 
         else {
             var iceServers = [];
@@ -87,14 +88,95 @@ angular.module('webRtcService', [])
                     iceServers.push({ 'urls' : FALLBACK_STUN_SERVER });
                 }
             }
-          
-            return new webRtc.RtcPeerConnection({"iceServers":iceServers});
+            pc = new webRtc.RtcPeerConnection({"iceServers":iceServers});
         }
+        
+        pc.ngoniceconnectionstatechange = function(){};
+        pc.ngonsignalingstatechange = function(){};
+        pc.ngonicecandidate = function(){};
+        pc.ngonaddstream = function(){};
+        
+        pc.oniceconnectionstatechange = function() {
+            $rootScope.$apply(function() {
+                pc.ngoniceconnectionstatechange(); 
+            });
+        };
+        pc.onsignalingstatechange = function() { 
+            $rootScope.$apply(function() {
+                pc.ngonsignalingstatechange(); 
+            });
+        };
+        pc.onicecandidate = function(c) {
+            $rootScope.$apply(function() {
+                pc.ngonicecandidate(c); 
+            });
+        };
+        pc.onaddstream = function(s) { 
+            $rootScope.$apply(function() {
+                pc.ngonaddstream(s); 
+            });
+        };
+        
+        pc.ngsetLocalDescription = function(rtcSessionDescription) {
+            var defer = $q.defer();
+            pc.setLocalDescription(rtcSessionDescription, function(s) {
+                defer.resolve(s);
+            }, 
+            function(e) {
+                defer.reject(e);
+            });
+            return defer.promise;
+        }
+        
+        pc.ngsetRemoteDescription = function(rtcSessionDescription) {
+            var defer = $q.defer();
+            pc.setRemoteDescription(rtcSessionDescription, function(s) {
+                defer.resolve(s);
+            }, 
+            function(e) {
+                defer.reject(e);
+            });
+            return defer.promise;
+        }
+        
+        pc.ngcreateOffer = function() {
+            var defer = $q.defer();
+            pc.createOffer(function(s) {
+                defer.resolve(s);
+            }, 
+            function(e) {
+                defer.reject(e);
+            });
+            return defer.promise;
+        };
+        
+        pc.ngcreateAnswer = function(constraints) {
+            var defer = $q.defer();
+            pc.createAnswer(function(s) {
+                defer.resolve(s);
+            }, 
+            function(e) {
+                defer.reject(e);
+            }, 
+            constraints);
+            return defer.promise;
+        };
+        
+        return pc;
     };
     
     this.getUserMedia = function(constraints, fnSuccess, fnFail) {
         console.log("getUserMedia: "+JSON.stringify(constraints));
-        webRtc.GetUserMedia.call($window.navigator, constraints, fnSuccess, fnFail);
+        var defer = $q.defer();
+        
+        webRtc.GetUserMedia.call($window.navigator, constraints, function(s) {
+            defer.resolve(s);
+        }, 
+        function(e) {
+            defer.reject(e);
+        });
+        
+        return defer.promise;
     };
     
     this.newIceCandidate = function(cand) {
