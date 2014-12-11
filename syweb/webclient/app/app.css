@@ -942,3 +942,14 @@ textarea, input {
     font-size: 14px;
 }
 
+/*** Seasonal ***/
+
+
+.controlButtonXmas {
+    cursor: pointer;
+    border: 0px;
+    width: 36px;
+    height: 46px;
+    margin-left: 3px;
+    margin-right: 3px;
+}
