@@ -27,7 +27,7 @@ angular.module('MatrixWebClientController', ['matrixService', 'mPresence', 'even
     // Check current URL to avoid to display the logout button on the login page
     $scope.location = $location.path();
     
-    
+    webRtcService.init();
     $rootScope.isWebRTCSupported = webRtcService.isWebRTCSupported;
 
     // Update the location state when the ng location changed

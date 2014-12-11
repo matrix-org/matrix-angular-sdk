@@ -22,16 +22,19 @@ limitations under the License.
 angular.module('webRtcService', [])
 .service('webRtcService', ['$window', '$q', '$timeout', function ($window, $q, $timeout) {
 
-    var FALLBACK_STUN_SERVER = 'stun:stun.l.google.com:19302';
-
+    this.FALLBACK_STUN_SERVER = 'stun:stun.l.google.com:19302';
+    
     var webRtc = {};
-    webRtc.GetUserMedia = $window.navigator.getUserMedia || $window.navigator.webkitGetUserMedia || $window.navigator.mozGetUserMedia;
-    webRtc.RtcPeerConnection = $window.RTCPeerConnection || $window.webkitRTCPeerConnection; // but not mozRTCPeerConnection because its interface is not compatible
-    webRtc.RtcSessionDescription = $window.RTCSessionDescription || $window.webkitRTCSessionDescription || $window.mozRTCSessionDescription;
-    webRtc.RtcIceCandidate = $window.RTCIceCandidate || $window.webkitRTCIceCandidate || $window.mozRTCIceCandidate;
+
+    this.init = function() {
+        webRtc.GetUserMedia = $window.navigator.getUserMedia || $window.navigator.webkitGetUserMedia || $window.navigator.mozGetUserMedia;
+        webRtc.RtcPeerConnection = $window.RTCPeerConnection || $window.webkitRTCPeerConnection || $window.mozRTCPeerConnection;
+        webRtc.RtcSessionDescription = $window.RTCSessionDescription || $window.webkitRTCSessionDescription || $window.mozRTCSessionDescription;
+        webRtc.RtcIceCandidate = $window.RTCIceCandidate || $window.webkitRTCIceCandidate || $window.mozRTCIceCandidate;
+    };
 
     this.isWebRTCSupported = function () {
-        return !!(webRtc.GetUserMedia || webRtc.RtcPeerConnection || webRtc.RtcSessionDescription || webRtc.RtcIceCandidate);
+        return !!(webRtc.GetUserMedia && webRtc.RtcPeerConnection && webRtc.RtcSessionDescription && webRtc.RtcIceCandidate);
     };
     
     this.isOpenWebRTC = function() {
@@ -67,7 +70,7 @@ angular.module('webRtcService', [])
                 } 
                 else {
                     console.log("No TURN server: using fallback STUN server");
-                    iceServers.push({ 'url' : FALLBACK_STUN_SERVER });
+                    iceServers.push({ 'url' : this.FALLBACK_STUN_SERVER });
                 }
             }
           
@@ -85,7 +88,7 @@ angular.module('webRtcService', [])
                     });
                 } else {
                     console.log("No TURN server: using fallback STUN server");
-                    iceServers.push({ 'urls' : FALLBACK_STUN_SERVER });
+                    iceServers.push({ 'urls' : this.FALLBACK_STUN_SERVER });
                 }
             }
             pc = new webRtc.RtcPeerConnection({"iceServers":iceServers});
