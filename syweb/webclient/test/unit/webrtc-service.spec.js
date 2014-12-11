@@ -254,4 +254,220 @@ describe('WebtRTCService', function() {
             "iceServers":output
         });
     }));
+    
+    it('should pass non-initiated callbacks to their ng-prefix versions.', inject(
+    function(webRtcService) {
+        win.navigator.getUserMedia = function(){};
+        win.RTCPeerConnection = function(){};
+        win.RTCSessionDescription = function(){};
+        win.RTCIceCandidate = function(){};
+
+        var stream = {foo:"bar"};
+        var ice = {bar:"baz"};
+
+        webRtcService.init();
+        var pc = webRtcService.createPeerConnection({});
+        
+        spyOn(pc, "ngoniceconnectionstatechange");
+        spyOn(pc, "ngonsignalingstatechange");
+        spyOn(pc, "ngonicecandidate");
+        spyOn(pc, "ngonaddstream");
+        
+        pc.oniceconnectionstatechange();
+        pc.onsignalingstatechange();
+        pc.onicecandidate(ice);
+        pc.onaddstream(stream);
+        
+        $timeout.flush();
+        
+        expect(pc.ngoniceconnectionstatechange).toHaveBeenCalled();
+        expect(pc.ngonsignalingstatechange).toHaveBeenCalled();
+        expect(pc.ngonicecandidate).toHaveBeenCalledWith(ice);
+        expect(pc.ngonaddstream).toHaveBeenCalledWith(stream);
+        
+    }));
+    
+    it("should resolve the deferred when setLocalDescription's success fn is called.", inject(
+    function(webRtcService) {
+        win.RTCPeerConnection = function(){
+            return {
+                setLocalDescription: jasmine.createSpy("RTCPeerConnection.setLocalDescription")
+            };
+        };
+        webRtcService.init();
+        var pc = webRtcService.createPeerConnection({});
+        var response;
+        var output = { foo: "bar" };
+        
+        pc.setLocalDescription.and.callFake(function(desc, suc, fail) {
+            suc(output);
+        });
+        pc.ngsetLocalDescription("stuff").then(function(s){
+            response = s;
+        });
+        
+        $rootScope.$digest();
+        expect(response).toEqual(output);
+    }));
+    
+    it("should reject the deferred when setLocalDescription's fail fn is called.", inject(
+    function(webRtcService) {
+        win.RTCPeerConnection = function(){
+            return {
+                setLocalDescription: jasmine.createSpy("RTCPeerConnection.setLocalDescription")
+            };
+        };
+        webRtcService.init();
+        var pc = webRtcService.createPeerConnection({});
+        var response;
+        var output = { foo: "bar" };
+        
+        pc.setLocalDescription.and.callFake(function(desc, suc, fail) {
+            fail(output);
+        });
+        pc.ngsetLocalDescription("stuff").then(function(s){}, function(e){
+            response = e;
+        });
+        
+        $rootScope.$digest();
+        expect(response).toEqual(output);
+    }));
+    
+    it("should resolve the deferred when setRemoteDescription's success fn is called.", inject(
+    function(webRtcService) {
+        win.RTCPeerConnection = function(){
+            return {
+                setRemoteDescription: jasmine.createSpy("RTCPeerConnection.setLocalDescription")
+            };
+        };
+        webRtcService.init();
+        var pc = webRtcService.createPeerConnection({});
+        var response;
+        var output = { foo: "bar" };
+        
+        pc.setRemoteDescription.and.callFake(function(desc, suc, fail) {
+            suc(output);
+        });
+        pc.ngsetRemoteDescription("stuff").then(function(s){
+            response = s;
+        });
+        
+        $rootScope.$digest();
+        expect(response).toEqual(output);
+    }));
+    
+    it("should reject the deferred when setRemoteDescription's fail fn is called.", inject(
+    function(webRtcService) {
+        win.RTCPeerConnection = function(){
+            return {
+                setRemoteDescription: jasmine.createSpy("RTCPeerConnection.setRemoteDescription")
+            };
+        };
+        webRtcService.init();
+        var pc = webRtcService.createPeerConnection({});
+        var response;
+        var output = { foo: "bar" };
+        
+        pc.setRemoteDescription.and.callFake(function(desc, suc, fail) {
+            fail(output);
+        });
+        pc.ngsetRemoteDescription("stuff").then(function(s){}, function(e){
+            response = e;
+        });
+        
+        $rootScope.$digest();
+        expect(response).toEqual(output);
+    }));
+    
+    it("should resolve the deferred when createOffer's success fn is called.", inject(
+    function(webRtcService) {
+        win.RTCPeerConnection = function(){
+            return {
+                createOffer: jasmine.createSpy("RTCPeerConnection.setLocalDescription")
+            };
+        };
+        webRtcService.init();
+        var pc = webRtcService.createPeerConnection({});
+        var response;
+        var output = { foo: "bar" };
+        
+        pc.createOffer.and.callFake(function(suc, fail) {
+            suc(output);
+        });
+        pc.ngcreateOffer("stuff").then(function(s){
+            response = s;
+        });
+        
+        $rootScope.$digest();
+        expect(response).toEqual(output);
+    }));
+    
+    it("should reject the deferred when createOffer's fail fn is called.", inject(
+    function(webRtcService) {
+        win.RTCPeerConnection = function(){
+            return {
+                createOffer: jasmine.createSpy("RTCPeerConnection.setRemoteDescription")
+            };
+        };
+        webRtcService.init();
+        var pc = webRtcService.createPeerConnection({});
+        var response;
+        var output = { foo: "bar" };
+        
+        pc.createOffer.and.callFake(function(suc, fail) {
+            fail(output);
+        });
+        pc.ngcreateOffer("stuff").then(function(s){}, function(e){
+            response = e;
+        });
+        
+        $rootScope.$digest();
+        expect(response).toEqual(output);
+    }));
+    
+    it("should resolve the deferred when createAnswer's success fn is called.", inject(
+    function(webRtcService) {
+        win.RTCPeerConnection = function(){
+            return {
+                createAnswer: jasmine.createSpy("RTCPeerConnection.setLocalDescription")
+            };
+        };
+        webRtcService.init();
+        var pc = webRtcService.createPeerConnection({});
+        var response;
+        var output = { foo: "bar" };
+        
+        pc.createAnswer.and.callFake(function(suc, fail, constraints) {
+            suc(output);
+        });
+        pc.ngcreateAnswer("stuff").then(function(s){
+            response = s;
+        });
+        
+        $rootScope.$digest();
+        expect(response).toEqual(output);
+    }));
+    
+    it("should reject the deferred when createAnswer's fail fn is called.", inject(
+    function(webRtcService) {
+        win.RTCPeerConnection = function(){
+            return {
+                createAnswer: jasmine.createSpy("RTCPeerConnection.setRemoteDescription")
+            };
+        };
+        webRtcService.init();
+        var pc = webRtcService.createPeerConnection({});
+        var response;
+        var output = { foo: "bar" };
+        
+        pc.createAnswer.and.callFake(function(suc, fail, constraints) {
+            fail(output);
+        });
+        pc.ngcreateAnswer("stuff").then(function(s){}, function(e){
+            response = e;
+        });
+        
+        $rootScope.$digest();
+        expect(response).toEqual(output);
+    }));
 });
