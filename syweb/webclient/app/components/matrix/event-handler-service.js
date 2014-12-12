@@ -338,7 +338,32 @@ function(matrixService, $rootScope, $window, $q, $timeout, $filter, mPresence, n
                 break;
             }
         }
+    };
+    
+    var handleTyping = function(event, isLiveEvent) {
+        if (!isLiveEvent) {
+            return; // m.typing is an EDU, so they should always be live.
+        }
         
+        var room = modelService.getRoom(event.room_id);
+        
+        // m.typing events clobber, so null out all the typing notifications.
+        for (var userId in room.now.members) {
+            if (!room.now.members.hasOwnProperty(userId)) continue;
+            var member = room.now.members[userId];
+            member.typing = false;
+        }
+        
+        // set the users currently typing
+        if (event.content && event.content.user_ids) {
+            for (var i=0; i<event.content.user_ids.length; i++) {
+                var userId = event.content.user_ids[i];
+                var member = room.now.members[userId];
+                if (member) {
+                    member.typing = true;
+                }
+            }
+        }
     };
     
     // resolves a room ID or alias, returning a deferred.
@@ -428,6 +453,9 @@ function(matrixService, $rootScope, $window, $q, $timeout, $filter, mPresence, n
                         break;
                     case 'm.room.redaction':
                         handleRedaction(event, isLiveEvent);
+                        break;
+                    case "m.typing":
+                        handleTyping(event, isLiveEvent);
                         break;
                     default:
                         // if it is a state event, then just add it in so it

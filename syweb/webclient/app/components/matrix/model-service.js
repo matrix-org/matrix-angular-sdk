@@ -293,6 +293,7 @@ function(matrixService, $rootScope, $q) {
         this.event = {}; // the m.room.member event representing the RoomMember.
         this.power_level_norm = 0;
         this.power_level = 0;
+        this.typing = false; // true if m.typing sez so
         // the calculated name of this member depending on the room state
         this.name = undefined;
         // the User: the current up-to-date info for this member

@@ -11,6 +11,7 @@ describe('EventHandlerService', function() {
             return {
                 room_id: roomId,
                 current_room_state: testNowState,
+                now: testNowState,
                 old_room_state: testOldState,
                 events: testEvents,
                 addMessageEvent: function(event, toFront) {
@@ -824,6 +825,113 @@ describe('EventHandlerService', function() {
             testInitialSync.data.rooms[0].messages.chunk[3],
             true
         );
+    }));
+    
+    it('should be able to process m.typing events.', inject(
+    function(eventHandlerService) {
+        eventHandlerService.handleInitialSyncDone(testInitialSync);
+        testNowState.members = {
+            "@aaa:matrix.org": {
+                typing: false
+            },
+            "@bbb:matrix.org": {
+                typing: false
+            }
+        };
+        
+        var event = {
+            content: {
+                user_ids: ["@aaa:matrix.org"]
+            },
+            user_id: "matrix.org",
+            type: "m.typing"
+        };
+        eventHandlerService.handleEvent(event, true);
+        expect(testNowState.members["@aaa:matrix.org"].typing).toBe(true);
+    }));
+    
+    it('should clobber m.typing events.', inject(
+    function(eventHandlerService) {
+        eventHandlerService.handleInitialSyncDone(testInitialSync);
+        testNowState.members = {
+            "@aaa:matrix.org": {
+                typing: false
+            },
+            "@bbb:matrix.org": {
+                typing: false
+            }
+        };
+        
+        var event = {
+            content: {
+                user_ids: ["@aaa:matrix.org"]
+            },
+            user_id: "matrix.org",
+            type: "m.typing"
+        };
+        eventHandlerService.handleEvent(event, true);
+        expect(testNowState.members["@aaa:matrix.org"].typing).toBe(true);
+        
+        // clobber with bbb
+        event = {
+            content: {
+                user_ids: ["@bbb:matrix.org"]
+            },
+            user_id: "matrix.org",
+            type: "m.typing"
+        };
+        eventHandlerService.handleEvent(event, true);
+        expect(testNowState.members["@aaa:matrix.org"].typing).toBe(false); // reset
+        expect(testNowState.members["@bbb:matrix.org"].typing).toBe(true);
+    }));
+    
+    it('should treat an empty m.typing user_ids array as no-one is typing.', inject(
+    function(eventHandlerService) {
+        eventHandlerService.handleInitialSyncDone(testInitialSync);
+        testNowState.members = {
+            "@aaa:matrix.org": {
+                typing: false
+            },
+            "@bbb:matrix.org": {
+                typing: false
+            }
+        };
+        
+        var event = {
+            content: {
+                user_ids: []
+            },
+            user_id: "matrix.org",
+            type: "m.typing"
+        };
+        eventHandlerService.handleEvent(event, true);
+        expect(testNowState.members["@aaa:matrix.org"].typing).toBe(false);
+        expect(testNowState.members["@bbb:matrix.org"].typing).toBe(false);
+    }));
+    
+    it('should ignore unknown user_ids in m.typing.', inject(
+    function(eventHandlerService) {
+        eventHandlerService.handleInitialSyncDone(testInitialSync);
+        testNowState.members = {
+            "@aaa:matrix.org": {
+                typing: false
+            },
+            "@bbb:matrix.org": {
+                typing: false
+            }
+        };
+        
+        var event = {
+            content: {
+                user_ids: ["@ccc:matrix.org"]
+            },
+            user_id: "matrix.org",
+            type: "m.typing"
+        };
+        eventHandlerService.handleEvent(event, true);
+        expect(testNowState.members["@aaa:matrix.org"].typing).toBe(false);
+        expect(testNowState.members["@bbb:matrix.org"].typing).toBe(false);
+        expect(testNowState.members["@ccc:matrix.org"]).toBeUndefined();
     }));
     
 });
