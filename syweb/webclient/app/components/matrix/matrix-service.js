@@ -41,6 +41,8 @@ angular.module('matrixService', [])
     var prefixPath = "/_matrix/client/api/v1";
     var handleRateLimiting = true;
     var rateLimitMaxMs = 1000 * 20; // 20s
+    
+    var DEFAULT_TYPING_TIMEOUT_MS = 20000;
 
     var doRequest = function(method, path, params, data, $httpParams) {
         if (!config) {
@@ -187,6 +189,7 @@ angular.module('matrixService', [])
     };
 
     return {
+        DEFAULT_TYPING_TIMEOUT_MS: DEFAULT_TYPING_TIMEOUT_MS,
         prefix: prefixPath,
         
         shouldHandleRateLimiting: function(handleLimiting) {
@@ -487,6 +490,36 @@ angular.module('matrixService', [])
             path = path.replace("$room_id", room_id);
             path = path.replace("$txn_id", txn_id);
 
+            return doRequest("PUT", path, undefined, content);
+        },
+        
+        setTyping: function(room_id, isTyping, timeoutMs, user_id) {
+            if (!user_id) {
+                user_id = config.user_id;
+            }
+        
+            var path = "/rooms/$room_id/typing/$user_id";
+            path = path.replace("$room_id", encodeURIComponent(room_id));
+            path = path.replace("$user_id", encodeURIComponent(user_id));
+            
+            var content;
+            
+            if (isTyping) {
+                if (!timeoutMs) {
+                    timeoutMs = DEFAULT_TYPING_TIMEOUT_MS;
+                }
+                
+                content = {
+                    typing: true,
+                    timeout: timeoutMs
+                };
+            }
+            else {
+                content = {
+                    typing: false
+                };
+            }
+            
             return doRequest("PUT", path, undefined, content);
         },
 
