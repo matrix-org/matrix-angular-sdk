@@ -250,7 +250,7 @@
                                   class="message"
                                   fix-width="false && msg.user_id === state.user_id" 
                                   ng-class="containsBingWord(msg) && msg.user_id != state.user_id ? msg.__echo_msg_state + ' messageBing' : msg.__echo_msg_state"
-                                  ng-bind-html="(msg.content.format === 'org.matrix.custom.html') ? (msg.content.formatted_body | unsanitizedLinky) : (msg.content.body | linky:'_blank') "/>
+                                  ng-bind-html="(msg.content.format === 'org.matrix.custom.html') ? (msg.content.formatted_body | unsanitizedLinky:'_blank') : (msg.content.body | linky:'_blank') "/>
 
                              <div ng-switch-when="m.image">
                                  <div ng-hide='msg.content.thumbnail_url' ng-style="msg.content.body.h && { 'height' : (msg.content.body.h < 320) ? msg.content.body.h : 320}">
