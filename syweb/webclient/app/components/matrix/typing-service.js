@@ -23,10 +23,9 @@ limitations under the License.
  * server poke (which when it times out means you need to re-poke).
  */
 angular.module('typingService', [])
-.factory('typingService', [ '$rootScope', '$timeout', 'matrixService',
-function($rootScope, $timeout, matrixService) {
+.factory('typingService', [ '$timeout', 'matrixService',
+function($timeout, matrixService) {
     var typingService = {};
-
 
     // canonical source for rooms typing in
     var roomsTyping = {
