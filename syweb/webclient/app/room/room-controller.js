@@ -284,6 +284,7 @@ angular.module('RoomController', ['ngSanitize', 'matrixFilter', 'mFileInput', 'a
         }
         $scope.feedback = "";
         scrollToBottom(true);
+        typingService.setTyping($scope.room_id, false);
         
         eventHandlerService.sendMessage($scope.room_id, input,
         {
