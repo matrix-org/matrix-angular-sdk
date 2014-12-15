@@ -263,6 +263,24 @@ angular.module('RoomController')
     }
 }])
 
+// a directive to call onTyping whenever the input box changes. FIXME: This is horribly coupled to the parent scope,
+// but the main use case (the chat entry box) already has an isolated scope and apparently you can't have >1. :(
+.directive('typing', function() {
+    return {
+        restrict: "AE",
+        link: function(scope, elem, attrs) {
+            elem.on("input", function(event) {
+                scope.onTyping(elem);
+            });
+            
+            scope.$on('$destroy', function() {
+                element.off("input");
+                scope = null;
+            });
+        }
+    };
+})
+
 // A directive to anchor the scroller position at the bottom when the browser is resizing.
 // When the screen resizes, the bottom of the element remains the same, not the top.
 .directive('keepScroll', ['$window', function($window) {
