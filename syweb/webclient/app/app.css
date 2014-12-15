@@ -614,6 +614,14 @@ textarea, input {
 }
 */
 
+.typingIcon {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 20px;
+    height: 20px;
+}
+
 .online {
     border-color: #38AF00;
     background-color: #38AF00;
