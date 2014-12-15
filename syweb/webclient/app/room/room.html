@@ -174,7 +174,7 @@
                      alt="{{ member.event.content.displayname || member.id.substr(0, member.id.indexOf(':')) }}"
                      title="{{ member.id }} - power: {{ member.power_level }}"
                      width="80" height="80"/>
-                <img src="img/keyboard.png" ng-show="member.typing" class="typingIcon" />
+                <img src="img/keyboard.png" ng-show="member.typing && member.id != state.user_id" class="typingIcon" />
                 <!-- <div class="userPowerLevel" ng-style="{'width': member.powerLevelNorm +'%'}"></div> -->
             </div>
             <div class="userName">
