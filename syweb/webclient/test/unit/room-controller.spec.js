@@ -53,7 +53,7 @@ describe("RoomController ", function() {
         open: function(){}
     };
     var typingService = {
-    
+        setTyping: function(){}
     };
     
     beforeEach(function() {
