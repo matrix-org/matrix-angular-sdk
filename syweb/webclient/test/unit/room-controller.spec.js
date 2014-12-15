@@ -52,6 +52,9 @@ describe("RoomController ", function() {
     var modal = {
         open: function(){}
     };
+    var typingService = {
+    
+    };
     
     beforeEach(function() {
         module('RoomController');
@@ -117,7 +120,8 @@ describe("RoomController ", function() {
                 'mFileUpload': mFileUpload,
                 'dialogService': dialogService,
                 '$routeParams': routeParams,
-                '$modal': modal
+                '$modal': modal,
+                'typingService': typingService
             });
         })
     );
