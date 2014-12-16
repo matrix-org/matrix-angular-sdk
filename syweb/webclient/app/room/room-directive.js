@@ -274,7 +274,7 @@ angular.module('RoomController')
             });
             
             scope.$on('$destroy', function() {
-                element.off("input");
+                elem.off("input");
                 scope = null;
             });
         }
