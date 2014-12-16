@@ -120,10 +120,18 @@ function(matrixService, $rootScope, $q) {
             var stateAtTheTime = toFront ? this.old_room_state : this.current_room_state;
             aEvent.sender = stateAtTheTime.members[aEvent.event.user_id];
             
-            if (aEvent.event.type === "m.room.member" && aEvent.event.content.membership === "invite") {
-                // give information on both the inviter and invitee
-                aEvent.target = stateAtTheTime.getStateEvent("m.room.member", aEvent.event.state_key);
+            if (aEvent.event.type === "m.room.member") {
+                if (aEvent.event.content.membership === "invite") {
+                    // give information on both the inviter and invitee
+                    aEvent.target = stateAtTheTime.getStateEvent("m.room.member", aEvent.event.state_key);
+                }
+                
+                var changed_key = this.getChangedKeyForMemberEvent(aEvent.event);
+                if (changed_key) {
+                    aEvent.changed_key = changed_key;
+                }
             }
+            
             return aEvent;
         },
         
@@ -146,8 +154,23 @@ function(matrixService, $rootScope, $q) {
             }
         },
         
+        getChangedKeyForMemberEvent: function(event) {
+            var memberChanges = undefined;
+        
+            // could be a membership change, display name change, etc.
+            // Find out which one.
+            if ((event.prev_content === undefined && event.content.membership) || (event.prev_content && (event.prev_content.membership !== event.content.membership))) {
+                memberChanges = "membership";
+            }
+            else if (event.prev_content && (event.prev_content.displayname !== event.content.displayname)) {
+                memberChanges = "displayname";
+            }
+            return memberChanges;
+        },
+        
         // mutate the member for the room state being modified.
         mutateRoomMemberState: function(event, isLive) {
+            var changed_key = this.getChangedKeyForMemberEvent(event);
             var userId = event.state_key;
             if (isLive) {
                 this.current_room_state.storeStateEvent(event);
@@ -165,7 +188,7 @@ function(matrixService, $rootScope, $q) {
                 // names/etc, hence the check here.
                 var targetContent = event.prev_content ? event.prev_content : event.content;
 
-                if (event.__changedKey === "membership" && event.content.membership === "join") {
+                if (changed_key === "membership" && event.content.membership === "join") {
                     // join has a prev_content but it doesn't contain all the info unlike the join, so use that.
                     targetContent = event.content;
                 }

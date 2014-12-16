@@ -4,10 +4,11 @@ describe('EventHandlerService', function() {
     var testContainsBingWords, testPresenceState, testRoomName; // mPresence, mRoomNameFilter, notificationService
     var testUserId, testDisplayName, testBingWords; // matrixService.config
     var testResolvedRoomId, testJoinSuccess, testRoomInitialSync; // matrixService
-    var testNowState, testOldState, testEvents; // modelService
+    var testNowState, testOldState, testEvents, testChangedKey; // modelService
     
     var modelService = {
         getRoom: function(roomId) {
+            // FIXME: This shouldn't return a new object every time, we should be spyOn'ing rather the all this crap
             return {
                 room_id: roomId,
                 current_room_state: testNowState,
@@ -48,7 +49,10 @@ describe('EventHandlerService', function() {
                         }
                     }
                 },
-                mutateRoomMemberState: function(){}
+                mutateRoomMemberState: function(){},
+                getChangedKeyForMemberEvent: function(){
+                    return testChangedKey;
+                }
             };
         },
         createRoomIdToAliasMapping: function(roomId, alias) {
@@ -171,6 +175,7 @@ describe('EventHandlerService', function() {
         testUserId = "@me:matrix.org";
         testDisplayName = "Me";
         testBingWords = [];
+        testChangedKey = undefined;
         
         testRoomName = "Room Name";
         testJoinSuccess = true;
@@ -724,6 +729,7 @@ describe('EventHandlerService', function() {
             type: "m.room.member",
             event_id: "wf"
         };
+        testChangedKey = "membership";
         spyOn(notificationService, "showNotification");
         _window.Notification = true;
         eventHandlerService.handleEvent(event, true);
@@ -766,7 +772,8 @@ describe('EventHandlerService', function() {
             room_id: roomId,
             addMessageEvent: function(){},
             addOrReplaceMessageEvent: function(){},
-            mutateRoomMemberState: function(){}
+            mutateRoomMemberState: function(){},
+            getChangedKeyForMemberEvent: function(){}
         };
         testInitialSync.data.rooms.push(angular.copy(testRoomInitialSync));
         
@@ -787,6 +794,7 @@ describe('EventHandlerService', function() {
         spyOn(theRoom.old_room_state, "storeStateEvents");
         spyOn(theRoom, "addOrReplaceMessageEvent");
         spyOn(theRoom, "addMessageEvent");
+        spyOn(theRoom, "getChangedKeyForMemberEvent");
         
         // an invited room
         var inviterUserId = "@inviter:matrix.org";

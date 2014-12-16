@@ -258,18 +258,7 @@ function(matrixService, $rootScope, $window, $q, $timeout, $filter, mPresence, n
     
     var handleRoomMember = function(event, isLiveEvent) {
         var room = modelService.getRoom(event.room_id);
-        var memberChanges = undefined;
-        
-        // could be a membership change, display name change, etc.
-        // Find out which one.
-        if ((event.prev_content === undefined && event.content.membership) || (event.prev_content && (event.prev_content.membership !== event.content.membership))) {
-            memberChanges = "membership";
-        }
-        else if (event.prev_content && (event.prev_content.displayname !== event.content.displayname)) {
-            memberChanges = "displayname";
-        }
-        // mark the key which changed
-        event.__changedKey = memberChanges;
+        var memberChanges = room.getChangedKeyForMemberEvent(event);
         
         // modify state before adding the message so it points to the right thing.
         // The events are copied to avoid referencing the same event when adding
