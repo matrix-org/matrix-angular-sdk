@@ -255,7 +255,7 @@
 
                              <div ng-switch-when="m.image">
                                  <div ng-hide='msg.e.content.thumbnail_url' ng-style="msg.e.content.body.h && { 'height' : (msg.e.content.body.h < 320) ? msg.e.content.body.h : 320}">
-                                     <img class="image" ng-src="{{ msg.httpUri(msg.e.content.url) }}"/>
+                                     <img class="image" ng-src="{{ msg.httpUri(msg.e.content.url, 300, 200) }}"/>
                                  </div>
                                  <div ng-show='msg.e.content.thumbnail_url' ng-style="{ 'height' : msg.e.content.thumbnail_info.h }">
                                      <img class="image mouse-pointer" ng-src="{{ msg.httpUri(msg.e.content.thumbnail_url) }}"

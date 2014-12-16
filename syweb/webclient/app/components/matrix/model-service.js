@@ -354,7 +354,7 @@ function(matrixService, $rootScope, $q) {
                 return uri;
             }
             if (uri.indexOf("mxc://") === 0) {
-                return matrixService.getHttpUriForMxc(mxc, width, height, resizeMethod);
+                return matrixService.getHttpUriForMxc(uri, width, height, resizeMethod);
             }
             return uri;
         }

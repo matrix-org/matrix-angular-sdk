@@ -380,19 +380,6 @@ angular.module('RoomController', ['ngSanitize', 'matrixFilter', 'mFileInput', 'a
             }
         }, 0);
     };
-
-    // used to send an image based on just a URL, rather than uploading one
-    $scope.sendImage = function(url, body) {
-        scrollToBottom(true);
-        
-        matrixService.sendImageMessage($scope.room_id, url, body).then(
-            function() {
-                console.log("Image sent");
-            },
-            function(error) {
-                dialogService.showError(error);
-            });
-    };
     
     $scope.fileToSend;
     $scope.$watch("fileToSend", function(newValue, oldValue) {
@@ -400,7 +387,7 @@ angular.module('RoomController', ['ngSanitize', 'matrixFilter', 'mFileInput', 'a
             // Upload this file
             var progressAmount = 0;
             dialogService.showProgress("Uploading file...", "", progressAmount);
-            mFileUpload.uploadFileAndThumbnail($scope.fileToSend, THUMBNAIL_SIZE).then(
+            mFileUpload.uploadForEvent($scope.fileToSend).then(
                 function(fileMessage) {
                     $rootScope.$broadcast('dialogs.wait.complete');
                     // fileMessage is complete message structure, send it as is

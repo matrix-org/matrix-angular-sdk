@@ -707,7 +707,7 @@ angular.module('matrixService', [])
          *          path and query parameters respectively.
          */
         getContentUrl: function() {
-            var path = "/_matrix/content";
+            var path = "/_matrix/media/v1/upload";
             
             var params = {
                 access_token: config.access_token
