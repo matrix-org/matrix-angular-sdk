@@ -204,7 +204,7 @@
                     <!--  room.now.members[msg.e.user_id].event.content.avatar_url is just backwards compat, and can be removed in the future. Synapse didn't used to
                           send m.room.member updates when avatar urls changed, so the image which should be visible here just going off room state isn't visible. We fix
                           this by reading off the m.presence url -->
-                    <img class="avatarImage mouse-pointer" ng-src="{{ msg.sender.event.content.avatar_url || room.now.members[msg.e.user_id].event.content.avatar_url || 'img/default-profile.png' }}" width="32" height="32" title="{{msg.e.user_id}}"
+                    <img class="avatarImage mouse-pointer" ng-src="{{ msg.httpUri(msg.sender.event.content.avatar_url) || room.now.members[msg.e.user_id].event.content.avatar_url || 'img/default-profile.png' }}" width="32" height="32" title="{{msg.e.user_id}}"
                          ng-hide="room.aevents[$index - 1].user_id === msg.e.user_id || msg.e.user_id === state.user_id" ng-click="$parent.goToUserPage(msg.e.user_id)"/>
                 </td>
                 <td class="msg" ng-class="(!msg.e.content.membership && ('m.room.topic' !== msg.e.type && 'm.room.name' !== msg.e.type))? (msg.e.content.msgtype === 'm.emote' ? 'emote text' : 'text') : 'membership text'">
@@ -243,37 +243,37 @@
                         <span ng-show='msg.e.type === "m.room.message"' ng-switch='msg.e.content.msgtype'>
                             <span ng-switch-when="m.emote"
                                   fix-width="false && msg.e.user_id === state.user_id" 
-                                  ng-class="containsBingWord(msg) && msg.e.user_id != state.user_id ? msg.css_class + ' messageBing' : msg.css_class"
+                                  ng-class="containsBingWord(msg.event) && msg.e.user_id != state.user_id ? msg.css_class + ' messageBing' : msg.css_class"
                                   ng-bind-html="'* ' + (msg.sender.name) + ' ' + msg.e.content.body | linky:'_blank'"
                                   />
 
                             <span ng-switch-when="m.text"
                                   class="message"
                                   fix-width="false && msg.e.user_id === state.user_id" 
-                                  ng-class="containsBingWord(msg) && msg.e.user_id != state.user_id ? msg.css_class + ' messageBing' : msg.css_class"
+                                  ng-class="containsBingWord(msg.event) && msg.e.user_id != state.user_id ? msg.css_class + ' messageBing' : msg.css_class"
                                   ng-bind-html="(msg.e.content.format === 'org.matrix.custom.html') ? (msg.e.content.formatted_body | unsanitizedLinky:'_blank') : (msg.e.content.body | linky:'_blank') "/>
 
                              <div ng-switch-when="m.image">
                                  <div ng-hide='msg.e.content.thumbnail_url' ng-style="msg.e.content.body.h && { 'height' : (msg.e.content.body.h < 320) ? msg.e.content.body.h : 320}">
-                                     <img class="image" ng-src="{{ msg.e.content.url }}"/>
+                                     <img class="image" ng-src="{{ msg.httpUri(msg.e.content.url) }}"/>
                                  </div>
                                  <div ng-show='msg.e.content.thumbnail_url' ng-style="{ 'height' : msg.e.content.thumbnail_info.h }">
-                                     <img class="image mouse-pointer" ng-src="{{ msg.e.content.thumbnail_url }}"
-                                          ng-click="$parent.$parent.fullScreenImageURL = msg.e.content.url; $event.stopPropagation();"/>
+                                     <img class="image mouse-pointer" ng-src="{{ msg.httpUri(msg.e.content.thumbnail_url) }}"
+                                          ng-click="$parent.$parent.fullScreenImageURL = msg.httpUri(msg.e.content.url); $event.stopPropagation();"/>
                                  </div>
                              </div>
 
                             <span ng-switch-when="m.file" ng-class="msg.css_class">
                                 <div class="file_thumbnail" ng-show='msg.e.content.thumbnail_url' ng-style="{ 'height' : msg.e.content.thumbnail_info.h }">
                                     <a href="{{ msg.e.content.url}}" target="_blank">
-                                        <img class="image mouse-pointer" ng-style="{ 'height' : msg.e.content.thumbnail_info.h }" ng-src="{{ msg.e.content.thumbnail_url }}"/>
+                                        <img class="image mouse-pointer" ng-style="{ 'height' : msg.e.content.thumbnail_info.h }" ng-src="{{ msg.httpUri(msg.e.content.thumbnail_url) }}"/>
                                     </a>
                                 </div>
                                 <a href="{{ msg.e.content.url}}" target="_blank">{{ msg.e.content.body }}</a>
                             </span>
                                 
                             <span ng-switch-default
-                                ng-class="containsBingWord(msg) && msg.e.user_id != state.user_id ? msg.css_class + ' messageBing' : msg.css_class"
+                                ng-class="containsBingWord(msg.event) && msg.e.user_id != state.user_id ? msg.css_class + ' messageBing' : msg.css_class"
                                 ng-bind-html="msg.e.content.body | linky:'_blank'"
                                 />
                         </span>

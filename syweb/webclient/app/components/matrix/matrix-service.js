@@ -718,6 +718,25 @@ angular.module('matrixService', [])
                 params: params
             };
         },
+        
+        getHttpUriForMxc: function(mxc, width, height, resizeMethod) {
+            var serverAndMediaId = mxc.slice(6); // strips mxc://
+            var prefix = "/_matrix/media/v1/download/";
+            var params = {};
+            
+            if (width) {
+                params.width = width;
+            }
+            if (height) {
+                params.height = height;
+            }
+            if (resizeMethod) {
+                params.method = resizeMethod;
+            }
+            
+            return config.homeserver + prefix + serverAndMediaId + (Object.keys(params).length === 0 ? "" : ("?" + jQuery.param(params)));
+        },
+        
 
         /**
          * Start listening on /events

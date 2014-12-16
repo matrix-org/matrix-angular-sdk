@@ -346,6 +346,18 @@ function(matrixService, $rootScope, $q) {
         this.e = this.event; // alias for this.event for html (less typing)
     };
     
+    AnnotatedEvent.prototype = {
+        httpUri: function(uri, width, height, resizeMethod) {
+            if (!typeof uri === "string" || !uri) {
+                return uri;
+            }
+            if (uri.indexOf("mxc://") === 0) {
+                return matrixService.getHttpUriForMxc(mxc, width, height, resizeMethod);
+            }
+            return uri;
+        }
+    };
+    
     
     return {
         LIVE_MESSAGE_EVENT: LIVE_MESSAGE_EVENT,
