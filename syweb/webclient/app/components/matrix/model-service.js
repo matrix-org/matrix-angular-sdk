@@ -69,7 +69,7 @@ function(matrixService, $rootScope, $q) {
         this.old_room_state = new RoomState();
         this.current_room_state = new RoomState();
         this.now = this.current_room_state; // makes html access shorter
-        this.events = []; // events which can be displayed on the UI.
+        this.events = []; // MessageEvents which can be displayed on the UI.
         
         // some pre-calculated cached information
         this.lastEvent = undefined;
@@ -306,6 +306,16 @@ function(matrixService, $rootScope, $q) {
         this.event = {};
         // used with last_active_ago to work out last seen times
         this.last_updated = 0;
+    };
+    
+    
+    /***** MessageEvent Object *****/
+    var MessageEvent = function Event() {
+        this.event = {};
+        this.sender = undefined; // the RoomMember who sent the event
+        this.target = undefined; // the target RoomMember for events with actions (invite/kick/ban)
+        this.send_state = undefined; // Can be 'unsent' or 'pending' depending on the send status.
+        this.changed_key = undefined; // the name of the key which changed for m.room.member events
     };
     
     
