@@ -552,11 +552,11 @@ function(matrixService, $rootScope, $window, $q, $timeout, $filter, mPresence, n
             initialSyncDeferred.resolve("");
         },
         
-        resendMessage: function(echoMessage, sendCallback) {
-            modelService.getRoom(echoMessage.room_id).removeEvent(echoMessage);
+        resendMessage: function(annotatedEvent, sendCallback) {
+            modelService.getRoom(annotatedEvent.event.room_id).removeEvent(annotatedEvent.event);
             return this.sendMessage(
-                echoMessage.room_id, 
-                echoMessage.__echo_original_input, 
+                annotatedEvent.event.room_id, 
+                annotatedEvent._original_input, 
                 sendCallback
             );
         },
@@ -594,11 +594,12 @@ function(matrixService, $rootScope, $window, $q, $timeout, $filter, mPresence, n
                     origin_server_ts: new Date().getTime(), // fake a timestamp
                     room_id: roomId,
                     type: "m.room.message",
-                    user_id: matrixService.config().user_id,
-                    __echo_original_input: input,
-                    __echo_msg_state: "messagePending"     // Add custom field to indicate the state of this fake message to HTML
+                    user_id: matrixService.config().user_id
                 };
-                modelService.getRoom(roomId).addMessageEvent(echoMessage);
+                var annotatedEvent = modelService.getRoom(roomId).addMessageEvent(echoMessage);
+                annotatedEvent._original_input = input;
+                annotatedEvent.send_state = "pending";
+                annotatedEvent.css_class = "messagePending";
                 sendCallback.onSendEcho(echoMessage);
             }
 
@@ -623,10 +624,11 @@ function(matrixService, $rootScope, $window, $q, $timeout, $filter, mPresence, n
                     },
                     function(error) {
                         sendCallback.onError(error);
-                        if (echoMessage) {
+                        if (annotatedEvent) {
                             // Mark the message as unsent for the rest of the page life
-                            echoMessage.origin_server_ts = "Unsent";
-                            echoMessage.__echo_msg_state = "messageUnSent";
+                            annotatedEvent.origin_server_ts = "Unsent";
+                            annotatedEvent.send_state = "unsent";
+                            annotatedEvent.css_class = "messageUnSent";
                         }
                     }
                 );

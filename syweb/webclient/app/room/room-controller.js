@@ -466,8 +466,8 @@ angular.module('RoomController', ['ngSanitize', 'matrixFilter', 'mFileInput', 'a
         $rootScope.currentCall = call;
     };
 
-    $scope.openJson = function(content) {
-        $scope.event_selected = angular.copy(content.event);
+    $scope.openJson = function(annotatedEvent) {
+        $scope.event_selected = angular.copy(annotatedEvent);
         
         // scope this so the template can check power levels and enable/disable
         // buttons
@@ -481,10 +481,10 @@ angular.module('RoomController', ['ngSanitize', 'matrixFilter', 'mFileInput', 'a
 
         modalInstance.result.then(function(action) {
             if (action === "redact") {
-                var eventId = $scope.event_selected.event_id;
+                var eventId = $scope.event_selected.event.event_id;
                 console.log("Redacting event ID " + eventId);
                 matrixService.redactEvent(
-                    $scope.event_selected.room_id,
+                    $scope.event_selected.event.room_id,
                     eventId
                 ).then(function(response) {
                     console.log("Redaction = " + JSON.stringify(response));
@@ -495,8 +495,8 @@ angular.module('RoomController', ['ngSanitize', 'matrixFilter', 'mFileInput', 'a
             }
             else if (action === "resend") {
                 // NB: Resend the original, NOT the copy.
-                console.log("Resending "+content);
-                eventHandlerService.resendMessage(content, {
+                console.log("Resending "+annotatedEvent.event);
+                eventHandlerService.resendMessage(annotatedEvent, {
                     onSendEcho: function(echoMessage) {},
                     onSent: function(response, isEcho) {},
                     onError: function(error) {

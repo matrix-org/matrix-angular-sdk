@@ -310,7 +310,7 @@ describe("RoomController ", function() {
         scope.room_id = roomId;
         scope.room = testRoom;
         
-        var msgEvent = {
+        var annotatedEvent = {
             event: {
                 content: {
                     body: "something naughty",
@@ -329,9 +329,9 @@ describe("RoomController ", function() {
             };
         });
         expect(scope.event_selected).toBeUndefined();
-        scope.openJson(msgEvent);
+        scope.openJson(annotatedEvent);
         expect(modal.open).toHaveBeenCalled();
-        expect(scope.event_selected).toEqual(jasmine.objectContaining(msgEvent.event));
+        expect(scope.event_selected).toEqual(jasmine.objectContaining(annotatedEvent));
     });
     
     it('should be able to redact an event on the event info dialog.', function() {
@@ -373,16 +373,18 @@ describe("RoomController ", function() {
         scope.room_id = roomId;
         scope.room = testRoom;
         
-        var event = {
-            content: {
-                body: "something naughty",
-                msgtype: "m.text"
+        var annotatedEvent = {
+            event: {
+                content: {
+                    body: "something naughty",
+                    msgtype: "m.text"
+                },
+                user_id: userId,
+                type: "m.room.message",
+                room_id: roomId,
+                event_id: eventId
             },
-            user_id: userId,
-            type: "m.room.message",
-            room_id: roomId,
-            event_id: eventId,
-            __echo_msg_state: "messageUnSent"
+            send_state: "unsent"
         };
         
         // open the dialog
@@ -392,7 +394,7 @@ describe("RoomController ", function() {
                 result: defer.promise
             };
         });
-        scope.openJson(event);
+        scope.openJson(annotatedEvent);
         
         
         // hit the resend button
@@ -403,7 +405,7 @@ describe("RoomController ", function() {
         defer.resolve("resend");
         scope.$digest();
         expect(eventHandlerService.resendMessage).toHaveBeenCalledWith(
-            event, 
+            annotatedEvent, 
             jasmine.any(Object)
         );  
     });

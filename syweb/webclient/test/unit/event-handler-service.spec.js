@@ -16,22 +16,24 @@ describe('EventHandlerService', function() {
                 old_room_state: testOldState,
                 aevents: testEvents,
                 addMessageEvent: function(event, toFront) {
+                    var annotatedEvent = {event: event};
                     if (toFront) {
-                        testEvents.unshift({event: event});
+                        testEvents.unshift(annotatedEvent);
                     }
                     else {
-                        testEvents.push({event: event});
+                        testEvents.push(annotatedEvent);
                     }
+                    return annotatedEvent;
                 },
                 addOrReplaceMessageEvent: function(event, toFront) {
                     for (var i = this.aevents.length - 1; i >= 0; i--) {
                         var storedEvent = this.aevents[i].event;
                         if (storedEvent.event_id === event.event_id) {
                             this.aevents[i] = {event: event};
-                            return;
+                            return this.aevents[i];
                         }
                     }
-                    this.addMessageEvent(event, toFront);
+                    return this.addMessageEvent(event, toFront);
                 },
                 getAnnotatedEvent: function(eventId) {
                     for (var i = this.aevents.length - 1; i >= 0; i--) {

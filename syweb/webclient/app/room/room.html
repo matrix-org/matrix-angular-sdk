@@ -2,18 +2,18 @@
 
     <script type="text/ng-template" id="eventInfoTemplate.html">
         <div class="modal-body">
-            <pre> {{event_selected | json}} </pre>
+            <pre> {{event_selected.event | json}} </pre>
         </div>
         <div class="modal-footer">
             <button ng-click="redact()" type="button" class="btn btn-danger redact-button" 
              ng-disabled="!room.current_room_state.state('m.room.power_levels').content.redact || !modelService.getUserPowerLevel(room_id, state.user_id) || modelService.getUserPowerLevel(room_id, state.user_id) < room.current_room_state.state('m.room.power_levels').content.redact"
-             ng-hide="event_selected.__echo_msg_state === 'messageUnSent'"
+             ng-hide="event_selected.send_state === 'unsent'"
              title="Delete this event on all home servers. This cannot be undone.">
                 Redact
             </button>
             
             <button ng-click="resend()" type="button" class="btn btn-info redact-button" 
-             ng-show="event_selected.__echo_msg_state === 'messageUnSent'">
+             ng-show="event_selected.send_state === 'unsent'">
                 Resend
             </button>
 
@@ -195,7 +195,7 @@
                 <td class="leftBlock" ng-mouseover="state.showTs = 1" ng-mouseout="state.showTs = 0">
                     <div class="timestamp"
                          ng-style="{ 'opacity': state.showTs ? 1.0 : 0.0 }"
-                         ng-class="msg.e.__echo_msg_state">
+                         ng-class="msg.css_class">
                         {{ (msg.e.origin_server_ts) | date:'MMM d HH:mm' }}
                     </div>
                     <div class="sender" ng-click="appendName($event, msg)" ng-hide="room.aevents[$index - 1].user_id === msg.e.user_id || msg.e.user_id === state.user_id"> {{ msg.sender.name }}</div>
@@ -243,14 +243,14 @@
                         <span ng-show='msg.e.type === "m.room.message"' ng-switch='msg.e.content.msgtype'>
                             <span ng-switch-when="m.emote"
                                   fix-width="false && msg.e.user_id === state.user_id" 
-                                  ng-class="containsBingWord(msg) && msg.e.user_id != state.user_id ? msg.e.__echo_msg_state + ' messageBing' : msg.e.__echo_msg_state"
+                                  ng-class="containsBingWord(msg) && msg.e.user_id != state.user_id ? msg.css_class + ' messageBing' : msg.css_class"
                                   ng-bind-html="'* ' + (msg.sender.name) + ' ' + msg.e.content.body | linky:'_blank'"
                                   />
 
                             <span ng-switch-when="m.text"
                                   class="message"
                                   fix-width="false && msg.e.user_id === state.user_id" 
-                                  ng-class="containsBingWord(msg) && msg.e.user_id != state.user_id ? msg.e.__echo_msg_state + ' messageBing' : msg.e.__echo_msg_state"
+                                  ng-class="containsBingWord(msg) && msg.e.user_id != state.user_id ? msg.css_class + ' messageBing' : msg.css_class"
                                   ng-bind-html="(msg.e.content.format === 'org.matrix.custom.html') ? (msg.e.content.formatted_body | unsanitizedLinky:'_blank') : (msg.e.content.body | linky:'_blank') "/>
 
                              <div ng-switch-when="m.image">
@@ -263,7 +263,7 @@
                                  </div>
                              </div>
 
-                            <span ng-switch-when="m.file" ng-class="msg.e.__echo_msg_state">
+                            <span ng-switch-when="m.file" ng-class="msg.css_class">
                                 <div class="file_thumbnail" ng-show='msg.e.content.thumbnail_url' ng-style="{ 'height' : msg.e.content.thumbnail_info.h }">
                                     <a href="{{ msg.e.content.url}}" target="_blank">
                                         <img class="image mouse-pointer" ng-style="{ 'height' : msg.e.content.thumbnail_info.h }" ng-src="{{ msg.e.content.thumbnail_url }}"/>
@@ -273,7 +273,7 @@
                             </span>
                                 
                             <span ng-switch-default
-                                ng-class="containsBingWord(msg) && msg.e.user_id != state.user_id ? msg.e.__echo_msg_state + ' messageBing' : msg.e.__echo_msg_state"
+                                ng-class="containsBingWord(msg) && msg.e.user_id != state.user_id ? msg.css_class + ' messageBing' : msg.css_class"
                                 ng-bind-html="msg.e.content.body | linky:'_blank'"
                                 />
                         </span>
