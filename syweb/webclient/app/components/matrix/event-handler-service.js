@@ -226,7 +226,7 @@ function(matrixService, $rootScope, $window, $q, $timeout, $filter, mPresence, n
         }
 
         // fix up icons for files. XXX: is this the right place to do this?
-        if (event.content.url && !event.content.thumbnail_url && event.content.info && event.content.info.mimetype) {
+        if (event.content.url && !event.content.thumbnail_url && event.content.info && event.content.info.mimetype && event.content.url.indexOf("mxc://") != 0) {
             var major = event.content.info.mimetype.substr(event.content.info.mimetype.indexOf("/"));
             event.content.thumbnail_url = mimeTypeToIcon[major] || mimeTypeToIcon[''];
             event.content.thumbnail_info = {

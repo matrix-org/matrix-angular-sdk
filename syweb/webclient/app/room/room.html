@@ -254,11 +254,15 @@
                                   ng-bind-html="(msg.e.content.format === 'org.matrix.custom.html') ? (msg.e.content.formatted_body | unsanitizedLinky:'_blank') : (msg.e.content.body | linky:'_blank') "/>
 
                              <div ng-switch-when="m.image">
-                                 <div ng-hide='msg.e.content.thumbnail_url' ng-style="msg.e.content.body.h && { 'height' : (msg.e.content.body.h < 320) ? msg.e.content.body.h : 320}">
-                                     <img class="image" ng-src="{{ msg.httpUri(msg.e.content.url, 300, 200) }}"/>
+                                 <div ng-hide='msg.e.content.thumbnail_url || msg.e.content.url.indexOf("mxc://") === 0' ng-style="msg.e.content.body.h && { 'height' : (msg.e.content.body.h < 320) ? msg.e.content.body.h : 320}">
+                                     <img class="image" ng-src="{{ msg.httpUri(msg.e.content.url, 320, 320) }}"/>
                                  </div>
                                  <div ng-show='msg.e.content.thumbnail_url' ng-style="{ 'height' : msg.e.content.thumbnail_info.h }">
                                      <img class="image mouse-pointer" ng-src="{{ msg.httpUri(msg.e.content.thumbnail_url) }}"
+                                          ng-click="$parent.$parent.fullScreenImageURL = msg.httpUri(msg.e.content.url); $event.stopPropagation();"/>
+                                 </div>
+                                 <div ng-show='msg.e.content.url.indexOf("mxc://") === 0' ng-style="{ 'height' : 320 }">
+                                     <img class="image mouse-pointer" ng-src="{{ msg.httpUri(msg.e.content.url, 320, 320) }}"
                                           ng-click="$parent.$parent.fullScreenImageURL = msg.httpUri(msg.e.content.url); $event.stopPropagation();"/>
                                  </div>
                              </div>
