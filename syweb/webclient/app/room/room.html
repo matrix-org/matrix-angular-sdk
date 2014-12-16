@@ -170,7 +170,7 @@
             <div class="userAvatarFrame" ng-class="(member.user.event.content.presence === 'online' ? 'online' : (member.user.event.content.presence === 'unavailable' ? 'unavailable' : '')) + ' ' + (member.event.content.membership == 'invite' ? 'invited' : '')">
                 <img class="userAvatarImage mouse-pointer" 
                      ng-click="$parent.goToUserPage(member.id)"
-                     ng-src="{{member.event.content.avatar_url || 'img/default-profile.png'}}" 
+                     ng-src="{{member.aevent.httpUri(member.event.content.avatar_url) || 'img/default-profile.png'}}" 
                      alt="{{ member.event.content.displayname || member.id.substr(0, member.id.indexOf(':')) }}"
                      title="{{ member.id }} - power: {{ member.power_level }}"
                      width="80" height="80"/>
@@ -191,21 +191,21 @@
          keep-scroll>
         <table id="messageTable" infinite-scroll="paginateMore()" aria-live="polite" role="log">
             <tr ng-repeat="msg in room.aevents"
-                ng-class="(room.aevents[$index - 1].user_id !== msg.e.user_id ? 'differentUser' : '') + (msg.e.user_id === state.user_id ? ' mine' : '')" scroll-item>
+                ng-class="(room.aevents[$index - 1].e.user_id !== msg.e.user_id ? 'differentUser' : '') + (msg.e.user_id === state.user_id ? ' mine' : '')" scroll-item>
                 <td class="leftBlock" ng-mouseover="state.showTs = 1" ng-mouseout="state.showTs = 0">
                     <div class="timestamp"
                          ng-style="{ 'opacity': state.showTs ? 1.0 : 0.0 }"
                          ng-class="msg.css_class">
                         {{ (msg.e.origin_server_ts) | date:'MMM d HH:mm' }}
                     </div>
-                    <div class="sender" ng-click="appendName($event, msg)" ng-hide="room.aevents[$index - 1].user_id === msg.e.user_id || msg.e.user_id === state.user_id"> {{ msg.sender.name }}</div>
+                    <div class="sender" ng-click="appendName($event, msg)" ng-hide="room.aevents[$index - 1].e.user_id === msg.e.user_id || msg.e.user_id === state.user_id"> {{ msg.sender.name }}</div>
                 </td>
                 <td class="avatar" ng-click="appendName($event, msg)">
                     <!--  room.now.members[msg.e.user_id].event.content.avatar_url is just backwards compat, and can be removed in the future. Synapse didn't used to
                           send m.room.member updates when avatar urls changed, so the image which should be visible here just going off room state isn't visible. We fix
                           this by reading off the m.presence url -->
-                    <img class="avatarImage mouse-pointer" ng-src="{{ msg.httpUri(msg.sender.event.content.avatar_url) || room.now.members[msg.e.user_id].event.content.avatar_url || 'img/default-profile.png' }}" width="32" height="32" title="{{msg.e.user_id}}"
-                         ng-hide="room.aevents[$index - 1].user_id === msg.e.user_id || msg.e.user_id === state.user_id" ng-click="$parent.goToUserPage(msg.e.user_id)"/>
+                    <img class="avatarImage mouse-pointer" ng-src="{{ msg.httpUri(msg.sender.event.content.avatar_url) || msg.httpUri(room.now.members[msg.e.user_id].event.content.avatar_url) || 'img/default-profile.png' }}" width="32" height="32" title="{{msg.e.user_id}}"
+                         ng-hide="room.aevents[$index - 1].e.user_id === msg.e.user_id || msg.e.user_id === state.user_id" ng-click="$parent.goToUserPage(msg.e.user_id)"/>
                 </td>
                 <td class="msg" ng-class="(!msg.e.content.membership && ('m.room.topic' !== msg.e.type && 'm.room.name' !== msg.e.type))? (msg.e.content.msgtype === 'm.emote' ? 'emote text' : 'text') : 'membership text'">
                     <div class="bubble" ng-dblclick="openJson(msg)" ng-mouseover="state.showTs = 1" ng-mouseout="state.showTs = 0">
@@ -265,11 +265,11 @@
 
                             <span ng-switch-when="m.file" ng-class="msg.css_class">
                                 <div class="file_thumbnail" ng-show='msg.e.content.thumbnail_url' ng-style="{ 'height' : msg.e.content.thumbnail_info.h }">
-                                    <a href="{{ msg.e.content.url}}" target="_blank">
+                                    <a href="{{ msg.httpUri(msg.e.content.url)}}" target="_blank">
                                         <img class="image mouse-pointer" ng-style="{ 'height' : msg.e.content.thumbnail_info.h }" ng-src="{{ msg.httpUri(msg.e.content.thumbnail_url) }}"/>
                                     </a>
                                 </div>
-                                <a href="{{ msg.e.content.url}}" target="_blank">{{ msg.e.content.body }}</a>
+                                <a href="{{ msg.httpUri(msg.e.content.url)}}" target="_blank">{{ msg.e.content.body }}</a>
                             </span>
                                 
                             <span ng-switch-default
@@ -292,8 +292,8 @@
                     </div>
                 </td>
                 <td class="rightBlock">
-                    <img class="avatarImage" ng-src="{{ room.now.members[msg.e.user_id].event.content.avatar_url || 'img/default-profile.png' }}" width="32" height="32"
-                         ng-hide="room.aevents[$index - 1].user_id === msg.e.user_id || msg.e.user_id !== state.user_id"/>
+                    <img class="avatarImage" ng-src="{{ msg.httpUri(room.now.members[msg.e.user_id].event.content.avatar_url) || 'img/default-profile.png' }}" width="32" height="32"
+                         ng-hide="room.aevents[$index - 1].e.user_id === msg.e.user_id || msg.e.user_id !== state.user_id"/>
                 </td>
             </tr>
         </table>

@@ -250,6 +250,7 @@ function(matrixService, $rootScope, $q) {
                 rm.event = event;
                 rm.user = users[userId];
                 rm.name = event.content.displayname ? event.content.displayname : userId;
+                rm.aevent = new AnnotatedEvent(event);
                 this.members[userId] = rm;
                 
                 // work out power level for this room member
@@ -318,6 +319,7 @@ function(matrixService, $rootScope, $q) {
     /***** Room Member Object *****/
     var RoomMember = function RoomMember() {
         this.event = {}; // the m.room.member event representing the RoomMember.
+        this.aevent = {}; // the m.room.member AnnotatedEvent
         this.power_level_norm = 0;
         this.power_level = 0;
         this.typing = false; // true if m.typing sez so

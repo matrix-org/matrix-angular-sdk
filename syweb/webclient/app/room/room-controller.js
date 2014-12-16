@@ -264,11 +264,11 @@ angular.module('RoomController', ['ngSanitize', 'matrixFilter', 'mFileInput', 'a
         $scope.room = null;
     });
     
-    $scope.appendName = function($event, event) {
+    $scope.appendName = function($event, annotatedEvent) {
         if ($event.shiftKey) {
-            var name = event.sender.name;
+            var name = annotatedEvent.sender.name;
             if (!name) {
-                name = mUserDisplayNameFilter(event.user_id);
+                name = mUserDisplayNameFilter(annotatedEvent.event.user_id);
             }
             if (name) {
                 $('#mainInput').val($('#mainInput').val() + name);
