@@ -330,11 +330,11 @@ function(matrixService, $rootScope, $window, $q, $timeout, $filter, mPresence, n
         // event ID?
         var room = modelService.getRoom(event.room_id);
         // remove event from list of messages in this room.
-        var eventList = room.events;
-        for (var i=0; i<eventList.length; i++) {
-            if (eventList[i].event_id === event.redacts) {
+        var annotatedEvents = room.aevents;
+        for (var i=0; i<annotatedEvents.length; i++) {
+            if (annotatedEvents[i].event.event_id === event.redacts) {
                 console.log("Removing event " + event.redacts);
-                eventList.splice(i, 1);
+                annotatedEvents.splice(i, 1);
                 break;
             }
         }
@@ -619,7 +619,7 @@ function(matrixService, $rootScope, $window, $q, $timeout, $filter, mPresence, n
                         sendCallback.onSent(response, echo);
                         if (echoMessage) {
                             var eventId = response.data.event_id;
-                            var exists = modelService.getRoom(roomId).getEvent(eventId);
+                            var exists = modelService.getRoom(roomId).getAnnotatedEvent(eventId);
                             if (exists) {
                                 // kill the echo message, we have the real one already
                                 modelService.getRoom(roomId).removeEvent(echoMessage);

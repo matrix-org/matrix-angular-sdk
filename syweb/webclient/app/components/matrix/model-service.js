@@ -83,20 +83,20 @@ function(matrixService, $rootScope, $q) {
         },
         
         addMessageEvent: function addMessageEvent(event, toFront) {
-            var msgEvent = new AnnotatedEvent(event);
-            this.setMessageMemberInfo(msgEvent, toFront);
+            var aEvent = new AnnotatedEvent(event);
+            this.setMessageMemberInfo(aEvent, toFront);
             if (toFront) {
-                this.aevents.unshift(msgEvent);
+                this.aevents.unshift(aEvent);
                 if (!this.lastEvent) {
-                    this.lastEvent = msgEvent;
+                    this.lastEvent = aEvent;
                 }
             }
             else {
-                this.aevents.push(msgEvent);
-                this.lastEvent = msgEvent;
-                $rootScope.$broadcast(LIVE_MESSAGE_EVENT, msgEvent);
+                this.aevents.push(aEvent);
+                this.lastEvent = aEvent;
+                $rootScope.$broadcast(LIVE_MESSAGE_EVENT, aEvent);
             }
-            return msgEvent;
+            return aEvent;
         },
         
         addOrReplaceMessageEvent: function addOrReplaceMessageEvent(event, toFront) {
@@ -114,20 +114,20 @@ function(matrixService, $rootScope, $q) {
             return this.addMessageEvent(event, toFront);
         },
         
-        setMessageMemberInfo: function(msgEvent, toFront) {
+        setMessageMemberInfo: function(aEvent, toFront) {
             // every message must reference the RoomMember which made it *at
             // that time* so things like display names display correctly.
             var stateAtTheTime = toFront ? this.old_room_state : this.current_room_state;
-            msgEvent.sender = stateAtTheTime.members[msgEvent.event.user_id];
+            aEvent.sender = stateAtTheTime.members[aEvent.event.user_id];
             
-            if (msgEvent.event.type === "m.room.member" && msgEvent.event.content.membership === "invite") {
+            if (aEvent.event.type === "m.room.member" && aEvent.event.content.membership === "invite") {
                 // give information on both the inviter and invitee
-                msgEvent.target = stateAtTheTime.getStateEvent("m.room.member", msgEvent.event.state_key);
+                aEvent.target = stateAtTheTime.getStateEvent("m.room.member", aEvent.event.state_key);
             }
-            return msgEvent;
+            return aEvent;
         },
         
-        getEvent: function(eventId) {
+        getAnnotatedEvent: function(eventId) {
             // typically for dupe detection, so start at the end and work back
             for (var i = this.aevents.length - 1; i >= 0; i--) {
                 var storedEvent = this.aevents[i];

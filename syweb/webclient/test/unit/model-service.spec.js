@@ -163,7 +163,7 @@ describe('ModelService', function() {
             event_id: "aoufhai"
         };
         room.addMessageEvent(event);
-        var e = room.getEvent("aoufhai");
+        var e = room.getAnnotatedEvent("aoufhai");
         
         expect(e.event).toEqual(event);
     }));

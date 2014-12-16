@@ -343,7 +343,7 @@ angular.module('RoomController', ['ngSanitize', 'matrixFilter', 'mFileInput', 'a
             
             // enable pagination on the NEXT digest cycle. If you don't do this,
             // a pagination will be immediately fired because there hasn't been
-            // a digest to populate the list from $scope.room.events
+            // a digest to populate the list from $scope.room.aevents
             $timeout(function() {
                 $scope.state.can_paginate = true;
                 paginateForWindowSize();
