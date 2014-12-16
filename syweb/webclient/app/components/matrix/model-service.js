@@ -87,13 +87,13 @@ function(matrixService, $rootScope, $q) {
             this.setMessageMemberInfo(aEvent, toFront);
             if (toFront) {
                 this.aevents.unshift(aEvent);
-                if (!this.lastEvent) {
-                    this.lastEvent = aEvent;
+                if (!this.lastAnnotatedEvent) {
+                    this.lastAnnotatedEvent = aEvent;
                 }
             }
             else {
                 this.aevents.push(aEvent);
-                this.lastEvent = aEvent;
+                this.lastAnnotatedEvent = aEvent;
                 $rootScope.$broadcast(LIVE_MESSAGE_EVENT, aEvent);
             }
             return aEvent;
@@ -320,6 +320,7 @@ function(matrixService, $rootScope, $q) {
         this.target = undefined; // the target RoomMember for events with actions (invite/kick/ban)
         this.send_state = undefined; // Can be 'unsent' or 'pending' depending on the send status.
         this.changed_key = undefined; // the name of the key which changed for m.room.member events
+        this.e = this.event; // alias for this.event for html (less typing)
     };
     
     

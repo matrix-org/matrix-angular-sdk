@@ -54,8 +54,8 @@ angular.module('RecentsFilter', [])
         // The room with the latest message at first
         filtered.sort(function (roomA, roomB) {
 
-            var lastMsgRoomA = roomA.lastEvent;
-            var lastMsgRoomB = roomB.lastEvent;
+            var lastMsgRoomA = roomA.lastAnnotatedEvent;
+            var lastMsgRoomB = roomB.lastAnnotatedEvent;
 
             // Invite message does not have a body message nor ts
             // Puth them at the top of the list
@@ -66,7 +66,7 @@ angular.module('RecentsFilter', [])
                 return 1;
             }
             else {
-                return lastMsgRoomB.origin_server_ts - lastMsgRoomA.origin_server_ts;
+                return lastMsgRoomB.event.origin_server_ts - lastMsgRoomA.event.origin_server_ts;
             }
         });
         return filtered;

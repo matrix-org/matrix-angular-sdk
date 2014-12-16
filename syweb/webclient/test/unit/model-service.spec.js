@@ -148,7 +148,7 @@ describe('ModelService', function() {
         expect(bcast).toBeUndefined();
     }));
     
-    it('should be able to Room.getEvent.', inject(
+    it('should be able to Room.getAnnotatedEvent.', inject(
     function(modelService) {
         var roomId = "!wefiohwefuiow:matrix.org";
         var userId = "@bob:matrix.org";
