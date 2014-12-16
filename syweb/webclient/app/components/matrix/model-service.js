@@ -69,10 +69,10 @@ function(matrixService, $rootScope, $q) {
         this.old_room_state = new RoomState();
         this.current_room_state = new RoomState();
         this.now = this.current_room_state; // makes html access shorter
-        this.events = []; // MessageEvents which can be displayed on the UI.
+        this.aevents = []; // AnnotatedEvents which can be displayed on the UI.
         
         // some pre-calculated cached information
-        this.lastEvent = undefined;
+        this.lastAnnotatedEvent = undefined;
         this.name = room_id;
     };
     Room.prototype = {
@@ -83,62 +83,66 @@ function(matrixService, $rootScope, $q) {
         },
         
         addMessageEvent: function addMessageEvent(event, toFront) {
-            this.setMessageMemberInfo(event, toFront);
+            var msgEvent = new AnnotatedEvent(event);
+            this.setMessageMemberInfo(msgEvent, toFront);
             if (toFront) {
-                this.events.unshift(event);
+                this.aevents.unshift(msgEvent);
                 if (!this.lastEvent) {
-                    this.lastEvent = event;
+                    this.lastEvent = msgEvent;
                 }
             }
             else {
-                this.events.push(event);
-                this.lastEvent = event;
-                $rootScope.$broadcast(LIVE_MESSAGE_EVENT, event);
+                this.aevents.push(msgEvent);
+                this.lastEvent = msgEvent;
+                $rootScope.$broadcast(LIVE_MESSAGE_EVENT, msgEvent);
             }
+            return msgEvent;
         },
         
         addOrReplaceMessageEvent: function addOrReplaceMessageEvent(event, toFront) {
             // Start looking from the tail since the first goal of this function 
             // is to find a message among the latest ones
-            for (var i = this.events.length - 1; i >= 0; i--) {
-                var storedEvent = this.events[i];
-                if (storedEvent.event_id === event.event_id) {
+            for (var i = this.aevents.length - 1; i >= 0; i--) {
+                var storedEvent = this.aevents[i];
+                if (storedEvent.event.event_id === event.event_id) {
                     // It's clobbering time!
-                    this.events[i] = event;
-                    this.setMessageMemberInfo(event, toFront);
-                    return;
+                    this.aevents[i] = new AnnotatedEvent(event);
+                    this.setMessageMemberInfo(this.aevents[i], toFront);
+                    return this.aevents[i];
                 }
             }
-            this.addMessageEvent(event, toFront);
+            return this.addMessageEvent(event, toFront);
         },
         
-        setMessageMemberInfo: function(event, toFront) {
+        setMessageMemberInfo: function(msgEvent, toFront) {
             // every message must reference the RoomMember which made it *at
             // that time* so things like display names display correctly.
             var stateAtTheTime = toFront ? this.old_room_state : this.current_room_state;
-            event.__room_member = stateAtTheTime.members[event.user_id];
+            msgEvent.sender = stateAtTheTime.members[msgEvent.event.user_id];
             
-            if (event.type === "m.room.member" && event.content.membership === "invite") {
+            if (msgEvent.event.type === "m.room.member" && msgEvent.event.content.membership === "invite") {
                 // give information on both the inviter and invitee
-                event.__target_room_member = stateAtTheTime.getStateEvent("m.room.member", event.state_key);
+                msgEvent.target = stateAtTheTime.getStateEvent("m.room.member", msgEvent.event.state_key);
             }
-            return event;
+            return msgEvent;
         },
         
         getEvent: function(eventId) {
             // typically for dupe detection, so start at the end and work back
-            for (var i = this.events.length - 1; i >= 0; i--) {
-                var storedEvent = this.events[i];
-                if (storedEvent.event_id == eventId) {
+            for (var i = this.aevents.length - 1; i >= 0; i--) {
+                var storedEvent = this.aevents[i];
+                if (storedEvent.event.event_id == eventId) {
                     return storedEvent;
                 }
             }
         },
         
         removeEvent: function(event) {
-            var index = this.events.indexOf(event);
-            if (index >= 0) {
-                this.events.splice(index, 1);
+            for (var i=0; i<this.aevents.length; i++) {
+                if (this.aevents[i].event == event) {
+                    this.aevents.splice(i, 1);
+                    return;
+                }
             }
         },
         
@@ -309,9 +313,9 @@ function(matrixService, $rootScope, $q) {
     };
     
     
-    /***** MessageEvent Object *****/
-    var MessageEvent = function Event() {
-        this.event = {};
+    /***** AnnotatedEvent Object *****/
+    var AnnotatedEvent = function AnnotatedEvent(e) {
+        this.event = e ? e : {};
         this.sender = undefined; // the RoomMember who sent the event
         this.target = undefined; // the target RoomMember for events with actions (invite/kick/ban)
         this.send_state = undefined; // Can be 'unsent' or 'pending' depending on the send status.

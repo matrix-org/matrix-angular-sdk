@@ -310,14 +310,16 @@ describe("RoomController ", function() {
         scope.room_id = roomId;
         scope.room = testRoom;
         
-        var event = {
-            content: {
-                body: "something naughty",
-                msgtype: "m.text"
-            },
-            user_id: userId,
-            type: "m.room.message",
-            event_id: "aa"
+        var msgEvent = {
+            event: {
+                content: {
+                    body: "something naughty",
+                    msgtype: "m.text"
+                },
+                user_id: userId,
+                type: "m.room.message",
+                event_id: "aa"
+            }
         };
         
         var defer = $q.defer();
@@ -327,9 +329,9 @@ describe("RoomController ", function() {
             };
         });
         expect(scope.event_selected).toBeUndefined();
-        scope.openJson(event);
+        scope.openJson(msgEvent);
         expect(modal.open).toHaveBeenCalled();
-        expect(scope.event_selected).toEqual(jasmine.objectContaining(event));
+        expect(scope.event_selected).toEqual(jasmine.objectContaining(msgEvent.event));
     });
     
     it('should be able to redact an event on the event info dialog.', function() {
@@ -338,21 +340,23 @@ describe("RoomController ", function() {
         scope.room_id = roomId;
         scope.room = testRoom;
         
-        var event = {
-            content: {
-                body: "something naughty",
-                msgtype: "m.text"
-            },
-            user_id: userId,
-            type: "m.room.message",
-            room_id: roomId,
-            event_id: eventId
+        var msgEvent = {
+            event: {
+                content: {
+                    body: "something naughty",
+                    msgtype: "m.text"
+                },
+                user_id: userId,
+                type: "m.room.message",
+                room_id: roomId,
+                event_id: eventId
+            }
         };
         
         // open the dialog
         var defer = $q.defer();
         spyOn(modal, "open").and.returnValue({result: defer.promise});
-        scope.openJson(event);
+        scope.openJson(msgEvent);
         
         
         // hit the redact button

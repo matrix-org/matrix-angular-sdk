@@ -266,7 +266,7 @@ angular.module('RoomController', ['ngSanitize', 'matrixFilter', 'mFileInput', 'a
     
     $scope.appendName = function($event, event) {
         if ($event.shiftKey) {
-            var name = event.__room_member.name;
+            var name = event.sender.name;
             if (!name) {
                 name = mUserDisplayNameFilter(event.user_id);
             }
@@ -467,11 +467,7 @@ angular.module('RoomController', ['ngSanitize', 'matrixFilter', 'mFileInput', 'a
     };
 
     $scope.openJson = function(content) {
-        $scope.event_selected = angular.copy(content);
-        
-        // FIXME: Pre-calculated event data should be stripped in a nicer way.
-        $scope.event_selected.__room_member = undefined;
-        $scope.event_selected.__target_room_member = undefined;
+        $scope.event_selected = angular.copy(content.event);
         
         // scope this so the template can check power levels and enable/disable
         // buttons
