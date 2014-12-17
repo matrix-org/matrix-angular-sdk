@@ -733,6 +733,10 @@ angular.module('matrixService', [])
             if (resizeMethod) {
                 params.method = resizeMethod;
             }
+            if (Object.keys(params).length > 0) {
+                // these are thumbnailing params so they probably want the thumbnailing API...
+                prefix = "/_matrix/media/v1/thumbnail/";
+            }
             
             return config.homeserver + prefix + serverAndMediaId + (Object.keys(params).length === 0 ? "" : ("?" + jQuery.param(params)));
         },
