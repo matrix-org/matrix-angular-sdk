@@ -33,7 +33,9 @@ describe("RoomController ", function() {
         joinRoom: function(rm){},
         handleRoomMessages: function(room, data, live, dir){},
         sendMessage: function(rm,input){},
-        resendMessage: function(event, cb){}
+        resendMessage: function(event, cb){},
+        MEMBER_EVENT: "MEMBER_EVENT",
+        LIVE_MESSAGE_EVENT: "LIVE_MESSAGE_EVENT"
     };
     var mFileUpload = {};
     var mUserDisplayNameFilter = function(roomId){ return "";};
