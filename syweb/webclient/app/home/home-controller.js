@@ -17,8 +17,8 @@ limitations under the License.
 'use strict';
 
 angular.module('HomeController', ['matrixService', 'eventHandlerService', 'RecentsController'])
-.controller('HomeController', ['$scope', '$location', 'matrixService', 'eventHandlerService', 'recentsService', 'dialogService', '$modal',
-                               function($scope, $location, matrixService, eventHandlerService, recentsService, dialogService, $modal) {
+.controller('HomeController', ['$scope', '$rootScope', '$location', 'matrixService', 'eventHandlerService', 'recentsService', 'dialogService', '$modal',
+                               function($scope, $rootScope, $location, matrixService, eventHandlerService, recentsService, dialogService, $modal) {
 
     $scope.config = matrixService.config();
     $scope.public_rooms = undefined;
@@ -69,10 +69,13 @@ angular.module('HomeController', ['matrixService', 'eventHandlerService', 'Recen
     };
 
     $scope.joinAlias = function(room_alias) {
+        dialogService.showProgress(room_alias, "Joining room...", 100);
         eventHandlerService.joinRoom(room_alias).then(function(roomId) {
+            $rootScope.$broadcast('dialogs.wait.complete');
             $location.url("/room/" + room_alias);
         }, 
         function(err) {
+            $rootScope.$broadcast('dialogs.wait.complete');
             dialogService.showError(err);
         });
         
