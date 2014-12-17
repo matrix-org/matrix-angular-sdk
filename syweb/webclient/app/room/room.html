@@ -261,7 +261,7 @@
                                      <img class="image mouse-pointer" ng-src="{{ msg.httpUri(msg.e.content.thumbnail_url) }}"
                                           ng-click="$parent.$parent.fullScreenImageURL = msg.httpUri(msg.e.content.url); $event.stopPropagation();"/>
                                  </div>
-                                 <div ng-show='msg.e.content.url.indexOf("mxc://") === 0' ng-style="{ 'height' : 320 }">
+                                 <div ng-show='msg.e.content.url.indexOf("mxc://") === 0' ng-style="{ 'height' : thumbDim(msg.e.content.thumbnail_info, 'w', 320) }">
                                      <img class="image mouse-pointer" ng-src="{{ msg.httpUri(msg.e.content.url, 320, 320) }}"
                                           ng-click="$parent.$parent.fullScreenImageURL = msg.httpUri(msg.e.content.url); $event.stopPropagation();"/>
                                  </div>

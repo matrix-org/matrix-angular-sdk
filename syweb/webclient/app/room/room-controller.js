@@ -36,6 +36,20 @@ angular.module('RoomController', ['ngSanitize', 'matrixFilter', 'mFileInput', 'a
     };
 
     $scope.imageURLToSend = "";
+    
+    // calcs the thumbnail dimension from a large image
+    $scope.thumbDim = function(info, key, requestedSize) {
+        var widthMulti = requestedSize / info.w;
+        var heightMulti = requestedSize / info.h;
+        if (widthMulti < heightMulti) {
+            // width is the dominant dimension so scaling will be fixed on that
+            return widthMulti * info[key];
+        }
+        else {
+            // height is the dominant dimension so scaling will be fixed on that
+            return heightMulti * info[key];
+        }
+    };
 
     // vars and functions for updating the name
     $scope.name = {
