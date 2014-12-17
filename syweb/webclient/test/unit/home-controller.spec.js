@@ -6,7 +6,8 @@ describe("HomeController ", function() {
     
     var dialogService = {
         showError: function(err){}, // will be spyed
-        showSuccess: function(a,b){} // will be spyed
+        showSuccess: function(a,b){}, // will be spyed
+        showProgress: function(a,b){}
     };
     
     // test vars
