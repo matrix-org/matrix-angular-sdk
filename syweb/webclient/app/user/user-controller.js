@@ -19,7 +19,7 @@ limitations under the License.
 angular.module('UserController', ['matrixService'])
 .controller('UserController', ['$scope', '$rootScope', '$routeParams', 'matrixService', 'dialogService', 'eventHandlerService',
                               function($scope, $rootScope, $routeParams, matrixService, dialogService, eventHandlerService) { 
-                              
+    $scope.httpUri = matrixService.getHttpUriForMxc;
     $scope.onInit = function() {
         $scope.user = {
             id: $routeParams.user_matrix_id,
