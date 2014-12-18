@@ -720,6 +720,12 @@ angular.module('matrixService', [])
         },
         
         getHttpUriForMxc: function(mxc, width, height, resizeMethod) {
+            if (!typeof mxc === "string" || !mxc) {
+                return mxc;
+            }
+            if (mxc.indexOf("mxc://") !== 0) {
+                return mxc;
+            }
             var serverAndMediaId = mxc.slice(6); // strips mxc://
             var prefix = "/_matrix/media/v1/download/";
             var params = {};

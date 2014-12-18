@@ -31,6 +31,8 @@ angular.module('SettingsController', ['matrixService', 'mFileUpload', 'mFileInpu
         return ret;
     };
     $scope.config = matrixService.config();
+    
+    $scope.httpUri = matrixService.getHttpUriForMxc;
 
     $scope.profile = {
         displayName: "",
