@@ -77,29 +77,6 @@
         <a href ng-click="goToPage('/')"><img src="img/logo-small.png" width="100" height="43" alt="[matrix]"/></a>
 
         <div id="controlButtons">
-            <button ng-click="startVoiceCall()" class="controlButtonXmas"
-                    style="background: url('img/xmas_voice.png'); position: relative; bottom: 10px;"
-                    ng-show="(currentCall == undefined || currentCall.state == 'ended')"
-                    ng-disabled="state.permission_denied"
-                    >
-                <span class="sr-only">Start voice call</span>
-            </button>
-            <button ng-click="startVideoCall()" class="controlButtonXmas"
-                    style="background: url('img/xmas_video.png'); position: relative; bottom: 10px;"
-                    ng-show="(currentCall == undefined || currentCall.state == 'ended')"
-                    ng-disabled="state.permission_denied"
-                    >
-                <span class="sr-only">Start video call</span>
-            </button>
-            <button ng-click="openRoomInfo()" class="controlButtonXmas"
-                    style="background: url('img/xmas_settings.png'); position: relative; bottom: 10px;"
-                    >
-                <span class="sr-only">Settings</span>
-            </button>
-        </div>
-        
-        <!-- original
-        <div id="controlButtons">
             <button ng-click="startVoiceCall()" class="controlButton"
                     style="background: url('img/voice.png')"
                     ng-show="(currentCall == undefined || currentCall.state == 'ended')"
@@ -120,7 +97,6 @@
                 <span class="sr-only">Settings</span>
             </button>
         </div>
-        -->
 
         <div class="roomHeaderInfo">
 
