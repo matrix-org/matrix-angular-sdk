@@ -1,5 +1,9 @@
-Changes in Matrix Angular SDK 0.5.4 (2014-12-19)
+Changes in Matrix Angular SDK 0.6.0 (2014-12-19)
 ================================================
+
+Breaking changes:
+ - Uploading files in the web client will now hit the new content repository URL
+   introduced in Synapse 0.6.
 
 Bug fixes:
  - Fixed a bug which caused the event stream to become wedged when the computer is asleep.
