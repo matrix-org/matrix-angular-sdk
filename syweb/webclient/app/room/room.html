@@ -2,18 +2,18 @@
 
     <script type="text/ng-template" id="eventInfoTemplate.html">
         <div class="modal-body">
-            <pre> {{event_selected | json}} </pre>
+            <pre> {{event_selected.event | json}} </pre>
         </div>
         <div class="modal-footer">
             <button ng-click="redact()" type="button" class="btn btn-danger redact-button" 
              ng-disabled="!room.current_room_state.state('m.room.power_levels').content.redact || !modelService.getUserPowerLevel(room_id, state.user_id) || modelService.getUserPowerLevel(room_id, state.user_id) < room.current_room_state.state('m.room.power_levels').content.redact"
-             ng-hide="event_selected.__echo_msg_state === 'messageUnSent'"
+             ng-hide="event_selected.send_state === 'unsent'"
              title="Delete this event on all home servers. This cannot be undone.">
                 Redact
             </button>
             
             <button ng-click="resend()" type="button" class="btn btn-info redact-button" 
-             ng-show="event_selected.__echo_msg_state === 'messageUnSent'">
+             ng-show="event_selected.send_state === 'unsent'">
                 Resend
             </button>
 
@@ -146,10 +146,11 @@
             <div class="userAvatarFrame" ng-class="(member.user.event.content.presence === 'online' ? 'online' : (member.user.event.content.presence === 'unavailable' ? 'unavailable' : '')) + ' ' + (member.event.content.membership == 'invite' ? 'invited' : '')">
                 <img class="userAvatarImage mouse-pointer" 
                      ng-click="$parent.goToUserPage(member.id)"
-                     ng-src="{{member.event.content.avatar_url || 'img/default-profile.png'}}" 
+                     ng-src="{{member.aevent.httpUri(member.event.content.avatar_url, 200, 200) || 'img/default-profile.png'}}" 
                      alt="{{ member.event.content.displayname || member.id.substr(0, member.id.indexOf(':')) }}"
                      title="{{ member.id }} - power: {{ member.power_level }}"
                      width="80" height="80"/>
+                <img src="img/keyboard.png" ng-show="member.typing && member.id != state.user_id" class="typingIcon" />
                 <!-- <div class="userPowerLevel" ng-style="{'width': member.powerLevelNorm +'%'}"></div> -->
             </div>
             <div class="userName">
@@ -165,110 +166,114 @@
          ng-style="{ 'visibility': state.messages_visibility }"
          keep-scroll>
         <table id="messageTable" infinite-scroll="paginateMore()" aria-live="polite" role="log">
-            <tr ng-repeat="msg in room.events"
-                ng-class="(room.events[$index - 1].user_id !== msg.user_id ? 'differentUser' : '') + (msg.user_id === state.user_id ? ' mine' : '')" scroll-item>
+            <tr ng-repeat="msg in room.aevents"
+                ng-class="(room.aevents[$index - 1].e.user_id !== msg.e.user_id ? 'differentUser' : '') + (msg.e.user_id === state.user_id ? ' mine' : '')" scroll-item>
                 <td class="leftBlock" ng-mouseover="state.showTs = 1" ng-mouseout="state.showTs = 0">
                     <div class="timestamp"
                          ng-style="{ 'opacity': state.showTs ? 1.0 : 0.0 }"
-                         ng-class="msg.__echo_msg_state">
-                        {{ (msg.origin_server_ts) | date:'MMM d HH:mm' }}
+                         ng-class="msg.css_class">
+                        {{ (msg.e.origin_server_ts) | date:'MMM d HH:mm' }}
                     </div>
-                    <div class="sender" ng-click="appendName($event, msg)" ng-hide="room.events[$index - 1].user_id === msg.user_id || msg.user_id === state.user_id"> {{ msg.__room_member.name }}</div>
+                    <div class="sender" ng-click="appendName($event, msg)" ng-hide="room.aevents[$index - 1].e.user_id === msg.e.user_id || msg.e.user_id === state.user_id"> {{ msg.sender.name }}</div>
                 </td>
                 <td class="avatar" ng-click="appendName($event, msg)">
-                    <!--  room.now.members[msg.user_id].event.content.avatar_url is just backwards compat, and can be removed in the future. Synapse didn't used to
+                    <!--  room.now.members[msg.e.user_id].event.content.avatar_url is just backwards compat, and can be removed in the future. Synapse didn't used to
                           send m.room.member updates when avatar urls changed, so the image which should be visible here just going off room state isn't visible. We fix
                           this by reading off the m.presence url -->
-                    <img class="avatarImage mouse-pointer" ng-src="{{ msg.__room_member.event.content.avatar_url || room.now.members[msg.user_id].event.content.avatar_url || 'img/default-profile.png' }}" width="32" height="32" title="{{msg.user_id}}"
-                         ng-hide="room.events[$index - 1].user_id === msg.user_id || msg.user_id === state.user_id" ng-click="$parent.goToUserPage(msg.user_id)"/>
+                    <img class="avatarImage mouse-pointer" ng-src="{{ msg.httpUri(msg.sender.event.content.avatar_url, 100, 100) || msg.httpUri(room.now.members[msg.e.user_id].event.content.avatar_url) || 'img/default-profile.png' }}" width="32" height="32" title="{{msg.e.user_id}}"
+                         ng-hide="room.aevents[$index - 1].e.user_id === msg.e.user_id || msg.e.user_id === state.user_id" ng-click="$parent.goToUserPage(msg.e.user_id)"/>
                 </td>
-                <td class="msg" ng-class="(!msg.content.membership && ('m.room.topic' !== msg.type && 'm.room.name' !== msg.type))? (msg.content.msgtype === 'm.emote' ? 'emote text' : 'text') : 'membership text'">
+                <td class="msg" ng-class="(!msg.e.content.membership && ('m.room.topic' !== msg.e.type && 'm.room.name' !== msg.e.type))? (msg.e.content.msgtype === 'm.emote' ? 'emote text' : 'text') : 'membership text'">
                     <div class="bubble" ng-dblclick="openJson(msg)" ng-mouseover="state.showTs = 1" ng-mouseout="state.showTs = 0">
-                        <span class="msg_meta" ng-if="'join' === msg.content.membership && msg.__changedKey === 'membership'">
-                            {{ msg.content.displayname || room.now.members[msg.state_key].event.content.displayname || msg.state_key }} joined
+                        <span class="msg_meta" ng-if="'join' === msg.e.content.membership && msg.changed_key === 'membership'">
+                            {{ msg.e.content.displayname || room.now.members[msg.e.state_key].event.content.displayname || msg.e.state_key }} joined
                         </span>
-                        <span class="msg_meta" ng-if="'leave' === msg.content.membership && msg.__changedKey === 'membership'">
-                            <span ng-if="msg.user_id === msg.state_key">
+                        <span class="msg_meta" ng-if="'leave' === msg.e.content.membership && msg.changed_key === 'membership'">
+                            <span ng-if="msg.e.user_id === msg.e.state_key">
                                 <!-- FIXME: This seems like a synapse bug that the 'leave' content doesn't give the displayname...
                                             so use the prev_content if there isn't a name. -->
-                                {{ msg.__room_member.name || msg.__room_member.event.prev_content.displayname }} left
+                                {{ msg.sender.name || msg.sender.event.prev_content.displayname }} left
                             </span>
-                            <span ng-if="msg.user_id !== msg.state_key && msg.prev_content">
-                                {{ msg.__room_member.name }}
-                                {{ {"invite": "kicked", "join": "kicked", "ban": "unbanned"}[msg.prev_content.membership] }}
-                                {{ msg.__target_room_member.content.displayname || msg.state_key }}
-                                <span ng-if="'join' === msg.prev_content.membership && msg.content.reason">
-                                    : {{ msg.content.reason }}
+                            <span ng-if="msg.e.user_id !== msg.e.state_key && msg.e.prev_content">
+                                {{ msg.sender.name }}
+                                {{ {"invite": "kicked", "join": "kicked", "ban": "unbanned"}[msg.e.prev_content.membership] }}
+                                {{ msg.target.content.displayname || msg.e.state_key }}
+                                <span ng-if="'join' === msg.e.prev_content.membership && msg.e.content.reason">
+                                    : {{ msg.e.content.reason }}
                                 </span>
                             </span>
                         </span>
-                        <span class="msg_meta" ng-if="'invite' === msg.content.membership && msg.__changedKey === 'membership' || 
-                                     'ban' === msg.content.membership && msg.__changedKey === 'membership'">
-                            {{ msg.__room_member.name }}
-                            {{ {"invite": "invited", "ban": "banned"}[msg.content.membership] }}
-                            {{ msg.__target_room_member.cnt.displayname || msg.state_key }}
-                            <span ng-if="msg.prev_content && 'ban' === msg.prev_content.membership && msg.content.reason">
-                                : {{ msg.content.reason }}
+                        <span class="msg_meta" ng-if="'invite' === msg.e.content.membership && msg.changed_key === 'membership' || 
+                                     'ban' === msg.e.content.membership && msg.changed_key === 'membership'">
+                            {{ msg.sender.name }}
+                            {{ {"invite": "invited", "ban": "banned"}[msg.e.content.membership] }}
+                            {{ msg.target.cnt.displayname || msg.e.state_key }}
+                            <span ng-if="msg.e.prev_content && 'ban' === msg.e.prev_content.membership && msg.e.content.reason">
+                                : {{ msg.e.content.reason }}
                             </span>
                         </span>                        
-                        <span class="msg_meta" ng-if="msg.__changedKey === 'displayname'">
-                            {{ msg.user_id }} changed their display name from {{ msg.prev_content.displayname }} to {{ msg.content.displayname }}
+                        <span class="msg_meta" ng-if="msg.changed_key === 'displayname'">
+                            {{ msg.e.user_id }} changed their display name from {{ msg.e.prev_content.displayname }} to {{ msg.e.content.displayname }}
                         </span>
                         
-                        <span ng-show='msg.type === "m.room.message"' ng-switch='msg.content.msgtype'>
+                        <span ng-show='msg.e.type === "m.room.message"' ng-switch='msg.e.content.msgtype'>
                             <span ng-switch-when="m.emote"
-                                  fix-width="false && msg.user_id === state.user_id" 
-                                  ng-class="containsBingWord(msg) && msg.user_id != state.user_id ? msg.__echo_msg_state + ' messageBing' : msg.__echo_msg_state"
-                                  ng-bind-html="'* ' + (msg.__room_member.name) + ' ' + msg.content.body | linky:'_blank'"
+                                  fix-width="false && msg.e.user_id === state.user_id" 
+                                  ng-class="containsBingWord(msg.event) && msg.e.user_id != state.user_id ? msg.css_class + ' messageBing' : msg.css_class"
+                                  ng-bind-html="'* ' + (msg.sender.name) + ' ' + msg.e.content.body | linky:'_blank'"
                                   />
 
                             <span ng-switch-when="m.text"
                                   class="message"
-                                  fix-width="false && msg.user_id === state.user_id" 
-                                  ng-class="containsBingWord(msg) && msg.user_id != state.user_id ? msg.__echo_msg_state + ' messageBing' : msg.__echo_msg_state"
-                                  ng-bind-html="(msg.content.format === 'org.matrix.custom.html') ? (msg.content.formatted_body | unsanitizedLinky) : (msg.content.body | linky:'_blank') "/>
+                                  fix-width="false && msg.e.user_id === state.user_id" 
+                                  ng-class="containsBingWord(msg.event) && msg.e.user_id != state.user_id ? msg.css_class + ' messageBing' : msg.css_class"
+                                  ng-bind-html="(msg.e.content.format === 'org.matrix.custom.html') ? (msg.e.content.formatted_body | unsanitizedLinky:'_blank') : (msg.e.content.body | linky:'_blank') "/>
 
                              <div ng-switch-when="m.image">
-                                 <div ng-hide='msg.content.thumbnail_url' ng-style="msg.content.body.h && { 'height' : (msg.content.body.h < 320) ? msg.content.body.h : 320}">
-                                     <img class="image" ng-src="{{ msg.content.url }}"/>
+                                 <div ng-hide='msg.e.content.thumbnail_url || msg.e.content.url.indexOf("mxc://") === 0' ng-style="msg.e.content.body.h && { 'height' : (msg.e.content.body.h < 320) ? msg.e.content.body.h : 320}">
+                                     <img class="image" ng-src="{{ msg.httpUri(msg.e.content.url, 320, 320) }}"/>
                                  </div>
-                                 <div ng-show='msg.content.thumbnail_url' ng-style="{ 'height' : msg.content.thumbnail_info.h }">
-                                     <img class="image mouse-pointer" ng-src="{{ msg.content.thumbnail_url }}"
-                                          ng-click="$parent.$parent.fullScreenImageURL = msg.content.url; $event.stopPropagation();"/>
+                                 <div ng-show='msg.e.content.thumbnail_url' ng-style="{ 'height' : msg.e.content.thumbnail_info.h }">
+                                     <img class="image mouse-pointer" ng-src="{{ msg.httpUri(msg.e.content.thumbnail_url) }}"
+                                          ng-click="$parent.$parent.fullScreenImageURL = msg.httpUri(msg.e.content.url); $event.stopPropagation();"/>
+                                 </div>
+                                 <div ng-show='msg.e.content.url.indexOf("mxc://") === 0' ng-style="{ 'height' : thumbDim(msg.e.content.thumbnail_info, 'w', 320) }">
+                                     <img class="image mouse-pointer" ng-src="{{ msg.httpUri(msg.e.content.url, 320, 320) }}"
+                                          ng-click="$parent.$parent.fullScreenImageURL = msg.httpUri(msg.e.content.url); $event.stopPropagation();"/>
                                  </div>
                              </div>
 
-                            <span ng-switch-when="m.file" ng-class="msg.__echo_msg_state">
-                                <div class="file_thumbnail" ng-show='msg.content.thumbnail_url' ng-style="{ 'height' : msg.content.thumbnail_info.h }">
-                                    <a href="{{ msg.content.url}}" target="_blank">
-                                        <img class="image mouse-pointer" ng-style="{ 'height' : msg.content.thumbnail_info.h }" ng-src="{{ msg.content.thumbnail_url }}"/>
+                            <span ng-switch-when="m.file" ng-class="msg.css_class">
+                                <div class="file_thumbnail" ng-show='msg.e.content.thumbnail_url' ng-style="{ 'height' : msg.e.content.thumbnail_info.h }">
+                                    <a href="{{ msg.httpUri(msg.e.content.url)}}" target="_blank">
+                                        <img class="image mouse-pointer" ng-style="{ 'height' : msg.e.content.thumbnail_info.h }" ng-src="{{ msg.httpUri(msg.e.content.thumbnail_url) }}"/>
                                     </a>
                                 </div>
-                                <a href="{{ msg.content.url}}" target="_blank">{{ msg.content.body }}</a>
+                                <a href="{{ msg.httpUri(msg.e.content.url)}}" target="_blank">{{ msg.e.content.body }}</a>
                             </span>
                                 
                             <span ng-switch-default
-                                ng-class="containsBingWord(msg) && msg.user_id != state.user_id ? msg.__echo_msg_state + ' messageBing' : msg.__echo_msg_state"
-                                ng-bind-html="msg.content.body | linky:'_blank'"
+                                ng-class="containsBingWord(msg.event) && msg.e.user_id != state.user_id ? msg.css_class + ' messageBing' : msg.css_class"
+                                ng-bind-html="msg.e.content.body | linky:'_blank'"
                                 />
                         </span>
 
-                        <span class="msg_meta" ng-show='msg.type === "m.call.invite" && msg.user_id == state.user_id'>Outgoing Call{{ isWebRTCSupported() ? '' : ' (But your browser does not support VoIP)' }}</span>
-                        <span class="msg_meta" ng-show='msg.type === "m.call.invite" && msg.user_id != state.user_id'>Incoming Call{{ isWebRTCSupported() ? '' : ' (But your browser does not support VoIP)' }}</span>
+                        <span class="msg_meta" ng-show='msg.e.type === "m.call.invite" && msg.e.user_id == state.user_id'>Outgoing Call{{ isWebRTCSupported() ? '' : ' (But your browser does not support VoIP)' }}</span>
+                        <span class="msg_meta" ng-show='msg.e.type === "m.call.invite" && msg.e.user_id != state.user_id'>Incoming Call{{ isWebRTCSupported() ? '' : ' (But your browser does not support VoIP)' }}</span>
 
-                        <span class="msg_meta" ng-if="'m.room.topic' === msg.type">
-                            {{ msg.__room_member.name }} changed the topic to: {{ msg.content.topic }}
+                        <span class="msg_meta" ng-if="'m.room.topic' === msg.e.type">
+                            {{ msg.sender.name }} changed the topic to: {{ msg.e.content.topic }}
                         </span>
 
-                        <span class="msg_meta" ng-if="'m.room.name' === msg.type">
-                            {{ msg.__room_member.name }} changed the room name to: {{ msg.content.name }}
+                        <span class="msg_meta" ng-if="'m.room.name' === msg.e.type">
+                            {{ msg.sender.name }} changed the room name to: {{ msg.e.content.name }}
                         </span>
 
                     </div>
                 </td>
                 <td class="rightBlock">
-                    <img class="avatarImage" ng-src="{{ room.now.members[msg.user_id].event.content.avatar_url || 'img/default-profile.png' }}" width="32" height="32"
-                         ng-hide="room.events[$index - 1].user_id === msg.user_id || msg.user_id !== state.user_id"/>
+                    <img class="avatarImage" ng-src="{{ msg.httpUri(room.now.members[msg.e.user_id].event.content.avatar_url, 100, 100) || 'img/default-profile.png' }}" width="32" height="32"
+                         ng-hide="room.aevents[$index - 1].e.user_id === msg.e.user_id || msg.e.user_id !== state.user_id"/>
                 </td>
             </tr>
         </table>
@@ -288,7 +293,7 @@
             </button>
             <textarea id="mainInput" rows="1" ng-enter="send()"
                       ng-disabled="state.permission_denied"
-                      ng-focus="true" autocomplete="off" tab-complete command-history="room_id"/>
+                      ng-focus="true" autocomplete="off" tab-complete command-history="room_id" typing/>
             <div class="feedback">{{ feedback }}</div>
         </div>
     </div>

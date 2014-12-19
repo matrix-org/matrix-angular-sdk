@@ -17,6 +17,16 @@ checkout to be picked up by synapse::
 
     $ python setup.py develop --user
 
+Running
+=======
+To run the stand-alone client, the ``syweb/webclient`` folder must be hosted.
+This can most easily be achieved by::
+
+   cd syweb/webclient
+   python -m SimpleHTTPServer
+   
+Navigate to ``http://localhost:8000`` to see the client.
+
 Overview
 ========
 The ``app`` directory contains the SDK, which is split up into subfolders depending
@@ -40,6 +50,8 @@ Services can be used independently provided their dependencies are satisfied.
 * ``eventHandlerService`` interprets raw Matrix events and determines what needs to be
   stored with the ``modelService``.
 * ``eventStreamService`` controls long-polling behaviour on the ``/events`` HTTP call.
+* ``typingService`` controls the submission of typing events into a room.
+* ``presenceService`` controls the submission of presence events.
  
 Alternatively, you can use different controllers and html templates and leave the services
 to work together as is.
@@ -55,6 +67,8 @@ Attributions
 ============
 File icons are taken from http://medialoot.com/item/free-flat-filetype-icons/ and
 distributed under the terms of the Paid License (invoice #7355)
+
+Keyboard icon from icons8: http://icons8.com/
 
 .. _Synapse: https://github.com/matrix-org/synapse/
 .. _Matrix: http://www.matrix.org

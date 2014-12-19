@@ -226,7 +226,7 @@ function(matrixService, $rootScope, $window, $q, $timeout, $filter, mPresence, n
         }
 
         // fix up icons for files. XXX: is this the right place to do this?
-        if (event.content.url && !event.content.thumbnail_url && event.content.info && event.content.info.mimetype) {
+        if (event.content.url && !event.content.thumbnail_url && event.content.info && event.content.info.mimetype && event.content.url.indexOf("mxc://") != 0) {
             var major = event.content.info.mimetype.substr(event.content.info.mimetype.indexOf("/"));
             event.content.thumbnail_url = mimeTypeToIcon[major] || mimeTypeToIcon[''];
             event.content.thumbnail_info = {
@@ -258,18 +258,7 @@ function(matrixService, $rootScope, $window, $q, $timeout, $filter, mPresence, n
     
     var handleRoomMember = function(event, isLiveEvent) {
         var room = modelService.getRoom(event.room_id);
-        var memberChanges = undefined;
-        
-        // could be a membership change, display name change, etc.
-        // Find out which one.
-        if ((event.prev_content === undefined && event.content.membership) || (event.prev_content && (event.prev_content.membership !== event.content.membership))) {
-            memberChanges = "membership";
-        }
-        else if (event.prev_content && (event.prev_content.displayname !== event.content.displayname)) {
-            memberChanges = "displayname";
-        }
-        // mark the key which changed
-        event.__changedKey = memberChanges;
+        var memberChanges = room.getChangedKeyForMemberEvent(event);
         
         // modify state before adding the message so it points to the right thing.
         // The events are copied to avoid referencing the same event when adding
@@ -330,15 +319,40 @@ function(matrixService, $rootScope, $window, $q, $timeout, $filter, mPresence, n
         // event ID?
         var room = modelService.getRoom(event.room_id);
         // remove event from list of messages in this room.
-        var eventList = room.events;
-        for (var i=0; i<eventList.length; i++) {
-            if (eventList[i].event_id === event.redacts) {
+        var annotatedEvents = room.aevents;
+        for (var i=0; i<annotatedEvents.length; i++) {
+            if (annotatedEvents[i].event.event_id === event.redacts) {
                 console.log("Removing event " + event.redacts);
-                eventList.splice(i, 1);
+                annotatedEvents.splice(i, 1);
                 break;
             }
         }
+    };
+    
+    var handleTyping = function(event, isLiveEvent) {
+        if (!isLiveEvent) {
+            return; // m.typing is an EDU, so they should always be live.
+        }
         
+        var room = modelService.getRoom(event.room_id);
+        
+        // m.typing events clobber, so null out all the typing notifications.
+        for (var userId in room.now.members) {
+            if (!room.now.members.hasOwnProperty(userId)) continue;
+            var member = room.now.members[userId];
+            member.typing = false;
+        }
+        
+        // set the users currently typing
+        if (event.content && event.content.user_ids) {
+            for (var i=0; i<event.content.user_ids.length; i++) {
+                var userId = event.content.user_ids[i];
+                var member = room.now.members[userId];
+                if (member) {
+                    member.typing = true;
+                }
+            }
+        }
     };
     
     // resolves a room ID or alias, returning a deferred.
@@ -428,6 +442,9 @@ function(matrixService, $rootScope, $window, $q, $timeout, $filter, mPresence, n
                         break;
                     case 'm.room.redaction':
                         handleRedaction(event, isLiveEvent);
+                        break;
+                    case "m.typing":
+                        handleTyping(event, isLiveEvent);
                         break;
                     default:
                         // if it is a state event, then just add it in so it
@@ -535,11 +552,11 @@ function(matrixService, $rootScope, $window, $q, $timeout, $filter, mPresence, n
             initialSyncDeferred.resolve("");
         },
         
-        resendMessage: function(echoMessage, sendCallback) {
-            modelService.getRoom(echoMessage.room_id).removeEchoEvent(echoMessage);
+        resendMessage: function(annotatedEvent, sendCallback) {
+            modelService.getRoom(annotatedEvent.event.room_id).removeEvent(annotatedEvent.event);
             return this.sendMessage(
-                echoMessage.room_id, 
-                echoMessage.__echo_original_input, 
+                annotatedEvent.event.room_id, 
+                annotatedEvent._original_input, 
                 sendCallback
             );
         },
@@ -577,11 +594,12 @@ function(matrixService, $rootScope, $window, $q, $timeout, $filter, mPresence, n
                     origin_server_ts: new Date().getTime(), // fake a timestamp
                     room_id: roomId,
                     type: "m.room.message",
-                    user_id: matrixService.config().user_id,
-                    __echo_original_input: input,
-                    __echo_msg_state: "messagePending"     // Add custom field to indicate the state of this fake message to HTML
+                    user_id: matrixService.config().user_id
                 };
-                modelService.getRoom(roomId).addMessageEvent(echoMessage);
+                var annotatedEvent = modelService.getRoom(roomId).addMessageEvent(echoMessage);
+                annotatedEvent._original_input = input;
+                annotatedEvent.send_state = "pending";
+                annotatedEvent.css_class = "messagePending";
                 sendCallback.onSendEcho(echoMessage);
             }
 
@@ -591,10 +609,10 @@ function(matrixService, $rootScope, $window, $q, $timeout, $filter, mPresence, n
                         sendCallback.onSent(response, echo);
                         if (echoMessage) {
                             var eventId = response.data.event_id;
-                            var exists = modelService.getRoom(roomId).getEvent(eventId);
+                            var exists = modelService.getRoom(roomId).getAnnotatedEvent(eventId);
                             if (exists) {
                                 // kill the echo message, we have the real one already
-                                modelService.getRoom(roomId).removeEchoEvent(echoMessage);
+                                modelService.getRoom(roomId).removeEvent(echoMessage);
                             }
                             else {
                                 // Mark this fake message event with its allocated event_id
@@ -606,10 +624,11 @@ function(matrixService, $rootScope, $window, $q, $timeout, $filter, mPresence, n
                     },
                     function(error) {
                         sendCallback.onError(error);
-                        if (echoMessage) {
+                        if (annotatedEvent) {
                             // Mark the message as unsent for the rest of the page life
-                            echoMessage.origin_server_ts = "Unsent";
-                            echoMessage.__echo_msg_state = "messageUnSent";
+                            annotatedEvent.origin_server_ts = "Unsent";
+                            annotatedEvent.send_state = "unsent";
+                            annotatedEvent.css_class = "messageUnSent";
                         }
                     }
                 );

@@ -31,6 +31,8 @@ angular.module('SettingsController', ['matrixService', 'mFileUpload', 'mFileInpu
         return ret;
     };
     $scope.config = matrixService.config();
+    
+    $scope.httpUri = matrixService.getHttpUriForMxc;
 
     $scope.profile = {
         displayName: "",
@@ -75,7 +77,7 @@ angular.module('SettingsController', ['matrixService', 'mFileUpload', 'mFileInpu
                     $scope.profile.avatarUrl = url;
                 },
                 function(error) {
-                    $scope.feedback = "Can't upload image";
+                    dialogService.showError(error);
                 } 
             );
         }

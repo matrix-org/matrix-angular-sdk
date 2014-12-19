@@ -21,27 +21,19 @@ limitations under the License.
 'use strict';
 
 angular.module('MatrixWebClientController', ['matrixService', 'mPresence', 'eventStreamService'])
-.controller('MatrixWebClientController', ['$scope', '$location', '$rootScope', '$timeout', 'matrixService', 'mPresence', 'eventStreamService', 'eventHandlerService', 'matrixPhoneService', 'modelService', 'eventReaperService', 'notificationService', 'mUserDisplayNameFilter', 'MatrixCall', 'dialogService',
-                               function($scope, $location, $rootScope, $timeout, matrixService, mPresence, eventStreamService, eventHandlerService, matrixPhoneService, modelService, eventReaperService, notificationService, mUserDisplayNameFilter, MatrixCall, dialogService) {
+.controller('MatrixWebClientController', ['$scope', '$location', '$rootScope', '$timeout', 'matrixService', 'mPresence', 'eventStreamService', 'eventHandlerService', 'matrixPhoneService', 'modelService', 'eventReaperService', 'notificationService', 'mUserDisplayNameFilter', 'MatrixCall', 'dialogService', 'webRtcService',
+                               function($scope, $location, $rootScope, $timeout, matrixService, mPresence, eventStreamService, eventHandlerService, matrixPhoneService, modelService, eventReaperService, notificationService, mUserDisplayNameFilter, MatrixCall, dialogService, webRtcService) {
          
     // Check current URL to avoid to display the logout button on the login page
     $scope.location = $location.path();
+    
+    webRtcService.init();
+    $rootScope.isWebRTCSupported = webRtcService.isWebRTCSupported;
 
     // Update the location state when the ng location changed
     $rootScope.$on('$routeChangeSuccess', function (event, current, previous) {
         $scope.location = $location.path();
     });
-
-    if (matrixService.isUserLoggedIn()) {
-        eventStreamService.resume();
-        mPresence.start();
-    }
-
-    $scope.user_id;
-    var config = matrixService.config();
-    if (config) {
-        $scope.user_id = matrixService.config().user_id;
-    }
     
     eventReaperService.setEnabled(true);
     
@@ -91,14 +83,23 @@ angular.module('MatrixWebClientController', ['matrixService', 'mPresence', 'even
         $scope.logout();
     });
     
+    $rootScope.$on(eventStreamService.BROADCAST_BAD_CONNECTION, function(ngEvent, isBad) {
+        $rootScope.isBadConnection = isBad;
+    });
+    
     $rootScope.onLoggedIn = function() {
         // update header
         $scope.user_id = matrixService.config().user_id;
         // start stream
         eventStreamService.resume();
+        mPresence.start();
         // refresh turn servers
         MatrixCall.getTurnServer();
     };
+    
+    if (matrixService.isUserLoggedIn()) {
+        $rootScope.onLoggedIn();
+    }
 
     $rootScope.$watch('currentCall', function(newVal, oldVal) {
         if (!$rootScope.currentCall) {

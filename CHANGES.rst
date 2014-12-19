@@ -1,3 +1,28 @@
+Changes in Matrix Angular SDK 0.6.0 (2014-12-19)
+================================================
+
+Breaking changes:
+ - Uploading files in the web client will now hit the new content repository URL
+   introduced in Synapse 0.6.
+
+Bug fixes:
+ - Fixed a bug which caused the event stream to become wedged when the computer is asleep.
+ - Fixed a bug which caused the recents to update but not the message window.
+
+Features:
+ - Typing notifications will now be sent.
+ - Typing notifications will now be displayed for other users.
+ - Use the new content repository introduced in Synapse 0.6 when uploading files.
+
+Improvements:
+ - Display more error dialogs rather than silently failing.
+ - Display loading spinners on signup.
+ - Display feedback when joining a room.
+ - CTRL + clicking on a recents entry will now open that room in a new tab.
+ - Clicking on links in messages will now open them in a new tab.
+ - Provide a progress dialog when uploading files.
+ - Display a red bar when the event stream connection is lost for an extended period of time.
+
 Changes in Matrix Angular SDK 0.5.3 (2014-12-05)
 ================================================
 

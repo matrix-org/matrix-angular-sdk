@@ -29,7 +29,7 @@
     
     <div>
         <div class="profile-avatar">
-            <img ng-src="{{ (null !== profile.avatarUrl) ? profile.avatarUrl : 'img/default-profile.png' }}"/>
+            <img ng-src="{{ (null !== profile.avatarUrl) ? httpUri(profile.avatarUrl, 320, 320) : 'img/default-profile.png' }}"/>
         </div>
         <div id="user-ids">
             <div id="user-displayname">{{ profile.displayName }}</div>

@@ -15,8 +15,8 @@ limitations under the License.
 */
 
 angular.module('RoomController', ['ngSanitize', 'matrixFilter', 'mFileInput', 'angular-peity'])
-.controller('RoomController', ['$modal', '$scope', '$timeout', '$routeParams', '$location', '$rootScope', 'matrixService', 'eventHandlerService', 'mFileUpload', 'MatrixCall', 'modelService', 'recentsService', 'mUserDisplayNameFilter', 'dialogService',
-                               function($modal, $scope, $timeout, $routeParams, $location, $rootScope, matrixService, eventHandlerService, mFileUpload, MatrixCall, modelService, recentsService, mUserDisplayNameFilter, dialogService) {
+.controller('RoomController', ['$modal', '$scope', '$timeout', '$routeParams', '$location', '$rootScope', 'matrixService', 'eventHandlerService', 'mFileUpload', 'MatrixCall', 'modelService', 'recentsService', 'mUserDisplayNameFilter', 'dialogService', 'typingService',
+                               function($modal, $scope, $timeout, $routeParams, $location, $rootScope, matrixService, eventHandlerService, mFileUpload, MatrixCall, modelService, recentsService, mUserDisplayNameFilter, dialogService, typingService) {
    'use strict';
     var MESSAGES_PER_PAGINATION = 30;
     var THUMBNAIL_SIZE = 320;
@@ -36,6 +36,20 @@ angular.module('RoomController', ['ngSanitize', 'matrixFilter', 'mFileInput', 'a
     };
 
     $scope.imageURLToSend = "";
+    
+    // calcs the thumbnail dimension from a large image
+    $scope.thumbDim = function(info, key, requestedSize) {
+        var widthMulti = requestedSize / info.w;
+        var heightMulti = requestedSize / info.h;
+        if (widthMulti < heightMulti) {
+            // width is the dominant dimension so scaling will be fixed on that
+            return widthMulti * info[key];
+        }
+        else {
+            // height is the dominant dimension so scaling will be fixed on that
+            return heightMulti * info[key];
+        }
+    };
 
     // vars and functions for updating the name
     $scope.name = {
@@ -147,9 +161,18 @@ angular.module('RoomController', ['ngSanitize', 'matrixFilter', 'mFileInput', 'a
         }
     };
 
-    $scope.$on(modelService.LIVE_MESSAGE_EVENT, function(ngEvent, event) {
-        if (event.room_id === $scope.room_id) {
+    $scope.$on(modelService.LIVE_MESSAGE_EVENT, function(ngEvent, annotatedEvent) {
+        if (annotatedEvent.event.room_id === $scope.room_id) {
             scrollToBottom();
+        }
+    });
+    
+    // It is possible for this room to be reaped. If that happens, we need to
+    // attach to the NEW room which is created, rather than holding onto the
+    // old one.
+    $rootScope.$on(modelService.NEW_ROOM, function(ngEvent, newRoom) {
+        if (newRoom.room_id === $scope.room_id) {
+            $scope.room = newRoom;
         }
     });
     
@@ -255,11 +278,11 @@ angular.module('RoomController', ['ngSanitize', 'matrixFilter', 'mFileInput', 'a
         $scope.room = null;
     });
     
-    $scope.appendName = function($event, event) {
+    $scope.appendName = function($event, annotatedEvent) {
         if ($event.shiftKey) {
-            var name = event.__room_member.name;
+            var name = annotatedEvent.sender.name;
             if (!name) {
-                name = mUserDisplayNameFilter(event.user_id);
+                name = mUserDisplayNameFilter(annotatedEvent.event.user_id);
             }
             if (name) {
                 $('#mainInput').val($('#mainInput').val() + name);
@@ -275,6 +298,7 @@ angular.module('RoomController', ['ngSanitize', 'matrixFilter', 'mFileInput', 'a
         }
         $scope.feedback = "";
         scrollToBottom(true);
+        typingService.setTyping($scope.room_id, false);
         
         eventHandlerService.sendMessage($scope.room_id, input,
         {
@@ -295,7 +319,7 @@ angular.module('RoomController', ['ngSanitize', 'matrixFilter', 'mFileInput', 'a
 
         
     };
-
+    
     // Tries to find a suitable room ID for this room.
     $scope.onInit = function() {
         console.log("onInit");
@@ -329,16 +353,18 @@ angular.module('RoomController', ['ngSanitize', 'matrixFilter', 'mFileInput', 'a
             
             updatePresenceTimes();
             
-            // Scroll down as soon as possible so that we point to the last message
-            // if it already exists in memory
-            scrollToBottom(true);
+            
             
             // enable pagination on the NEXT digest cycle. If you don't do this,
             // a pagination will be immediately fired because there hasn't been
-            // a digest to populate the list from $scope.room.events
+            // a digest to populate the list from $scope.room.aevents
             $timeout(function() {
                 $scope.state.can_paginate = true;
                 paginateForWindowSize();
+                
+                // Scroll down as soon as possible so that we point to the last message
+                // if it already exists in memory
+                scrollToBottom(true);
             }, 0);
         },
         function(err) {
@@ -368,41 +394,43 @@ angular.module('RoomController', ['ngSanitize', 'matrixFilter', 'mFileInput', 'a
             }
         }, 0);
     };
-
-    // used to send an image based on just a URL, rather than uploading one
-    $scope.sendImage = function(url, body) {
-        scrollToBottom(true);
-        
-        matrixService.sendImageMessage($scope.room_id, url, body).then(
-            function() {
-                console.log("Image sent");
-            },
-            function(error) {
-                $scope.feedback = "Failed to send image: " + error.data.error;
-            });
-    };
     
     $scope.fileToSend;
     $scope.$watch("fileToSend", function(newValue, oldValue) {
         if ($scope.fileToSend) {
             // Upload this file
-            mFileUpload.uploadFileAndThumbnail($scope.fileToSend, THUMBNAIL_SIZE).then(
+            var progressAmount = 0;
+            dialogService.showProgress("Uploading file...", "", progressAmount);
+            mFileUpload.uploadForEvent($scope.fileToSend).then(
                 function(fileMessage) {
+                    $rootScope.$broadcast('dialogs.wait.complete');
                     // fileMessage is complete message structure, send it as is
                     matrixService.sendMessage($scope.room_id, undefined, fileMessage).then(
                         function() {
                             console.log("File message sent");
                         },
                         function(error) {
-                            $scope.feedback = "Failed to send file message: " + error.data.error;
+                            dialogService.showError(error);
                         });
                 },
                 function(error) {
-                    $scope.feedback = "Can't upload file";
+                    $rootScope.$broadcast('dialogs.wait.complete');
+                    console.error("Got : "+JSON.stringify(error));
+                    dialogService.showError(error);
+                },
+                function(evt) {
+                    progressAmount = 100.0 * (evt.loaded / evt.total);
+                    $rootScope.$broadcast('dialogs.wait.progress', {'progress': progressAmount});
                 }
             );
         }
     });
+    
+    $scope.onTyping = function(elem) {
+        if ($scope.room) {
+            typingService.setTyping($scope.room.room_id, elem[0].value);
+        }
+    };
 
     $scope.checkWebRTC = function() {
         if (!$rootScope.isWebRTCSupported()) {
@@ -439,12 +467,8 @@ angular.module('RoomController', ['ngSanitize', 'matrixFilter', 'mFileInput', 'a
         $rootScope.currentCall = call;
     };
 
-    $scope.openJson = function(content) {
-        $scope.event_selected = angular.copy(content);
-        
-        // FIXME: Pre-calculated event data should be stripped in a nicer way.
-        $scope.event_selected.__room_member = undefined;
-        $scope.event_selected.__target_room_member = undefined;
+    $scope.openJson = function(annotatedEvent) {
+        $scope.event_selected = angular.copy(annotatedEvent);
         
         // scope this so the template can check power levels and enable/disable
         // buttons
@@ -458,10 +482,10 @@ angular.module('RoomController', ['ngSanitize', 'matrixFilter', 'mFileInput', 'a
 
         modalInstance.result.then(function(action) {
             if (action === "redact") {
-                var eventId = $scope.event_selected.event_id;
+                var eventId = $scope.event_selected.event.event_id;
                 console.log("Redacting event ID " + eventId);
                 matrixService.redactEvent(
-                    $scope.event_selected.room_id,
+                    $scope.event_selected.event.room_id,
                     eventId
                 ).then(function(response) {
                     console.log("Redaction = " + JSON.stringify(response));
@@ -472,8 +496,8 @@ angular.module('RoomController', ['ngSanitize', 'matrixFilter', 'mFileInput', 'a
             }
             else if (action === "resend") {
                 // NB: Resend the original, NOT the copy.
-                console.log("Resending "+content);
-                eventHandlerService.resendMessage(content, {
+                console.log("Resending "+annotatedEvent.event);
+                eventHandlerService.resendMessage(annotatedEvent, {
                     onSendEcho: function(echoMessage) {},
                     onSent: function(response, isEcho) {},
                     onError: function(error) {
@@ -512,7 +536,6 @@ angular.module('RoomController', ['ngSanitize', 'matrixFilter', 'mFileInput', 'a
 .controller('EventInfoController', function($scope, $modalInstance) {
     console.log("Displaying modal dialog for >>>> " + JSON.stringify($scope.event_selected));
     $scope.redact = function() {
-        console.log("Redact level = "+$scope.room.current_room_state.state_events["m.room.power_levels"].content.redact);
         console.log("Redact event >> " + JSON.stringify($scope.event_selected));
         $modalInstance.close("redact");
     };
@@ -528,11 +551,10 @@ angular.module('RoomController', ['ngSanitize', 'matrixFilter', 'mFileInput', 'a
     $scope.userIDToInvite = "";
     
     $scope.inviteUser = function() {
-        
         matrixService.invite($scope.room_id, $scope.userIDToInvite).then(
             function() {
                 console.log("Invited.");
-                $scope.feedback = "Invite successfully sent to " + $scope.userIDToInvite;
+                dialogService.showSuccess("Invited", "Invite successfully sent to " + $scope.userIDToInvite);
                 $scope.userIDToInvite = "";
             },
             function(reason) {

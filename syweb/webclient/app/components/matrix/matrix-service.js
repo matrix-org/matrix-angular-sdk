@@ -41,6 +41,8 @@ angular.module('matrixService', [])
     var prefixPath = "/_matrix/client/api/v1";
     var handleRateLimiting = true;
     var rateLimitMaxMs = 1000 * 20; // 20s
+    
+    var DEFAULT_TYPING_TIMEOUT_MS = 20000;
 
     var doRequest = function(method, path, params, data, $httpParams) {
         if (!config) {
@@ -187,6 +189,7 @@ angular.module('matrixService', [])
     };
 
     return {
+        DEFAULT_TYPING_TIMEOUT_MS: DEFAULT_TYPING_TIMEOUT_MS,
         prefix: prefixPath,
         
         shouldHandleRateLimiting: function(handleLimiting) {
@@ -489,6 +492,36 @@ angular.module('matrixService', [])
 
             return doRequest("PUT", path, undefined, content);
         },
+        
+        setTyping: function(room_id, isTyping, timeoutMs, user_id) {
+            if (!user_id) {
+                user_id = config.user_id;
+            }
+        
+            var path = "/rooms/$room_id/typing/$user_id";
+            path = path.replace("$room_id", encodeURIComponent(room_id));
+            path = path.replace("$user_id", encodeURIComponent(user_id));
+            
+            var content;
+            
+            if (isTyping) {
+                if (!timeoutMs) {
+                    timeoutMs = DEFAULT_TYPING_TIMEOUT_MS;
+                }
+                
+                content = {
+                    typing: true,
+                    timeout: timeoutMs
+                };
+            }
+            else {
+                content = {
+                    typing: false
+                };
+            }
+            
+            return doRequest("PUT", path, undefined, content);
+        },
 
         sendMessage: function(room_id, txn_id, content) {
             return this.sendEvent(room_id, 'm.room.message', txn_id, content);
@@ -648,13 +681,11 @@ angular.module('matrixService', [])
         },
         
         uploadContent: function(file) {
-            var path = "/_matrix/content";
             var headers = {
                 "Content-Type": undefined // undefined means angular will figure it out
             };
-            var params = {
-                access_token: config.access_token
-            };
+            
+            var url = this.getContentUrl();
 
             // If the file is actually a Blob object, prevent $http from JSON-stringified it before sending
             // (Equivalent to jQuery ajax processData = false)
@@ -665,8 +696,57 @@ angular.module('matrixService', [])
                 };
             }
 
-            return doBaseRequest(config.homeserver, "POST", path, params, file, headers, $httpParams);
+            return doBaseRequest(url.base, "POST", url.path, url.params, file, headers, $httpParams);
         },
+        
+        /**
+         * Get the content repository url with query parameters. This is useful
+         * if you would prefer to upload content in a different way to 
+         * matrixService.uploadContent(file) (e.g. for progress bars).
+         * @returns An object with a 'base', 'path' and 'params' for base URL, 
+         *          path and query parameters respectively.
+         */
+        getContentUrl: function() {
+            var path = "/_matrix/media/v1/upload";
+            
+            var params = {
+                access_token: config.access_token
+            };
+            return {
+                base: config.homeserver,
+                path: path,
+                params: params
+            };
+        },
+        
+        getHttpUriForMxc: function(mxc, width, height, resizeMethod) {
+            if (!typeof mxc === "string" || !mxc) {
+                return mxc;
+            }
+            if (mxc.indexOf("mxc://") !== 0) {
+                return mxc;
+            }
+            var serverAndMediaId = mxc.slice(6); // strips mxc://
+            var prefix = "/_matrix/media/v1/download/";
+            var params = {};
+            
+            if (width) {
+                params.width = width;
+            }
+            if (height) {
+                params.height = height;
+            }
+            if (resizeMethod) {
+                params.method = resizeMethod;
+            }
+            if (Object.keys(params).length > 0) {
+                // these are thumbnailing params so they probably want the thumbnailing API...
+                prefix = "/_matrix/media/v1/thumbnail/";
+            }
+            
+            return config.homeserver + prefix + serverAndMediaId + (Object.keys(params).length === 0 ? "" : ("?" + jQuery.param(params)));
+        },
+        
 
         /**
          * Start listening on /events

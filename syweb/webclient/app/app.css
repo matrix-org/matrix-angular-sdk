@@ -50,14 +50,29 @@ textarea, input {
     text-align: center;
 }
 
-#header
+.header
 {
     position: absolute;
     z-index: 2;
     top: 0px;
     width: 100%;
-    background-color: #333;
     height: 32px;
+}
+
+.badConnection {
+    background-color: #cd0000;
+}
+
+.goodConnection {
+    background-color: #333;
+}
+
+#headerBadConnection {
+    float: left;
+    height: 32px;
+    line-height: 32px;
+    position: relative;
+    margin-left: 10px;
 }
 
 #callBar {
@@ -599,6 +614,14 @@ textarea, input {
 }
 */
 
+.typingIcon {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 20px;
+    height: 20px;
+}
+
 .online {
     border-color: #38AF00;
     background-color: #38AF00;
@@ -927,3 +950,14 @@ textarea, input {
     font-size: 14px;
 }
 
+/*** Seasonal ***/
+
+
+.controlButtonXmas {
+    cursor: pointer;
+    border: 0px;
+    width: 36px;
+    height: 46px;
+    margin-left: 3px;
+    margin-right: 3px;
+}

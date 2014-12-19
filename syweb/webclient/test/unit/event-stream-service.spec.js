@@ -1,5 +1,5 @@
 describe('EventStreamService', function() {
-    var q, scope;
+    var q, scope, timeout;
 
     var testInitialSync, testEventStream;
 
@@ -55,9 +55,10 @@ describe('EventStreamService', function() {
         module('eventStreamService');
     });
     
-    beforeEach(inject(function($q, $rootScope) {
+    beforeEach(inject(function($q, $rootScope, $timeout) {
         q = $q;
         scope = $rootScope;
+        timeout = $timeout;
     }));
 
     it('should start with /initialSync then go onto /events', inject(
@@ -120,5 +121,65 @@ describe('EventStreamService', function() {
         scope.$digest(); // resolving the timeout
         expect(timeoutResolved).toBeTruthy();
         
+    }));
+    
+    it('should broadcast a bad connection if there are multiple failed attempts.', inject(
+    function(eventStreamService) {
+        var request = q.defer(); // the http request which we're blocking on
+        var timesCalled = 0;
+        var isBadConnection = false;
+        spyOn(matrixService, "getEventStream").and.callFake(function(from, timeoutMs, promise) {
+            timesCalled += 1;
+            return request.promise;
+        });
+        scope.$on(eventStreamService.BROADCAST_BAD_CONNECTION, function(ngEvent, isBad) {
+            isBadConnection = isBad;
+        });
+        
+        eventStreamService.resume();
+        scope.$digest(); // initialSync request
+        
+        for (var i=0; i<eventStreamService.MAX_FAILED_ATTEMPTS; i++) {
+            request.reject({data:{status:0}}); // reject no connection.
+            request = q.defer(); // make a new promise in prep for the next request
+            scope.$digest(); // invoke the .then
+            timeout.flush(); // flush the waiting period.
+        }
+        
+        expect(timesCalled).toBe(eventStreamService.MAX_FAILED_ATTEMPTS + 1);
+        expect(isBadConnection).toBe(true);
+        
+    }));
+    
+    it('should broadcast a good connection if a successful attempt goes through after bad ones.', inject(
+    function(eventStreamService) {
+        var request = q.defer(); // the http request which we're blocking on
+        var timesCalled = 0;
+        var isBadConnection = false;
+        spyOn(matrixService, "getEventStream").and.callFake(function(from, timeoutMs, promise) {
+            timesCalled += 1;
+            return request.promise;
+        });
+        scope.$on(eventStreamService.BROADCAST_BAD_CONNECTION, function(ngEvent, isBad) {
+            isBadConnection = isBad;
+        });
+        
+        eventStreamService.resume();
+        scope.$digest(); // initialSync request
+        
+        for (var i=0; i<(eventStreamService.MAX_FAILED_ATTEMPTS + 1); i++) {
+            request.reject({data:{status:0}}); // reject no connection.
+            request = q.defer(); // make a new promise in prep for the next request
+            scope.$digest(); // invoke the .then
+            timeout.flush(); // flush the waiting period.
+        }
+        
+        expect(isBadConnection).toBe(true);
+        
+        // successful connection now
+        request.resolve({data: {chunk:[],start:"s",end:"e"}});
+        request = q.defer();
+        scope.$digest();
+        expect(isBadConnection).toBe(false);
     }));
 });

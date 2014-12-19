@@ -464,6 +464,98 @@ describe('MatrixService', function() {
         httpBackend.flush();
     }));
     
+    it('should be able to send typing notifications', inject(
+    function(matrixService) {
+        var testConfig = angular.copy(CONFIG);
+        testConfig.user_id = "@bob:example.com";
+        matrixService.setConfig(testConfig);
+        var roomId = "!fh38hfwfwef:example.com";
+        matrixService.setTyping(roomId, true).then(
+        function(response) {
+            expect(response.data).toEqual({});
+        });
+
+        httpBackend.expectPUT(
+            URL + "/rooms/" + encodeURIComponent(roomId) + 
+            "/typing/"+encodeURIComponent(testConfig.user_id) +
+            "?access_token=foobar",
+            {
+                typing: true,
+                timeout: matrixService.DEFAULT_TYPING_TIMEOUT_MS
+            })
+            .respond({});
+        httpBackend.flush();
+    }));
+    
+    it('should be able to send typing notifications with a custom timeout', inject(
+    function(matrixService) {
+        var testConfig = angular.copy(CONFIG);
+        testConfig.user_id = "@bob:example.com";
+        matrixService.setConfig(testConfig);
+        var roomId = "!fh38hfwfwef:example.com";
+        matrixService.setTyping(roomId, true, 15000).then(
+        function(response) {
+            expect(response.data).toEqual({});
+        });
+
+        httpBackend.expectPUT(
+            URL + "/rooms/" + encodeURIComponent(roomId) + 
+            "/typing/"+encodeURIComponent(testConfig.user_id) +
+            "?access_token=foobar",
+            {
+                typing: true,
+                timeout: 15000
+            })
+            .respond({});
+        httpBackend.flush();
+    }));
+    
+    it('should be able to send typing notifications as a different user', inject(
+    function(matrixService) {
+        var otherUser = "@alice:example.com";
+        var testConfig = angular.copy(CONFIG);
+        testConfig.user_id = "@bob:example.com";
+        matrixService.setConfig(testConfig);
+        var roomId = "!fh38hfwfwef:example.com";
+        matrixService.setTyping(roomId, true, undefined, otherUser).then(
+        function(response) {
+            expect(response.data).toEqual({});
+        });
+
+        httpBackend.expectPUT(
+            URL + "/rooms/" + encodeURIComponent(roomId) + 
+            "/typing/"+encodeURIComponent(otherUser) +
+            "?access_token=foobar",
+            {
+                typing: true,
+                timeout: matrixService.DEFAULT_TYPING_TIMEOUT_MS
+            })
+            .respond({});
+        httpBackend.flush();
+    }));
+    
+    it('should be able to stop sending typing notifications', inject(
+    function(matrixService) {
+        var testConfig = angular.copy(CONFIG);
+        testConfig.user_id = "@bob:example.com";
+        matrixService.setConfig(testConfig);
+        var roomId = "!fh38hfwfwef:example.com";
+        matrixService.setTyping(roomId, false).then(
+        function(response) {
+            expect(response.data).toEqual({});
+        });
+
+        httpBackend.expectPUT(
+            URL + "/rooms/" + encodeURIComponent(roomId) + 
+            "/typing/"+encodeURIComponent(testConfig.user_id) +
+            "?access_token=foobar",
+            {
+                typing: false
+            })
+            .respond({});
+        httpBackend.flush();
+    }));
+    
     it('should be able to login with password', inject(
     function(matrixService) {
         matrixService.setConfig(CONFIG);

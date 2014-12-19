@@ -1,13 +1,192 @@
 describe('ModelService', function() {
+    var rootScope, q;
+
+    var matrixService = {
+        leave: function(){}
+    };
 
     // setup the dependencies
     beforeEach(function() {
         // dependencies
-        module('matrixService');
+        module(function ($provide) {
+            $provide.value('matrixService', matrixService);
+        });
         
         // tested service
         module('modelService');
     });
+    
+    beforeEach(inject(function($q, $rootScope) {
+        rootScope = $rootScope;
+        q = $q;
+    }));
+    
+    it('should be able to add message events', inject(
+    function(modelService) {
+        var roomId = "!wefiohwefuiow:matrix.org";
+        var userId = "@bob:matrix.org";
+        
+        var room = modelService.getRoom(roomId);
+        
+        var event = {
+            content: {
+                body: "herro",
+                msgtype: "m.text"
+            },
+            user_id: userId,
+            type: "m.room.message",
+            event_id: "aoufhai"
+        };
+        
+        room.addMessageEvent(event);
+        
+        expect(room.aevents.length).toEqual(1);
+        expect(room.aevents[0].event).toEqual(jasmine.objectContaining(event));
+        
+        // add 2 more events
+        event = angular.copy(event);
+        event.content.body = "goodbye";
+        event.event_id = "wefuohweui";
+        var events = [ event ];
+        
+        event = angular.copy(event);
+        event.content.body = "333";
+        event.event_id = "wefuohfswaaaweui";
+        events.push(event);
+        room.addMessageEvents(events);
+        
+        expect(room.aevents.length).toEqual(3);
+        expect(room.aevents[0].event.content.body).toEqual("herro");
+        expect(room.aevents[1].event.content.body).toEqual("goodbye");
+        expect(room.aevents[2].event.content.body).toEqual("333");
+    }));
+    
+    it('should add old messages to the start and new messages to the front.', inject(
+    function(modelService) {
+        var roomId = "!wefiohwefuiow:matrix.org";
+        var userId = "@bob:matrix.org";
+        
+        var room = modelService.getRoom(roomId);
+        
+        var event = {
+            content: {
+                body: "herro",
+                msgtype: "m.text"
+            },
+            user_id: userId,
+            type: "m.room.message",
+            event_id: "aoufhai"
+        };
+        room.addMessageEvent(event, false); // to end
+        
+        // add 2 more events
+        event = angular.copy(event);
+        event.content.body = "goodbye";
+        event.event_id = "wefuohweui";
+        room.addMessageEvent(event, true); // to start
+        
+        event = angular.copy(event);
+        event.content.body = "333";
+        event.event_id = "wefuohfswaaaweui";
+        room.addMessageEvent(event, true); // to start
+        
+        expect(room.aevents.length).toEqual(3);
+        expect(room.aevents[2].event.content.body).toEqual("herro");
+        expect(room.aevents[1].event.content.body).toEqual("goodbye");
+        expect(room.aevents[0].event.content.body).toEqual("333");
+    }));
+    
+    it('should $broadcast live message events.', inject(
+    function(modelService) {
+        var roomId = "!wefiohwefuiow:matrix.org";
+        var userId = "@bob:matrix.org";
+        var room = modelService.getRoom(roomId);
+        var event = {
+            content: {
+                body: "herro",
+                msgtype: "m.text"
+            },
+            user_id: userId,
+            type: "m.room.message",
+            event_id: "aoufhai"
+        };
+        
+        var bcast;
+        rootScope.$on(modelService.LIVE_MESSAGE_EVENT, function(ngEvent, event) {
+            bcast = event;
+        });
+        
+        room.addMessageEvent(event);
+        rootScope.$digest();
+        
+        expect(bcast.event).toEqual(event);
+    }));
+    
+    it('should NOT $broadcast old message events.', inject(
+    function(modelService) {
+        var roomId = "!wefiohwefuiow:matrix.org";
+        var userId = "@bob:matrix.org";
+        var room = modelService.getRoom(roomId);
+        var event = {
+            content: {
+                body: "herro",
+                msgtype: "m.text"
+            },
+            user_id: userId,
+            type: "m.room.message",
+            event_id: "aoufhai"
+        };
+        
+        var bcast;
+        rootScope.$on(modelService.LIVE_MESSAGE_EVENT, function(ngEvent, event) {
+            bcast = event;
+        });
+        
+        room.addMessageEvent(event, true);
+        rootScope.$digest();
+        
+        expect(bcast).toBeUndefined();
+    }));
+    
+    it('should be able to Room.getAnnotatedEvent.', inject(
+    function(modelService) {
+        var roomId = "!wefiohwefuiow:matrix.org";
+        var userId = "@bob:matrix.org";
+        var room = modelService.getRoom(roomId);
+        var event = {
+            content: {
+                body: "herro",
+                msgtype: "m.text"
+            },
+            user_id: userId,
+            type: "m.room.message",
+            event_id: "aoufhai"
+        };
+        room.addMessageEvent(event);
+        var e = room.getAnnotatedEvent("aoufhai");
+        
+        expect(e.event).toEqual(event);
+    }));
+    
+    it('should be able to Room.removeEvent.', inject(
+    function(modelService) {
+        var roomId = "!wefiohwefuiow:matrix.org";
+        var userId = "@bob:matrix.org";
+        var room = modelService.getRoom(roomId);
+        var event = {
+            content: {
+                body: "herro",
+                msgtype: "m.text"
+            },
+            user_id: userId,
+            type: "m.room.message",
+            event_id: "aoufhai"
+        };
+        room.addMessageEvent(event);
+        room.removeEvent(event);
+        
+        expect(room.aevents.length).toEqual(0);
+    }));
 
     it('should be able to get a member in a room', inject(
     function(modelService) {
@@ -285,7 +464,7 @@ describe('ModelService', function() {
         expect(roomMember.power_level_norm).toEqual(100);
     }));
     
-    it('should set __room_member when a live message is added.', inject(
+    it('should set event.sender when a live message is added.', inject(
     function(modelService) {
         var roomId = "!wefiohwefuiow:matrix.org";
         var userId = "@bob:matrix.org";
@@ -311,11 +490,11 @@ describe('ModelService', function() {
             type: "m.room.message"
         };
         
-        modelService.getRoom(roomId).addMessageEvent(event, false);
-        expect(event.__room_member).toBeDefined();
+        var msgEvent = modelService.getRoom(roomId).addMessageEvent(event, false);
+        expect(msgEvent.sender).toBeDefined();
     }));
     
-    it('should set __room_member when a live message clobbers a local echoed message.', inject(
+    it('should set event.sender when a live message clobbers a local echoed message.', inject(
     function(modelService) {
         var roomId = "!wefiohwefuiow:matrix.org";
         var userId = "@bob:matrix.org";
@@ -352,7 +531,36 @@ describe('ModelService', function() {
             type: "m.room.message"
         };
         
-        modelService.getRoom(roomId).addOrReplaceMessageEvent(event, false);
-        expect(event.__room_member).toBeDefined();
+        var msgEvent = modelService.getRoom(roomId).addOrReplaceMessageEvent(event, false);
+        expect(msgEvent.sender).toBeDefined();
+    }));
+    
+    it('should be able to Room.leave()', inject(function(modelService) {
+        var leaveDefer = q.defer();
+        spyOn(matrixService, "leave").and.returnValue(leaveDefer.promise);
+        var room = modelService.getRoom("!foo:bar");
+        var response;
+        room.leave().then(function(res) {
+            response = res;
+        });
+        expect(matrixService.leave).toHaveBeenCalledWith("!foo:bar");
+        leaveDefer.resolve({data:{}});
+        rootScope.$digest();
+        expect(response).toBeDefined();
+    }));
+    
+    it('should be able to remove a room', inject(function(modelService) {
+        var room = modelService.getRoom("!foo:bar");
+        expect(Object.keys(modelService.getRooms()).length).toEqual(1);
+        modelService.removeRoom("!foo:bar");
+        expect(Object.keys(modelService.getRooms()).length).toEqual(0);
+    }));
+    
+    it('should be able to clear all rooms', inject(function(modelService) {
+        var room = modelService.getRoom("!foo:bar");
+        room = modelService.getRoom("!baz:bar");
+        expect(Object.keys(modelService.getRooms()).length).toEqual(2);
+        modelService.clearRooms();
+        expect(Object.keys(modelService.getRooms()).length).toEqual(0);
     }));
 });

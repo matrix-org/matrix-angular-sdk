@@ -20,6 +20,7 @@
     <script src="lib/jquery.peity.min.js"></script>
     <script src="lib/angular-peity.js"></script>
     <script src="lib/angular-spinner.min.js"></script>
+    <script src="lib/angular-file-upload.min.js"></script>
     <script src="lib/spin.min.js"></script>
     <script type="text/javascript" src="lib/ui-bootstrap-tpls-0.11.2.js"></script>
     <script type="text/javascript" src="lib/ng-infinite-scroll-matrix.js"></script>
@@ -42,6 +43,7 @@
     <script src="app/user/user-controller.js"></script>
     <script src="app/components/matrix/matrix-service.js"></script>
     <script src="app/components/matrix/matrix-filter.js"></script>
+    <script src="app/components/matrix/webrtc-service.js"></script>
     <script src="app/components/matrix/matrix-call.js"></script>
     <script src="app/components/matrix/matrix-phone-service.js"></script>
     <script src="app/components/matrix/event-stream-service.js"></script>
@@ -52,6 +54,7 @@
     <script src="app/components/matrix/commands-service.js"></script>
     <script src="app/components/matrix/model-service.js"></script>
     <script src="app/components/matrix/presence-service.js"></script>
+    <script src="app/components/matrix/typing-service.js"></script>
     <script src="app/components/dialogs/dialog-service.js"></script>
     <script src="app/components/fileInput/file-input-directive.js"></script>
     <script src="app/components/fileUpload/file-upload-service.js"></script>
@@ -72,7 +75,10 @@
         </div>
     </div>
 
-    <div id="header">
+    <div ng-class="isBadConnection ? 'header badConnection' : 'header goodConnection'">
+        <div id="headerBadConnection" ng-show="isBadConnection">
+            Connection Lost
+        </div>
         <!-- Do not show buttons on the login page -->
         <div id="headerContent" ng-hide="'/login' == location || '/register' == location">
             <div id="callBar" ng-show="currentCall">

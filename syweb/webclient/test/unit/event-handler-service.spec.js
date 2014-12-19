@@ -4,48 +4,57 @@ describe('EventHandlerService', function() {
     var testContainsBingWords, testPresenceState, testRoomName; // mPresence, mRoomNameFilter, notificationService
     var testUserId, testDisplayName, testBingWords; // matrixService.config
     var testResolvedRoomId, testJoinSuccess, testRoomInitialSync; // matrixService
-    var testNowState, testOldState, testEvents; // modelService
+    var testNowState, testOldState, testEvents, testChangedKey; // modelService
     
     var modelService = {
         getRoom: function(roomId) {
+            // FIXME: This shouldn't return a new object every time, we should be spyOn'ing rather the all this crap
             return {
                 room_id: roomId,
                 current_room_state: testNowState,
+                now: testNowState,
                 old_room_state: testOldState,
-                events: testEvents,
+                aevents: testEvents,
                 addMessageEvent: function(event, toFront) {
+                    var annotatedEvent = {event: event};
                     if (toFront) {
-                        testEvents.unshift(event);
+                        testEvents.unshift(annotatedEvent);
                     }
                     else {
-                        testEvents.push(event);
+                        testEvents.push(annotatedEvent);
                     }
+                    return annotatedEvent;
                 },
                 addOrReplaceMessageEvent: function(event, toFront) {
-                    for (var i = this.events.length - 1; i >= 0; i--) {
-                        var storedEvent = this.events[i];
+                    for (var i = this.aevents.length - 1; i >= 0; i--) {
+                        var storedEvent = this.aevents[i].event;
                         if (storedEvent.event_id === event.event_id) {
-                            this.events[i] = event;
-                            return;
+                            this.aevents[i] = {event: event};
+                            return this.aevents[i];
                         }
                     }
-                    this.addMessageEvent(event, toFront);
+                    return this.addMessageEvent(event, toFront);
                 },
-                getEvent: function(eventId) {
-                    for (var i = this.events.length - 1; i >= 0; i--) {
-                        var storedEvent = this.events[i];
-                        if (storedEvent.event_id === eventId) {
+                getAnnotatedEvent: function(eventId) {
+                    for (var i = this.aevents.length - 1; i >= 0; i--) {
+                        var storedEvent = this.aevents[i];
+                        if (storedEvent.event.event_id === eventId) {
                             return storedEvent;
                         }
                     }
                 },
-                removeEchoEvent: function(event) {
-                    var index = this.events.indexOf(event);
-                    if (index >= 0) {
-                        this.events.splice(index, 1);
+                removeEvent: function(event) {
+                    for (var i=0; i<this.aevents.length; i++) {
+                        if (this.aevents[i].event == event) {
+                            this.aevents.splice(i, 1);
+                            break;
+                        }
                     }
                 },
-                mutateRoomMemberState: function(){}
+                mutateRoomMemberState: function(){},
+                getChangedKeyForMemberEvent: function(){
+                    return testChangedKey;
+                }
             };
         },
         createRoomIdToAliasMapping: function(roomId, alias) {
@@ -107,6 +116,7 @@ describe('EventHandlerService', function() {
             }
             return defer.promise;
         },
+        create: function(){},
         presence: { unavailable: "unavailable", online: "online" }
     };
     
@@ -140,6 +150,23 @@ describe('EventHandlerService', function() {
             return input;
         }
     };
+    
+    // helper function
+    var mkEvent = function(evType, content, rmId, stateKey, usrId) {
+        var eventId = Math.random().toString(36);
+        if (!usrId) {
+            usrId = testUserId;
+        }
+        return {
+            event_id: eventId,
+            user_id: usrId,
+            state_key: stateKey,
+            room_id: rmId,
+            content: content,
+            type: evType
+        };
+    };
+    
 
     // setup the service and mocked dependencies
     beforeEach(function() {
@@ -150,6 +177,7 @@ describe('EventHandlerService', function() {
         testUserId = "@me:matrix.org";
         testDisplayName = "Me";
         testBingWords = [];
+        testChangedKey = undefined;
         
         testRoomName = "Room Name";
         testJoinSuccess = true;
@@ -246,7 +274,7 @@ describe('EventHandlerService', function() {
         _window = $window;
     }));
 
-    it('should be able to join a room from a room ID.', inject(
+    it('joinRoom: should be able to join a room from a room ID.', inject(
     function(eventHandlerService) {
         eventHandlerService.handleInitialSyncDone(testInitialSync);
         var roomId = "!foobar:matrix.org";
@@ -282,7 +310,7 @@ describe('EventHandlerService', function() {
         expect(promiseResult).toEqual(roomId);
     }));
     
-    it('should be able to join a room from a room alias.', inject(
+    it('joinRoom: should be able to join a room from a room alias.', inject(
     function(eventHandlerService) {
         eventHandlerService.handleInitialSyncDone(testInitialSync);
         var roomAlias = "#flibble:matrix.org";
@@ -375,7 +403,9 @@ describe('EventHandlerService', function() {
         });
         scope.$digest(); // resolve stuff
         
-        expect(testEvents).toEqual(testRoomInitialSync.messages.chunk);
+        for (var i=0; i<testEvents.length; i++) {
+            expect(testEvents[i].event).toEqual(testRoomInitialSync.messages.chunk[i]);
+        }
         
         expect(promiseResult).toEqual(roomId);
     }));
@@ -512,7 +542,7 @@ describe('EventHandlerService', function() {
             event_id: badEventId
         };
         eventHandlerService.handleEvent(event, true);
-        expect(testEvents[0]).toEqual(event);
+        expect(testEvents[0].event).toEqual(event);
         
         var redaction = {
             content: {},
@@ -574,7 +604,7 @@ describe('EventHandlerService', function() {
         eventHandlerService.handleEvent(event, true);
         eventHandlerService.handleEvent(dupeEvent, true);
         expect(testEvents.length).toEqual(1);
-        expect(testEvents[0]).toEqual(event);
+        expect(testEvents[0].event).toEqual(event);
     }));
     
     it('should suppress duplicate event IDs when sending messages.', inject(
@@ -615,7 +645,7 @@ describe('EventHandlerService', function() {
         scope.$digest(); // process the send message request
         
         expect(testEvents.length).toEqual(1);
-        expect(testEvents[0]).toEqual(event);
+        expect(testEvents[0].event).toEqual(event);
     }));
     
     it('should be able to send a text message with echo.', inject(
@@ -701,16 +731,221 @@ describe('EventHandlerService', function() {
             type: "m.room.member",
             event_id: "wf"
         };
+        testChangedKey = "membership";
         spyOn(notificationService, "showNotification");
         _window.Notification = true;
         eventHandlerService.handleEvent(event, true);
         expect(notificationService.showNotification).toHaveBeenCalled();
     }));
     
-    /* TODO
-    it('should be able to store and process initial sync data.', inject(
+    
+    it('should be able to create a room and do an initial sync on the room.', inject(
+    function(eventHandlerService) {
+        var alias = "bob";
+        var isPublic = true;
+        var invitee = "@alicia:matrix.org";
+        var roomId = "!avauyga:matrix.org";
+        var defer = q.defer();
+        spyOn(matrixService, "create").and.returnValue(defer.promise);
+        spyOn(matrixService, "roomInitialSync").and.callThrough();
+        
+        var promise = eventHandlerService.createRoom(alias, isPublic, invitee);
+        
+        expect(matrixService.create).toHaveBeenCalled();
+        defer.resolve({data:{room_id:roomId}});
+        scope.$digest();
+        expect(matrixService.roomInitialSync).toHaveBeenCalledWith(
+            roomId, 
+            jasmine.any(Number)
+        );
+    })); 
+    
+    it('should be able to handle global initial sync data', inject(
+    function(eventHandlerService) {
+        // a joined room with messages
+        var roomId = "!rooma:matrix.org";
+        var theRoom = {
+            current_room_state: {
+                storeStateEvents: function(){}
+            },
+            old_room_state: {
+                storeStateEvents: function(){}
+            },
+            room_id: roomId,
+            addMessageEvent: function(){},
+            addOrReplaceMessageEvent: function(){},
+            mutateRoomMemberState: function(){},
+            getChangedKeyForMemberEvent: function(){}
+        };
+        testInitialSync.data.rooms.push(angular.copy(testRoomInitialSync));
+        
+        var roomAmember = "@roomamember:matrix.org";
+        testInitialSync.data.rooms[0].state = [
+            mkEvent("m.room.member", {membership:"join"}, roomId, testUserId),
+            mkEvent("m.room.member", {membership:"join"}, roomId, roomAmember, roomAmember)
+        ];
+        testInitialSync.data.rooms[0].messages.chunk = [
+            mkEvent("m.room.member", {membership:"join"}, roomId, testUserId),
+            mkEvent("m.room.member", {membership:"join"}, roomId, roomAmember, roomAmember),
+            mkEvent("m.room.message", {body:"hi",msgtype:"m.text"}, roomId),
+            mkEvent("m.room.message", {body:"bye",msgtype:"m.text"}, roomId, undefined, roomAmember)
+        ];
+        testInitialSync.data.rooms[0].room_id = roomId;
+        spyOn(modelService, "getRoom").and.returnValue(theRoom);
+        spyOn(theRoom.current_room_state, "storeStateEvents");
+        spyOn(theRoom.old_room_state, "storeStateEvents");
+        spyOn(theRoom, "addOrReplaceMessageEvent");
+        spyOn(theRoom, "addMessageEvent");
+        spyOn(theRoom, "getChangedKeyForMemberEvent");
+        
+        // an invited room
+        var inviterUserId = "@inviter:matrix.org";
+        var inviteRoomId = "!invite:matrix.org";
+        testInitialSync.data.rooms.push({
+            inviter: inviterUserId,
+            room_id: inviteRoomId,
+            membership: "invite"
+        });
+        
+        // some presence
+        testInitialSync.data.presence.push({
+            content: {status:"online"},
+            user_id: roomAmember,
+            type: "m.presence"
+        });
+        spyOn(modelService, "setUser");
+    
+        eventHandlerService.handleInitialSyncDone(testInitialSync);
+        
+        // expect injected fake invite event
+        expect(testInitialSync.data.rooms[1].state.length).toEqual(1);
+        
+        // expect presence stuff
+        expect(modelService.setUser).toHaveBeenCalledWith(
+            testInitialSync.data.presence[0]
+        );
+        
+        // expect room state & msgs stored
+        expect(theRoom.current_room_state.storeStateEvents).toHaveBeenCalledWith(
+            testInitialSync.data.rooms[0].state
+        );
+        // addOrReplace since it was sent by us and we may need to replace local echo
+        expect(theRoom.addOrReplaceMessageEvent).toHaveBeenCalledWith(
+            testInitialSync.data.rooms[0].messages.chunk[2],
+            true
+        );
+        // add since it wasn't sent by us and so doesn't need to replace a local echo
+        expect(theRoom.addMessageEvent).toHaveBeenCalledWith(
+            testInitialSync.data.rooms[0].messages.chunk[3],
+            true
+        );
+    }));
+    
+    it('should be able to process m.typing events.', inject(
     function(eventHandlerService) {
         eventHandlerService.handleInitialSyncDone(testInitialSync);
-    })); */
+        testNowState.members = {
+            "@aaa:matrix.org": {
+                typing: false
+            },
+            "@bbb:matrix.org": {
+                typing: false
+            }
+        };
+        
+        var event = {
+            content: {
+                user_ids: ["@aaa:matrix.org"]
+            },
+            user_id: "matrix.org",
+            type: "m.typing"
+        };
+        eventHandlerService.handleEvent(event, true);
+        expect(testNowState.members["@aaa:matrix.org"].typing).toBe(true);
+    }));
+    
+    it('should clobber m.typing events.', inject(
+    function(eventHandlerService) {
+        eventHandlerService.handleInitialSyncDone(testInitialSync);
+        testNowState.members = {
+            "@aaa:matrix.org": {
+                typing: false
+            },
+            "@bbb:matrix.org": {
+                typing: false
+            }
+        };
+        
+        var event = {
+            content: {
+                user_ids: ["@aaa:matrix.org"]
+            },
+            user_id: "matrix.org",
+            type: "m.typing"
+        };
+        eventHandlerService.handleEvent(event, true);
+        expect(testNowState.members["@aaa:matrix.org"].typing).toBe(true);
+        
+        // clobber with bbb
+        event = {
+            content: {
+                user_ids: ["@bbb:matrix.org"]
+            },
+            user_id: "matrix.org",
+            type: "m.typing"
+        };
+        eventHandlerService.handleEvent(event, true);
+        expect(testNowState.members["@aaa:matrix.org"].typing).toBe(false); // reset
+        expect(testNowState.members["@bbb:matrix.org"].typing).toBe(true);
+    }));
+    
+    it('should treat an empty m.typing user_ids array as no-one is typing.', inject(
+    function(eventHandlerService) {
+        eventHandlerService.handleInitialSyncDone(testInitialSync);
+        testNowState.members = {
+            "@aaa:matrix.org": {
+                typing: false
+            },
+            "@bbb:matrix.org": {
+                typing: false
+            }
+        };
+        
+        var event = {
+            content: {
+                user_ids: []
+            },
+            user_id: "matrix.org",
+            type: "m.typing"
+        };
+        eventHandlerService.handleEvent(event, true);
+        expect(testNowState.members["@aaa:matrix.org"].typing).toBe(false);
+        expect(testNowState.members["@bbb:matrix.org"].typing).toBe(false);
+    }));
+    
+    it('should ignore unknown user_ids in m.typing.', inject(
+    function(eventHandlerService) {
+        eventHandlerService.handleInitialSyncDone(testInitialSync);
+        testNowState.members = {
+            "@aaa:matrix.org": {
+                typing: false
+            },
+            "@bbb:matrix.org": {
+                typing: false
+            }
+        };
+        
+        var event = {
+            content: {
+                user_ids: ["@ccc:matrix.org"]
+            },
+            user_id: "matrix.org",
+            type: "m.typing"
+        };
+        eventHandlerService.handleEvent(event, true);
+        expect(testNowState.members["@aaa:matrix.org"].typing).toBe(false);
+        expect(testNowState.members["@bbb:matrix.org"].typing).toBe(false);
+        expect(testNowState.members["@ccc:matrix.org"]).toBeUndefined();
+    }));
     
 });

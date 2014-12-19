@@ -15,8 +15,8 @@
  */
  
 angular.module('LoginController', ['matrixService'])
-.controller('LoginController', ['$scope', '$rootScope', '$location', 'matrixService', 'eventStreamService', 'dialogService',
-                                    function($scope, $rootScope, $location, matrixService, eventStreamService, dialogService) {
+.controller('LoginController', ['$scope', '$rootScope', '$location', 'matrixService', 'dialogService',
+                                    function($scope, $rootScope, $location, matrixService, dialogService) {
     'use strict';
     
     
@@ -99,7 +99,12 @@ angular.module('LoginController', ['matrixService'])
                 }
             },
             function(error) {
-                dialogService.showError(error);
+                if (error.status != 403) {
+                    dialogService.showError(error);
+                }
+                else {
+                    dialogService.showError("Incorrect username or password.");
+                }
             }
         );
     };

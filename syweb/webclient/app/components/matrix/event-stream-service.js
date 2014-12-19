@@ -23,10 +23,15 @@ stream. This service is not responsible for parsing event data. For that, see
 the eventHandlerService.
 */
 angular.module('eventStreamService', [])
-.factory('eventStreamService', ['$q', '$timeout', 'matrixService', 'eventHandlerService', function($q, $timeout, matrixService, eventHandlerService) {
+.factory('eventStreamService', ['$q', '$timeout', '$rootScope', 'matrixService', 'eventHandlerService', function($q, $timeout, $rootScope, matrixService, eventHandlerService) {
+    var BROADCAST_BAD_CONNECTION = "eventStreamService.BROADCAST_BAD_CONNECTION(isBad)";
     var END = "END";
     var SERVER_TIMEOUT_MS = 30000;
     var ERR_TIMEOUT_MS = 5000;
+    
+    var badConnection = false;
+    var failedAttempts = 0;
+    var MAX_FAILED_ATTEMPTS = 4;
     
     var settings = {
         from: "END",
@@ -36,17 +41,41 @@ angular.module('eventStreamService', [])
         isActive: false
     };
     
+    var setBadConnection = function(isBad) {
+        if (badConnection != isBad) {
+            badConnection = isBad;
+            console.log("[EventStream] BROADCAST setBadConnection -> "+isBad);
+            $rootScope.$emit(BROADCAST_BAD_CONNECTION, badConnection);
+        }
+    };
+    
     var timeout = $q.defer();
     
+    var killConnection = function(reason) {
+        console.log("[EventStream] killConnection -> "+reason);
+        timeout.resolve(reason);
+        timeout = $q.defer();
+    };
+    
+    // we need to monitor the specified timeout client-side (SYWEB-219) as we
+    // cannot trust that the connection will in fact be ended remotely after 
+    // SERVER_TIMEOUT_MS
+    var startConnectionTimer = function() {
+        return $timeout(function() {
+            killConnection("timed out");
+        }, SERVER_TIMEOUT_MS + (1000 * 2)); // buffer period
+    };
+    
+    
     // interrupts the stream. Only valid if there is a stream conneciton 
-    // open.
+    // open. This is typically used when logging out, to kill the stream immediately
+    // and stop retrying.
     var interrupt = function(shouldPoll) {
         console.log("[EventStream] interrupt("+shouldPoll+") "+
                     JSON.stringify(settings));
         settings.shouldPoll = shouldPoll;
         settings.isActive = false;
-        timeout.resolve("interrupted.");
-        timeout = $q.defer();
+        killConnection("interrupted");
     };
 
     var doEventStream = function(deferred) {
@@ -54,9 +83,21 @@ angular.module('eventStreamService', [])
         settings.isActive = true;
         deferred = deferred || $q.defer();
 
+        
+        // monitors if the connection is *still ongoing* after X time then knifes it
+        // as we cannot trust the server side timeout.
+        var connTimer = startConnectionTimer(); 
+        // monitors if there has been a *successful* response, and if not, says 
+        // you're on a bad connection.
+        
+        
         // run the stream from the latest token
         matrixService.getEventStream(settings.from, SERVER_TIMEOUT_MS, timeout.promise).then(
             function(response) {
+                failedAttempts = 0;
+                setBadConnection(false);
+                
+                $timeout.cancel(connTimer);
                 if (!settings.isActive) {
                     console.log("[EventStream] Got response but now inactive. Dropping data.");
                     return;
@@ -82,6 +123,13 @@ angular.module('eventStreamService', [])
                 }
             },
             function(error) {
+                console.error("[EventStream] failed /events request, retrying...");
+                $timeout.cancel(connTimer);
+                failedAttempts += 1;
+                if (failedAttempts >= MAX_FAILED_ATTEMPTS) {
+                    setBadConnection(true);
+                }
+                
                 if (error.status === 403) {
                     settings.shouldPoll = false;
                 }
@@ -135,6 +183,8 @@ angular.module('eventStreamService', [])
     return {
         // expose these values for testing
         SERVER_TIMEOUT: SERVER_TIMEOUT_MS,
+        MAX_FAILED_ATTEMPTS: MAX_FAILED_ATTEMPTS,
+        BROADCAST_BAD_CONNECTION: BROADCAST_BAD_CONNECTION,
     
         // resume the stream from whereever it last got up to. Typically used
         // when the page is opened.

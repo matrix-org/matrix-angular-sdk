@@ -149,17 +149,19 @@ describe('EventReaperService', function() {
         scope.$broadcast(recentsService.BROADCAST_SELECTED_ROOM_ID, "!a:b.com");
         scope.$digest();
         
-        var event = {
-            content: {},
-            room_id: roomId,
-            event_id: "f",
-            type: "m.room.message"
+        var aevent = {
+            event: {
+                content: {},
+                room_id: roomId,
+                event_id: "f",
+                type: "m.room.message"
+            }
         };
         
-        var eventsArray = [event];
+        var aeventsArray = [aevent];
         spyOn(modelService, "getRoom").and.callFake(function(roomId) {
             return {
-                events: eventsArray
+                aevents: aeventsArray
             }
         });
         
@@ -168,8 +170,8 @@ describe('EventReaperService', function() {
         });
         
         for (var i=0; i< eventReaperService.MAX_EVENTS + 1; i++) {
-            eventsArray.push(event);
-            scope.$broadcast(eventHandlerService.MSG_EVENT, event, true);
+            aeventsArray.push(aevent);
+            scope.$broadcast(eventHandlerService.MSG_EVENT, aevent.event, true);
             scope.$digest();
         }
         
