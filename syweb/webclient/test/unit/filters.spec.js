@@ -654,7 +654,7 @@ describe('orderRecents filter', function() {
                 }
             },
             now: this.current_room_state,
-            lastEvent: {},
+            lastAnnotatedEvent: {},
             room_id: roomId,
             events: []
         };
@@ -681,8 +681,10 @@ describe('orderRecents filter', function() {
                 membership: "join"
             }
         });
-        rooms[roomA].lastEvent = {
-            origin_server_ts: 200
+        rooms[roomA].lastAnnotatedEvent = {
+            event: {
+                origin_server_ts: 200
+            }
         };
 
         rooms[roomB] = makeRoom(roomB, {
@@ -690,7 +692,7 @@ describe('orderRecents filter', function() {
                 membership: "invite"
             }
         });
-        rooms[roomB].lastEvent = undefined;
+        rooms[roomB].lastAnnotatedEvent = undefined;
 
         var output = orderRecents(rooms);
         expect(output.length).toBe(2);
@@ -707,8 +709,10 @@ describe('orderRecents filter', function() {
                 membership: "join"
             }
         });
-        rooms[roomA].lastEvent = {
-            origin_server_ts: 200
+        rooms[roomA].lastAnnotatedEvent = {
+            event: {
+                origin_server_ts: 200
+            }
         };
 
         rooms[roomB] = makeRoom(roomB, {
@@ -716,8 +720,10 @@ describe('orderRecents filter', function() {
                 membership: "join"
             }
         });
-        rooms[roomB].lastEvent = {
-            origin_server_ts: 100
+        rooms[roomB].lastAnnotatedEvent = {
+            event: {
+                origin_server_ts: 100
+            }
         };
 
         var output = orderRecents(rooms);

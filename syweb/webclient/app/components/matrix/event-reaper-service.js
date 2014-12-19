@@ -32,7 +32,7 @@ function($rootScope, modelService, recentsService, matrixService, eventHandlerSe
      * as they may be actively paginating / interacting with the room.
      *
      * - If a room is being viewed, it cannot be reaped. Detected via BROADCAST_SELECTED_ROOM_ID
-     * - If a room exceeds MAX_EVENTS events, it will be reaped. Detected via the length of room.events.
+     * - If a room exceeds MAX_EVENTS events, it will be reaped. Detected via the length of room.aevents.
      * 
      * It is important to check for eligible rooms to reap *without any user interaction*
      * as one of the use cases we are trying to resolve here is leaving open the webapp in a
@@ -78,7 +78,7 @@ function($rootScope, modelService, recentsService, matrixService, eventHandlerSe
         }
 
         var room = modelService.getRoom(event.room_id);
-        if (room.events.length > MAX_EVENTS) {
+        if (room.aevents.length > MAX_EVENTS) {
             reapRoom(event.room_id);
         }
     });

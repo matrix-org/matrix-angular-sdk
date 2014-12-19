@@ -10,7 +10,7 @@
         <div class="section">
             <form>
                 <div class="profile-avatar">
-                    <img ng-src="{{ (null !== profile.avatarUrl) ? profile.avatarUrl : 'img/default-profile.png' }}" m-file-input="profile.avatarFile"/>
+                    <img ng-src="{{ (null !== profile.avatarUrl) ? httpUri(profile.avatarUrl, 320, 320) : 'img/default-profile.png' }}" m-file-input="profile.avatarFile"/>
                 </div>
                 <div>
                     <input id="user-displayname-input" size="40" ng-model="profile.displayName" placeholder="Your display name"/>

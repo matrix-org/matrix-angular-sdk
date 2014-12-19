@@ -40,8 +40,8 @@ describe('ModelService', function() {
         
         room.addMessageEvent(event);
         
-        expect(room.events.length).toEqual(1);
-        expect(room.events[0]).toEqual(jasmine.objectContaining(event));
+        expect(room.aevents.length).toEqual(1);
+        expect(room.aevents[0].event).toEqual(jasmine.objectContaining(event));
         
         // add 2 more events
         event = angular.copy(event);
@@ -55,10 +55,10 @@ describe('ModelService', function() {
         events.push(event);
         room.addMessageEvents(events);
         
-        expect(room.events.length).toEqual(3);
-        expect(room.events[0].content.body).toEqual("herro");
-        expect(room.events[1].content.body).toEqual("goodbye");
-        expect(room.events[2].content.body).toEqual("333");
+        expect(room.aevents.length).toEqual(3);
+        expect(room.aevents[0].event.content.body).toEqual("herro");
+        expect(room.aevents[1].event.content.body).toEqual("goodbye");
+        expect(room.aevents[2].event.content.body).toEqual("333");
     }));
     
     it('should add old messages to the start and new messages to the front.', inject(
@@ -90,10 +90,10 @@ describe('ModelService', function() {
         event.event_id = "wefuohfswaaaweui";
         room.addMessageEvent(event, true); // to start
         
-        expect(room.events.length).toEqual(3);
-        expect(room.events[2].content.body).toEqual("herro");
-        expect(room.events[1].content.body).toEqual("goodbye");
-        expect(room.events[0].content.body).toEqual("333");
+        expect(room.aevents.length).toEqual(3);
+        expect(room.aevents[2].event.content.body).toEqual("herro");
+        expect(room.aevents[1].event.content.body).toEqual("goodbye");
+        expect(room.aevents[0].event.content.body).toEqual("333");
     }));
     
     it('should $broadcast live message events.', inject(
@@ -119,7 +119,7 @@ describe('ModelService', function() {
         room.addMessageEvent(event);
         rootScope.$digest();
         
-        expect(bcast).toEqual(event);
+        expect(bcast.event).toEqual(event);
     }));
     
     it('should NOT $broadcast old message events.', inject(
@@ -148,7 +148,7 @@ describe('ModelService', function() {
         expect(bcast).toBeUndefined();
     }));
     
-    it('should be able to Room.getEvent.', inject(
+    it('should be able to Room.getAnnotatedEvent.', inject(
     function(modelService) {
         var roomId = "!wefiohwefuiow:matrix.org";
         var userId = "@bob:matrix.org";
@@ -163,9 +163,9 @@ describe('ModelService', function() {
             event_id: "aoufhai"
         };
         room.addMessageEvent(event);
-        var e = room.getEvent("aoufhai");
+        var e = room.getAnnotatedEvent("aoufhai");
         
-        expect(e).toEqual(event);
+        expect(e.event).toEqual(event);
     }));
     
     it('should be able to Room.removeEvent.', inject(
@@ -185,7 +185,7 @@ describe('ModelService', function() {
         room.addMessageEvent(event);
         room.removeEvent(event);
         
-        expect(room.events.length).toEqual(0);
+        expect(room.aevents.length).toEqual(0);
     }));
 
     it('should be able to get a member in a room', inject(
@@ -464,7 +464,7 @@ describe('ModelService', function() {
         expect(roomMember.power_level_norm).toEqual(100);
     }));
     
-    it('should set __room_member when a live message is added.', inject(
+    it('should set event.sender when a live message is added.', inject(
     function(modelService) {
         var roomId = "!wefiohwefuiow:matrix.org";
         var userId = "@bob:matrix.org";
@@ -490,11 +490,11 @@ describe('ModelService', function() {
             type: "m.room.message"
         };
         
-        modelService.getRoom(roomId).addMessageEvent(event, false);
-        expect(event.__room_member).toBeDefined();
+        var msgEvent = modelService.getRoom(roomId).addMessageEvent(event, false);
+        expect(msgEvent.sender).toBeDefined();
     }));
     
-    it('should set __room_member when a live message clobbers a local echoed message.', inject(
+    it('should set event.sender when a live message clobbers a local echoed message.', inject(
     function(modelService) {
         var roomId = "!wefiohwefuiow:matrix.org";
         var userId = "@bob:matrix.org";
@@ -531,8 +531,8 @@ describe('ModelService', function() {
             type: "m.room.message"
         };
         
-        modelService.getRoom(roomId).addOrReplaceMessageEvent(event, false);
-        expect(event.__room_member).toBeDefined();
+        var msgEvent = modelService.getRoom(roomId).addOrReplaceMessageEvent(event, false);
+        expect(msgEvent.sender).toBeDefined();
     }));
     
     it('should be able to Room.leave()', inject(function(modelService) {

@@ -10,7 +10,7 @@
 
         <div>
             <div class="profile-avatar">
-                <img ng-src="{{ user.avatar_url || 'img/default-profile.png' }}"/>
+                <img ng-src="{{ httpUri(user.avatar_url, 320, 320) || 'img/default-profile.png' }}"/>
             </div>
             <div id="user-ids">
                 <div>{{ user.id }}</div>                        

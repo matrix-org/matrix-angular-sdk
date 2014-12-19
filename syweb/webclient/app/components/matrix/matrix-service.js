@@ -707,7 +707,7 @@ angular.module('matrixService', [])
          *          path and query parameters respectively.
          */
         getContentUrl: function() {
-            var path = "/_matrix/content";
+            var path = "/_matrix/media/v1/upload";
             
             var params = {
                 access_token: config.access_token
@@ -718,6 +718,35 @@ angular.module('matrixService', [])
                 params: params
             };
         },
+        
+        getHttpUriForMxc: function(mxc, width, height, resizeMethod) {
+            if (!typeof mxc === "string" || !mxc) {
+                return mxc;
+            }
+            if (mxc.indexOf("mxc://") !== 0) {
+                return mxc;
+            }
+            var serverAndMediaId = mxc.slice(6); // strips mxc://
+            var prefix = "/_matrix/media/v1/download/";
+            var params = {};
+            
+            if (width) {
+                params.width = width;
+            }
+            if (height) {
+                params.height = height;
+            }
+            if (resizeMethod) {
+                params.method = resizeMethod;
+            }
+            if (Object.keys(params).length > 0) {
+                // these are thumbnailing params so they probably want the thumbnailing API...
+                prefix = "/_matrix/media/v1/thumbnail/";
+            }
+            
+            return config.homeserver + prefix + serverAndMediaId + (Object.keys(params).length === 0 ? "" : ("?" + jQuery.param(params)));
+        },
+        
 
         /**
          * Start listening on /events

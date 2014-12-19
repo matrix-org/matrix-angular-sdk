@@ -4,49 +4,57 @@ describe('EventHandlerService', function() {
     var testContainsBingWords, testPresenceState, testRoomName; // mPresence, mRoomNameFilter, notificationService
     var testUserId, testDisplayName, testBingWords; // matrixService.config
     var testResolvedRoomId, testJoinSuccess, testRoomInitialSync; // matrixService
-    var testNowState, testOldState, testEvents; // modelService
+    var testNowState, testOldState, testEvents, testChangedKey; // modelService
     
     var modelService = {
         getRoom: function(roomId) {
+            // FIXME: This shouldn't return a new object every time, we should be spyOn'ing rather the all this crap
             return {
                 room_id: roomId,
                 current_room_state: testNowState,
                 now: testNowState,
                 old_room_state: testOldState,
-                events: testEvents,
+                aevents: testEvents,
                 addMessageEvent: function(event, toFront) {
+                    var annotatedEvent = {event: event};
                     if (toFront) {
-                        testEvents.unshift(event);
+                        testEvents.unshift(annotatedEvent);
                     }
                     else {
-                        testEvents.push(event);
+                        testEvents.push(annotatedEvent);
                     }
+                    return annotatedEvent;
                 },
                 addOrReplaceMessageEvent: function(event, toFront) {
-                    for (var i = this.events.length - 1; i >= 0; i--) {
-                        var storedEvent = this.events[i];
+                    for (var i = this.aevents.length - 1; i >= 0; i--) {
+                        var storedEvent = this.aevents[i].event;
                         if (storedEvent.event_id === event.event_id) {
-                            this.events[i] = event;
-                            return;
+                            this.aevents[i] = {event: event};
+                            return this.aevents[i];
                         }
                     }
-                    this.addMessageEvent(event, toFront);
+                    return this.addMessageEvent(event, toFront);
                 },
-                getEvent: function(eventId) {
-                    for (var i = this.events.length - 1; i >= 0; i--) {
-                        var storedEvent = this.events[i];
-                        if (storedEvent.event_id === eventId) {
+                getAnnotatedEvent: function(eventId) {
+                    for (var i = this.aevents.length - 1; i >= 0; i--) {
+                        var storedEvent = this.aevents[i];
+                        if (storedEvent.event.event_id === eventId) {
                             return storedEvent;
                         }
                     }
                 },
                 removeEvent: function(event) {
-                    var index = this.events.indexOf(event);
-                    if (index >= 0) {
-                        this.events.splice(index, 1);
+                    for (var i=0; i<this.aevents.length; i++) {
+                        if (this.aevents[i].event == event) {
+                            this.aevents.splice(i, 1);
+                            break;
+                        }
                     }
                 },
-                mutateRoomMemberState: function(){}
+                mutateRoomMemberState: function(){},
+                getChangedKeyForMemberEvent: function(){
+                    return testChangedKey;
+                }
             };
         },
         createRoomIdToAliasMapping: function(roomId, alias) {
@@ -169,6 +177,7 @@ describe('EventHandlerService', function() {
         testUserId = "@me:matrix.org";
         testDisplayName = "Me";
         testBingWords = [];
+        testChangedKey = undefined;
         
         testRoomName = "Room Name";
         testJoinSuccess = true;
@@ -394,7 +403,9 @@ describe('EventHandlerService', function() {
         });
         scope.$digest(); // resolve stuff
         
-        expect(testEvents).toEqual(testRoomInitialSync.messages.chunk);
+        for (var i=0; i<testEvents.length; i++) {
+            expect(testEvents[i].event).toEqual(testRoomInitialSync.messages.chunk[i]);
+        }
         
         expect(promiseResult).toEqual(roomId);
     }));
@@ -531,7 +542,7 @@ describe('EventHandlerService', function() {
             event_id: badEventId
         };
         eventHandlerService.handleEvent(event, true);
-        expect(testEvents[0]).toEqual(event);
+        expect(testEvents[0].event).toEqual(event);
         
         var redaction = {
             content: {},
@@ -593,7 +604,7 @@ describe('EventHandlerService', function() {
         eventHandlerService.handleEvent(event, true);
         eventHandlerService.handleEvent(dupeEvent, true);
         expect(testEvents.length).toEqual(1);
-        expect(testEvents[0]).toEqual(event);
+        expect(testEvents[0].event).toEqual(event);
     }));
     
     it('should suppress duplicate event IDs when sending messages.', inject(
@@ -634,7 +645,7 @@ describe('EventHandlerService', function() {
         scope.$digest(); // process the send message request
         
         expect(testEvents.length).toEqual(1);
-        expect(testEvents[0]).toEqual(event);
+        expect(testEvents[0].event).toEqual(event);
     }));
     
     it('should be able to send a text message with echo.', inject(
@@ -720,6 +731,7 @@ describe('EventHandlerService', function() {
             type: "m.room.member",
             event_id: "wf"
         };
+        testChangedKey = "membership";
         spyOn(notificationService, "showNotification");
         _window.Notification = true;
         eventHandlerService.handleEvent(event, true);
@@ -762,7 +774,8 @@ describe('EventHandlerService', function() {
             room_id: roomId,
             addMessageEvent: function(){},
             addOrReplaceMessageEvent: function(){},
-            mutateRoomMemberState: function(){}
+            mutateRoomMemberState: function(){},
+            getChangedKeyForMemberEvent: function(){}
         };
         testInitialSync.data.rooms.push(angular.copy(testRoomInitialSync));
         
@@ -783,6 +796,7 @@ describe('EventHandlerService', function() {
         spyOn(theRoom.old_room_state, "storeStateEvents");
         spyOn(theRoom, "addOrReplaceMessageEvent");
         spyOn(theRoom, "addMessageEvent");
+        spyOn(theRoom, "getChangedKeyForMemberEvent");
         
         // an invited room
         var inviterUserId = "@inviter:matrix.org";

@@ -22,6 +22,71 @@
  */
 angular.module('mFileUpload', ['matrixService', 'mUtilities', 'angularFileUpload'])
 .service('mFileUpload', ['$q', 'matrixService', 'mUtilities', '$upload', function ($q, matrixService, mUtilities, $upload) {
+
+    /*
+     * Get the event content JSON for this file. Returns a promise.
+     * @param {File|Blob} The file
+     * @param {String} The remote URI for this file
+     */
+    this.getEventJson = function(file, uri) {
+        var d = $q.defer();
+        var message = {};
+        
+        if (file.type.indexOf("image/") === 0) {
+            mUtilities.getImageSize(file).then(function(dimensions) {
+                message.url = uri;
+                message.msgtype = "m.image";
+                message.body = file.name;
+                message.info = {
+                    size: file.size,
+                    w: dimensions.width,
+                    h: dimensions.height,
+                    mimetype: file.type
+                };
+                d.resolve(message);
+            },
+            function(error) {
+                d.reject(error);
+            });
+        }
+        else {
+            message.url = uri;
+            message.msgtype = "m.file";
+            message.body = file.name;
+            message.info = {
+                size: file.size,
+                mimetype: file.type
+            };
+            d.resolve(message);
+        }
+        return d.promise;
+    };
+
+    /*
+     * Upload an HTML5 file or blob to a server and returned a promise
+     * that will provide the event content that needs to be sent.
+     * @param {File|Blob} file the file data to send
+     */
+    this.uploadForEvent = function(file) {
+        var d = $q.defer();
+        var that = this;
+        this.uploadFile(file).then(function(uri) {
+            that.getEventJson(file, uri).then(function(event) {
+                d.resolve(event);
+            },
+            function(error) {
+                d.reject(error);
+            });
+        },
+        function(error) {
+            d.reject(error);
+        },
+        function(progress) {
+            d.notify(progress);
+        });
+        
+        return d.promise;
+    };
         
     /*
      * Upload an HTML5 file or blob to a server and returned a promise
@@ -44,7 +109,7 @@ angular.module('mFileUpload', ['matrixService', 'mUtilities', 'angularFileUpload
             console.log('progress: ' + evt.loaded + " / " + evt.total + ' file :'+ evt.config.file.name);
             deferred.notify(evt);
         }).success(function(data, status, headers, config) {
-            var content_url = data.content_token;
+            var content_url = data.content_uri;
             console.log("   -> Successfully uploaded! Available at " + content_url);
             deferred.resolve(content_url);
         }).error(function(data, status, headers, config) {
@@ -62,7 +127,7 @@ angular.module('mFileUpload', ['matrixService', 'mUtilities', 'angularFileUpload
      * @param {Integer} thumbnailSize the max side size of the thumbnail to create
      * @returns {promise} A promise that will be resolved by a message object
      *   ready to be send with the Matrix API
-     */
+     *//* XXX: Remove this?
     this.uploadFileAndThumbnail = function(file, thumbnailSize) {
         var self = this;
         var deferred = $q.defer();
@@ -71,7 +136,7 @@ angular.module('mFileUpload', ['matrixService', 'mUtilities', 'angularFileUpload
 
         // The message structure that will be returned in the promise will look something like:
         var message = {
-/*            
+            
             msgtype: "m.image",
             url: undefined,
             body: "Image",
@@ -88,7 +153,7 @@ angular.module('mFileUpload', ['matrixService', 'mUtilities', 'angularFileUpload
                 h: undefined,
                 mimetype: undefined
             }
-*/            
+            
         };
 
         if (file.type.indexOf("image/") === 0) {
@@ -218,6 +283,6 @@ angular.module('mFileUpload', ['matrixService', 'mUtilities', 'angularFileUpload
         }
 
         return deferred.promise;
-    };
+    }; */
 
 }]);

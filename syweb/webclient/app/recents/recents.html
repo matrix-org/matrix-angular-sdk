@@ -15,7 +15,7 @@
                     </span>
                 </td>
                 <td class="recentsRoomSummaryTS">
-                    {{ (room.lastEvent.origin_server_ts) | date:'MMM d HH:mm' }}
+                    {{ (room.lastAnnotatedEvent.event.origin_server_ts) | date:'MMM d HH:mm' }}
                     
                     <img ng-click="leave(room.room_id); $event.stopPropagation();" src="img/close.png" width="10" height="10" style="margin-bottom: -1px; margin-left: 2px;" alt="close"/>
                 </td>
@@ -28,74 +28,74 @@
                         {{ room.recent.inviter | mUserDisplayName: room.room_id }} invited you
                     </div>
                     
-                    <div ng-hide="room.recent.me.membership === 'invite'" ng-switch="room.lastEvent.type">
+                    <div ng-hide="room.recent.me.membership === 'invite'" ng-switch="room.lastAnnotatedEvent.event.type">
                         <div ng-switch-when="m.room.member">
-                            <span ng-switch="room.lastEvent.__changedKey">
+                            <span ng-switch="room.lastAnnotatedEvent.changed_key">
                                 <span ng-switch-when="membership">
-                                    <span ng-if="'join' === room.lastEvent.content.membership">
-                                        {{ room.lastEvent.state_key | mUserDisplayName: room.room_id }} joined
+                                    <span ng-if="'join' === room.lastAnnotatedEvent.event.content.membership">
+                                        {{ room.lastAnnotatedEvent.event.state_key | mUserDisplayName: room.room_id }} joined
                                     </span>
-                                    <span ng-if="'leave' === room.lastEvent.content.membership">
-                                        <span ng-if="room.lastEvent.user_id === room.lastEvent.state_key">
-                                            {{room.lastEvent.state_key | mUserDisplayName: room.room_id }} left
+                                    <span ng-if="'leave' === room.lastAnnotatedEvent.event.content.membership">
+                                        <span ng-if="room.lastAnnotatedEvent.event.user_id === room.lastAnnotatedEvent.event.state_key">
+                                            {{room.lastAnnotatedEvent.event.state_key | mUserDisplayName: room.room_id }} left
                                         </span>
-                                        <span ng-if="room.lastEvent.user_id !== room.lastEvent.state_key && room.lastEvent.prev_content">
-                                            {{ room.lastEvent.user_id | mUserDisplayName: room.room_id }}
-                                            {{ {"invite": "kicked", "join": "kicked", "ban": "unbanned"}[room.lastEvent.prev_content.membership] }}
-                                            {{ room.lastEvent.state_key | mUserDisplayName: room.room_id }}
+                                        <span ng-if="room.lastAnnotatedEvent.event.user_id !== room.lastAnnotatedEvent.event.state_key && room.lastAnnotatedEvent.event.prev_content">
+                                            {{ room.lastAnnotatedEvent.event.user_id | mUserDisplayName: room.room_id }}
+                                            {{ {"invite": "kicked", "join": "kicked", "ban": "unbanned"}[room.lastAnnotatedEvent.event.prev_content.membership] }}
+                                            {{ room.lastAnnotatedEvent.event.state_key | mUserDisplayName: room.room_id }}
                                         </span>
-                                        <span ng-if="room.lastEvent.prev_content && 'join' === room.lastEvent.prev_content.membership && room.lastEvent.content.reason">
-                                            : {{ room.lastEvent.content.reason }}
+                                        <span ng-if="room.lastAnnotatedEvent.event.prev_content && 'join' === room.lastAnnotatedEvent.event.prev_content.membership && room.lastAnnotatedEvent.event.content.reason">
+                                            : {{ room.lastAnnotatedEvent.event.content.reason }}
                                         </span>
                                     </span>
-                                    <span ng-if="'invite' === room.lastEvent.content.membership || 'ban' === room.lastEvent.content.membership">
-                                        {{ room.lastEvent.user_id | mUserDisplayName: room.room_id }}
-                                        {{ {"invite": "invited", "ban": "banned"}[room.lastEvent.content.membership] }}
-                                        {{ room.lastEvent.state_key | mUserDisplayName: room.room_id }}
-                                        <span ng-if="room.lastEvent.prev_content && 'ban' === room.lastEvent.prev_content.membership && room.lastEvent.content.reason">
-                                            : {{ room.lastEvent.content.reason }}
+                                    <span ng-if="'invite' === room.lastAnnotatedEvent.event.content.membership || 'ban' === room.lastAnnotatedEvent.event.content.membership">
+                                        {{ room.lastAnnotatedEvent.event.user_id | mUserDisplayName: room.room_id }}
+                                        {{ {"invite": "invited", "ban": "banned"}[room.lastAnnotatedEvent.event.content.membership] }}
+                                        {{ room.lastAnnotatedEvent.event.state_key | mUserDisplayName: room.room_id }}
+                                        <span ng-if="room.lastAnnotatedEvent.event.prev_content && 'ban' === room.lastAnnotatedEvent.event.prev_content.membership && room.lastAnnotatedEvent.event.content.reason">
+                                            : {{ room.lastAnnotatedEvent.event.content.reason }}
                                         </span>
                                     </span>         
                                 </span>
                                 <span ng-switch-when="displayname">
-                                    {{ room.lastEvent.user_id }} changed their display name from {{ room.lastEvent.prev_content.displayname }} to {{ room.lastEvent.content.displayname }}
+                                    {{ room.lastAnnotatedEvent.event.user_id }} changed their display name from {{ room.lastAnnotatedEvent.event.prev_content.displayname }} to {{ room.lastAnnotatedEvent.event.content.displayname }}
                                 </span>
                             </span>
                         </div>
 
                         <div ng-switch-when="m.room.message">
-                            <div ng-switch="room.lastEvent.content.msgtype">
+                            <div ng-switch="room.lastAnnotatedEvent.event.content.msgtype">
                                 <div ng-switch-when="m.text">
-                                    {{ room.lastEvent.user_id | mUserDisplayName: room.room_id }} :
-                                    <span ng-bind-html="(room.lastEvent.content.body) | linky:'_blank'">
+                                    {{ room.lastAnnotatedEvent.event.user_id | mUserDisplayName: room.room_id }} :
+                                    <span ng-bind-html="(room.lastAnnotatedEvent.event.content.body) | linky:'_blank'">
                                     </span>
                                 </div>
 
                                 <div ng-switch-when="m.image">
-                                    {{ room.lastEvent.user_id | mUserDisplayName: room.room_id }} sent an image
+                                    {{ room.lastAnnotatedEvent.event.user_id | mUserDisplayName: room.room_id }} sent an image
                                 </div>
 
                                 <div ng-switch-when="m.emote">
-                                    <span ng-bind-html="'* ' + (room.lastEvent.user_id | mUserDisplayName: room.room_id) + ' ' + room.lastEvent.content.body | linky:'_blank'">
+                                    <span ng-bind-html="'* ' + (room.lastAnnotatedEvent.event.user_id | mUserDisplayName: room.room_id) + ' ' + room.lastAnnotatedEvent.event.content.body | linky:'_blank'">
                                     </span>
                                 </div>
 
                                 <div ng-switch-default>
-                                    {{ room.lastEvent.content.body | linky:'_blank' }}
+                                    {{ room.lastAnnotatedEvent.event.content.body | linky:'_blank' }}
                                 </div>
                             </div>
                         </div>
 
                         <div ng-switch-when="m.room.topic">
-                            {{ room.lastEvent.user_id | mUserDisplayName: room.room_id }} changed the topic to: {{ room.lastEvent.content.topic }}
+                            {{ room.lastAnnotatedEvent.event.user_id | mUserDisplayName: room.room_id }} changed the topic to: {{ room.lastAnnotatedEvent.event.content.topic }}
                         </div>
 
                         <div ng-switch-when="m.room.name">
-                            {{ room.lastEvent.user_id | mUserDisplayName: room.room_id }} changed the room name to: {{ room.lastEvent.content.name }}
+                            {{ room.lastAnnotatedEvent.event.user_id | mUserDisplayName: room.room_id }} changed the room name to: {{ room.lastAnnotatedEvent.event.content.name }}
                         </div>
 
                         <div ng-switch-default>
-                            <div ng-if="room.lastEvent.type.indexOf('m.call.') === 0">
+                            <div ng-if="room.lastAnnotatedEvent.event.type.indexOf('m.call.') === 0">
                                 Call
                             </div>
                         </div>

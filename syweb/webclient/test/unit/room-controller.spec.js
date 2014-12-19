@@ -33,7 +33,9 @@ describe("RoomController ", function() {
         joinRoom: function(rm){},
         handleRoomMessages: function(room, data, live, dir){},
         sendMessage: function(rm,input){},
-        resendMessage: function(event, cb){}
+        resendMessage: function(event, cb){},
+        MEMBER_EVENT: "MEMBER_EVENT",
+        LIVE_MESSAGE_EVENT: "LIVE_MESSAGE_EVENT"
     };
     var mFileUpload = {};
     var mUserDisplayNameFilter = function(roomId){ return "";};
@@ -310,14 +312,16 @@ describe("RoomController ", function() {
         scope.room_id = roomId;
         scope.room = testRoom;
         
-        var event = {
-            content: {
-                body: "something naughty",
-                msgtype: "m.text"
-            },
-            user_id: userId,
-            type: "m.room.message",
-            event_id: "aa"
+        var annotatedEvent = {
+            event: {
+                content: {
+                    body: "something naughty",
+                    msgtype: "m.text"
+                },
+                user_id: userId,
+                type: "m.room.message",
+                event_id: "aa"
+            }
         };
         
         var defer = $q.defer();
@@ -327,9 +331,9 @@ describe("RoomController ", function() {
             };
         });
         expect(scope.event_selected).toBeUndefined();
-        scope.openJson(event);
+        scope.openJson(annotatedEvent);
         expect(modal.open).toHaveBeenCalled();
-        expect(scope.event_selected).toEqual(jasmine.objectContaining(event));
+        expect(scope.event_selected).toEqual(jasmine.objectContaining(annotatedEvent));
     });
     
     it('should be able to redact an event on the event info dialog.', function() {
@@ -338,21 +342,23 @@ describe("RoomController ", function() {
         scope.room_id = roomId;
         scope.room = testRoom;
         
-        var event = {
-            content: {
-                body: "something naughty",
-                msgtype: "m.text"
-            },
-            user_id: userId,
-            type: "m.room.message",
-            room_id: roomId,
-            event_id: eventId
+        var msgEvent = {
+            event: {
+                content: {
+                    body: "something naughty",
+                    msgtype: "m.text"
+                },
+                user_id: userId,
+                type: "m.room.message",
+                room_id: roomId,
+                event_id: eventId
+            }
         };
         
         // open the dialog
         var defer = $q.defer();
         spyOn(modal, "open").and.returnValue({result: defer.promise});
-        scope.openJson(event);
+        scope.openJson(msgEvent);
         
         
         // hit the redact button
@@ -369,16 +375,18 @@ describe("RoomController ", function() {
         scope.room_id = roomId;
         scope.room = testRoom;
         
-        var event = {
-            content: {
-                body: "something naughty",
-                msgtype: "m.text"
+        var annotatedEvent = {
+            event: {
+                content: {
+                    body: "something naughty",
+                    msgtype: "m.text"
+                },
+                user_id: userId,
+                type: "m.room.message",
+                room_id: roomId,
+                event_id: eventId
             },
-            user_id: userId,
-            type: "m.room.message",
-            room_id: roomId,
-            event_id: eventId,
-            __echo_msg_state: "messageUnSent"
+            send_state: "unsent"
         };
         
         // open the dialog
@@ -388,7 +396,7 @@ describe("RoomController ", function() {
                 result: defer.promise
             };
         });
-        scope.openJson(event);
+        scope.openJson(annotatedEvent);
         
         
         // hit the resend button
@@ -399,7 +407,7 @@ describe("RoomController ", function() {
         defer.resolve("resend");
         scope.$digest();
         expect(eventHandlerService.resendMessage).toHaveBeenCalledWith(
-            event, 
+            annotatedEvent, 
             jasmine.any(Object)
         );  
     });
