@@ -35,7 +35,7 @@ angular.module('LoginController', ['matrixService'])
         desired_user_name: "",
         user_id: "",
         password: "",
-        identityServer: $location.protocol() + "//matrix.org",
+        identityServer: $location.protocol() + "://matrix.org",
         pwd1: "",
         pwd2: "",
     };
