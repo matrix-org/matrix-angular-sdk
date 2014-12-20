@@ -53,7 +53,7 @@ angular.module('RegisterController', ['matrixService'])
         desired_user_id: "",
         desired_user_name: "",
         password: "",
-        identityServer: "http://matrix.org:8090",
+        identityServer: $location.protocol() + "://matrix.org",
         pwd1: "",
         pwd2: "",
         displayName : ""
