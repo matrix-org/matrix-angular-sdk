@@ -67,7 +67,7 @@
                             <div ng-switch="room.lastAnnotatedEvent.event.content.msgtype">
                                 <div ng-switch-when="m.text">
                                     {{ room.lastAnnotatedEvent.event.user_id | mUserDisplayName: room.room_id }} :
-                                    <span ng-bind-html="(room.lastAnnotatedEvent.event.content.body) | linky:'_blank'">
+                                    <span ng-bind-html="(room.lastAnnotatedEvent.event.content.body) | escapeHTML | linky:'_blank'">
                                     </span>
                                 </div>
 
