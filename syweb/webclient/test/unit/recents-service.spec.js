@@ -2,12 +2,20 @@ describe('RecentsService', function() {
     var scope;
     var MSG_EVENT = "__test__";
     
-    var testEventContainsBingWord, testIsLive, testEvent, testDocumentTitle;
+    var testEventContainsBingWord, testIsLive, testEvent, testDocumentTitle, testUserId;
     
     var eventHandlerService = {
         MSG_EVENT: MSG_EVENT,
         eventContainsBingWord: function(event) {
             return testEventContainsBingWord;
+        }
+    };
+    
+    var matrixService = {
+        config: function() {
+            return {
+                user_id: testUserId
+            };
         }
     };
     
@@ -30,11 +38,13 @@ describe('RecentsService', function() {
             user_id: "@alfred:localhost",
             room_id: "!fl1bb13:localhost",
             event_id: "fwuegfw@localhost"
-        }
+        };
+        testUserId = "@me:localhost";
         
         // mocked dependencies
         module(function ($provide) {
           $provide.value('eventHandlerService', eventHandlerService);
+          $provide.value('matrixService', matrixService);
           $provide.value('$document', doc);
         });
         
@@ -111,6 +121,18 @@ describe('RecentsService', function() {
     function(recentsService) {
         testIsLive = false;
         
+        recentsService.setSelectedRoomId("!someotherroomid:localhost");
+        testEventContainsBingWord = true;
+        scope.$broadcast(MSG_EVENT, testEvent, testIsLive);
+    
+        expect(recentsService.getUnreadMessages()).toEqual({});
+        expect(recentsService.getUnreadBingMessages()).toEqual({});
+    }));
+    
+    // SYWEB-235
+    it('should not add messages as unread if they are sent by you.', inject(
+    function(recentsService) {
+        testUserId = testEvent.user_id;
         recentsService.setSelectedRoomId("!someotherroomid:localhost");
         testEventContainsBingWord = true;
         scope.$broadcast(MSG_EVENT, testEvent, testIsLive);
