@@ -146,7 +146,7 @@
             <div class="userAvatarFrame" ng-class="(member.user.event.content.presence === 'online' ? 'online' : (member.user.event.content.presence === 'unavailable' ? 'unavailable' : '')) + ' ' + (member.event.content.membership == 'invite' ? 'invited' : '')">
                 <img class="userAvatarImage mouse-pointer" 
                      ng-click="$parent.goToUserPage(member.id)"
-                     ng-src="{{member.aevent.httpUri(member.event.content.avatar_url, 200, 200) || 'img/default-profile.png'}}" 
+                     ng-src="{{member.aevent.httpUri(member.event.content.avatar_url, 96, 96, 'crop') || 'img/default-profile.png'}}" 
                      alt="{{ member.event.content.displayname || member.id.substr(0, member.id.indexOf(':')) }}"
                      title="{{ member.id }} - power: {{ member.power_level }}"
                      width="80" height="80"/>
@@ -180,7 +180,7 @@
                     <!--  room.now.members[msg.e.user_id].event.content.avatar_url is just backwards compat, and can be removed in the future. Synapse didn't used to
                           send m.room.member updates when avatar urls changed, so the image which should be visible here just going off room state isn't visible. We fix
                           this by reading off the m.presence url -->
-                    <img class="avatarImage mouse-pointer" ng-src="{{ msg.httpUri(msg.sender.event.content.avatar_url, 100, 100) || msg.httpUri(room.now.members[msg.e.user_id].event.content.avatar_url) || 'img/default-profile.png' }}" width="32" height="32" title="{{msg.e.user_id}}"
+                    <img class="avatarImage mouse-pointer" ng-src="{{ msg.httpUri(msg.sender.event.content.avatar_url, 96, 96, 'crop') || msg.httpUri(room.now.members[msg.e.user_id].event.content.avatar_url, 96, 96, 'crop') || 'img/default-profile.png' }}" width="32" height="32" title="{{msg.e.user_id}}"
                          ng-hide="room.aevents[$index - 1].e.user_id === msg.e.user_id || msg.e.user_id === state.user_id" ng-click="$parent.goToUserPage(msg.e.user_id)"/>
                 </td>
                 <td class="msg" ng-class="(!msg.e.content.membership && ('m.room.topic' !== msg.e.type && 'm.room.name' !== msg.e.type))? (msg.e.content.msgtype === 'm.emote' ? 'emote text' : 'text') : 'membership text'">
@@ -227,7 +227,7 @@
                                   class="message"
                                   fix-width="false && msg.e.user_id === state.user_id" 
                                   ng-class="containsBingWord(msg.event) && msg.e.user_id != state.user_id ? msg.css_class + ' messageBing' : msg.css_class"
-                                  ng-bind-html="(msg.e.content.format === 'org.matrix.custom.html') ? (msg.e.content.formatted_body | unsanitizedLinky:'_blank') : (msg.e.content.body | linky:'_blank') "/>
+                                  ng-bind-html="(msg.e.content.format === 'org.matrix.custom.html') ? (msg.e.content.formatted_body | unsanitizedLinky:'_blank') : (msg.e.content.body | escapeHTML | unsanitizedLinky:'_blank') "/>
 
                              <div ng-switch-when="m.image">
                                  <div ng-hide='msg.e.content.thumbnail_url || msg.e.content.url.indexOf("mxc://") === 0' ng-style="msg.e.content.body.h && { 'height' : (msg.e.content.body.h < 320) ? msg.e.content.body.h : 320}">
@@ -237,8 +237,8 @@
                                      <img class="image mouse-pointer" ng-src="{{ msg.httpUri(msg.e.content.thumbnail_url) }}"
                                           ng-click="$parent.$parent.fullScreenImageURL = msg.httpUri(msg.e.content.url); $event.stopPropagation();"/>
                                  </div>
-                                 <div ng-show='msg.e.content.url.indexOf("mxc://") === 0' ng-style="{ 'height' : thumbDim(msg.e.content.thumbnail_info, 'w', 320) }">
-                                     <img class="image mouse-pointer" ng-src="{{ msg.httpUri(msg.e.content.url, 320, 320) }}"
+                                 <div ng-show='msg.e.content.url.indexOf("mxc://") === 0' ng-style="{ 'height' : thumbDim(msg.e.content.info, 'w', 320) }">
+                                     <img class="messageImage mouse-pointer" ng-src="{{ msg.httpUri(msg.e.content.url, 320, 320) }}"
                                           ng-click="$parent.$parent.fullScreenImageURL = msg.httpUri(msg.e.content.url); $event.stopPropagation();"/>
                                  </div>
                              </div>
@@ -272,7 +272,7 @@
                     </div>
                 </td>
                 <td class="rightBlock">
-                    <img class="avatarImage" ng-src="{{ msg.httpUri(room.now.members[msg.e.user_id].event.content.avatar_url, 100, 100) || 'img/default-profile.png' }}" width="32" height="32"
+                    <img class="avatarImage" ng-src="{{ msg.httpUri(room.now.members[msg.e.user_id].event.content.avatar_url, 96, 96, 'crop') || 'img/default-profile.png' }}" width="32" height="32"
                          ng-hide="room.aevents[$index - 1].e.user_id === msg.e.user_id || msg.e.user_id !== state.user_id"/>
                 </td>
             </tr>

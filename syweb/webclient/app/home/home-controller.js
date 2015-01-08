@@ -51,6 +51,7 @@ angular.module('HomeController', ['matrixService', 'eventHandlerService', 'Recen
         matrixService.publicRooms().then(
             function(response) {
                 $scope.public_rooms = response.data.chunk;
+                if (!$scope.public_rooms) return;
                 for (var i = 0; i < $scope.public_rooms.length; i++) {
                     var room = $scope.public_rooms[i];
                     

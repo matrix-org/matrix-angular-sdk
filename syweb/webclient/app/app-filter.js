@@ -93,6 +93,19 @@ angular.module('matrixWebClient')
         return $sce.trustAsHtml(text);
     };
 }])
+.filter('escapeHTML', function() {
+    return function(text) {
+        if (text) {
+            return text.
+            replace(/&/g, '&amp;').
+            replace(/</g, '&lt;').
+            replace(/>/g, '&gt;').
+            replace(/'/g, '&#39;').
+            replace(/"/g, '&quot;');
+        }
+        return '';
+    };
+})
 // Exactly the same as ngSanitize's linky but instead of pushing sanitized
 // text in the addText function, we just push the raw text.
 .filter('unsanitizedLinky', ['$sanitize', function($sanitize) {

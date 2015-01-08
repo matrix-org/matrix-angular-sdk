@@ -39,6 +39,12 @@ angular.module('RoomController', ['ngSanitize', 'matrixFilter', 'mFileInput', 'a
     
     // calcs the thumbnail dimension from a large image
     $scope.thumbDim = function(info, key, requestedSize) {
+        if (!info) {
+            return requestedSize;
+        }
+        if (info[key] < requestedSize) {
+            return info[key];
+        }
         var widthMulti = requestedSize / info.w;
         var heightMulti = requestedSize / info.h;
         if (widthMulti < heightMulti) {

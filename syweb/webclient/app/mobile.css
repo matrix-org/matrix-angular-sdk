@@ -28,7 +28,7 @@
         width: 36px ! important;
     }
     
-    #header {
+    #header, .goodConnection {
         background-color: transparent;
     }
         
@@ -99,7 +99,7 @@
         top: 40px ! important;
         left: 5px ! important;
         right: 5px ! important;
-        bottom: 70px ! important;
+        bottom: 40px ! important;
     }
     
     #controlPanel {

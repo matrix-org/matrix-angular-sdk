@@ -517,37 +517,39 @@ function(matrixService, $rootScope, $window, $q, $timeout, $filter, mPresence, n
 
         handleInitialSyncDone: function(response) {
             var rooms = response.data.rooms;
-            console.log("processing "+rooms.length+" initialSync rooms.");
-            for (var i = 0; i < rooms.length; ++i) {
-                var room = rooms[i];
+            if (rooms) {
+                console.log("processing "+rooms.length+" initialSync rooms.");
+                for (var i = 0; i < rooms.length; ++i) {
+                    var room = rooms[i];
                 
-                // FIXME: This is ming: the HS should be sending down the m.room.member
-                // event for the invite in .state but it isn't, so fudge it for now.
-                if (room.inviter && room.membership === "invite") {
-                    var me = matrixService.config().user_id;
-                    var fakeEvent = {
-                        event_id: "__FAKE__" + room.room_id,
-                        user_id: room.inviter,
-                        origin_server_ts: 0,
-                        room_id: room.room_id,
-                        state_key: me,
-                        type: "m.room.member",
-                        content: {
-                            membership: "invite"
+                    // FIXME: This is ming: the HS should be sending down the m.room.member
+                    // event for the invite in .state but it isn't, so fudge it for now.
+                    if (room.inviter && room.membership === "invite") {
+                        var me = matrixService.config().user_id;
+                        var fakeEvent = {
+                            event_id: "__FAKE__" + room.room_id,
+                            user_id: room.inviter,
+                            origin_server_ts: 0,
+                            room_id: room.room_id,
+                            state_key: me,
+                            type: "m.room.member",
+                            content: {
+                                membership: "invite"
+                            }
+                        };
+                        if (!room.state) {
+                            room.state = [];
                         }
-                    };
-                    if (!room.state) {
-                        room.state = [];
+                        room.state.push(fakeEvent);
+                        console.log("RECV /initialSync invite >> "+room.room_id);
                     }
-                    room.state.push(fakeEvent);
-                    console.log("RECV /initialSync invite >> "+room.room_id);
-                }
                 
-                var newRoom = modelService.getRoom(room.room_id);
-                this.handleRoomInitialSync(newRoom, room);
+                    var newRoom = modelService.getRoom(room.room_id);
+                    this.handleRoomInitialSync(newRoom, room);
+                }
+                var presence = response.data.presence;
+                this.handleEvents(presence, false);
             }
-            var presence = response.data.presence;
-            this.handleEvents(presence, false);
 
             initialSyncDeferred.resolve("");
         },
