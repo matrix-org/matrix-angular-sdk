@@ -1,3 +1,15 @@
+Changes in Matrix Angular SDK 0.6.1 (2015-01-08)
+================================================
+Bug fixes:
+ - Fixed a bug with mobile CSS.
+ - Adjusted mxc:// thumbnail parameters to resize images correctly.
+ - Fixed spurious width errors in the console.
+ - Fixed a bug which expected /initialSync to have a 'rooms' key.
+ - Prevent sent messages from highlighting rooms.
+ - Fixed a bug which caused some message bodies with < and > to be incorrectly
+   sanitized which stripped the entire contents of the message.
+
+
 Changes in Matrix Angular SDK 0.6.0 (2014-12-19)
 ================================================
 
