@@ -652,14 +652,12 @@ function(matrixService, $rootScope, $window, $q, $timeout, $filter, mPresence, n
             resolveRoomIdentifier(roomIdOrAlias).then(function(roomId) {
                 // check if you are joined already
                 eventHandlerService.waitForInitialSyncCompletion().then(function() {
-                    var members = modelService.getRoom(roomId).current_room_state.members;
+                    var thisRoom = modelService.getRoom(roomId);
                     var me = matrixService.config().user_id;
-                    if (me in members) {
-                        if ("join" === members[me].event.content.membership) {
-                            console.log("joinRoom: Already joined room "+roomId);
-                            defer.resolve(roomId);
-                            return;
-                        }
+                    if (thisRoom.isJoinedRoom(me)) {
+                        console.log("joinRoom: Already joined room "+roomId);
+                        defer.resolve(roomId);
+                        return;
                     }
                     // join the room and get current room state
                     matrixService.join(roomIdOrAlias).then(function() {

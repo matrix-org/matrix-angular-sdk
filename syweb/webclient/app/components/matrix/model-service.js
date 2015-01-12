@@ -202,7 +202,7 @@ function(matrixService, $rootScope, $q) {
             }
         },
         
-        leave: function leave() {
+        leave: function() {
             var d = $q.defer();
             var roomId = this.room_id;
             matrixService.leave(roomId).then(function(response) {
@@ -214,6 +214,11 @@ function(matrixService, $rootScope, $q) {
             });
             
             return d.promise;
+        },
+        
+        isJoinedRoom: function(user_id) {
+            var member = this.current_room_state.members[user_id];
+            return member && member.event.content && member.event.content.membership === "join";
         }
     };
     
@@ -371,6 +376,16 @@ function(matrixService, $rootScope, $q) {
                 $rootScope.$emit(NEW_ROOM, rooms[roomId]);
             }
             return rooms[roomId];
+        },
+        
+        getKnownRoom: function(room_id_or_alias) {
+            if (rooms[room_id_or_alias]) {
+                return rooms[room_id_or_alias];
+            }
+            // check aliases
+            if (aliasToRoomId[room_id_or_alias]) {
+                return rooms[aliasToRoomId[room_id_or_alias]];
+            }
         },
         
         removeRoom: function(roomId) {

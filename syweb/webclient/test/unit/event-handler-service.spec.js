@@ -54,6 +54,9 @@ describe('EventHandlerService', function() {
                 mutateRoomMemberState: function(){},
                 getChangedKeyForMemberEvent: function(){
                     return testChangedKey;
+                },
+                isJoinedRoom: function(userId){
+                    return testNowState.members[userId] && testNowState.members[userId].event.content.membership === "join";
                 }
             };
         },

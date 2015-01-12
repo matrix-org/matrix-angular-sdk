@@ -44,12 +44,15 @@ angular.module('UserController', ['matrixService'])
 
     $scope.messageUser = function() {    
         // FIXME: create a new room every time, for now
+        dialogService.showProgress($scope.user.id, "Sending invite...", 100);
         eventHandlerService.createRoom(undefined, "private", [$scope.user.id]).then(
             function(room_id) { 
+                $rootScope.$broadcast('dialogs.wait.complete');
                 $scope.feedback = "Invite sent successfully";
                 $rootScope.goToPage("/room/" + room_id);
             },
             function(error) {
+                $rootScope.$broadcast('dialogs.wait.complete');
                 dialogService.showError(error);
             });                
     };

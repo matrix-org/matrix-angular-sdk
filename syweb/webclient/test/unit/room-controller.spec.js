@@ -7,7 +7,8 @@ describe("RoomController ", function() {
     
     var dialogService = {
         showError: function(err){}, // will be spyed
-        showSuccess: function(a,b){} // will be spyed
+        showSuccess: function(a,b){}, // will be spyed
+        showProgress: function(){}
     };
     
     // test vars
@@ -42,7 +43,8 @@ describe("RoomController ", function() {
     var modelService = {
         getRoom: function(roomId) {
             return testRoom;
-        }
+        },
+        getKnownRoom: function(roomIdOrAlias) {}
     };
     var recentsService = {
         setSelectedRoomId: function(roomId){}

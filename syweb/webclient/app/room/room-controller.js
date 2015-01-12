@@ -350,6 +350,12 @@ angular.module('RoomController', ['ngSanitize', 'matrixFilter', 'mFileInput', 'a
             }
         }
         
+        var knownRoom = modelService.getKnownRoom(room_id_or_alias);
+        var showJoinDialog = !knownRoom || !knownRoom.isJoinedRoom($scope.state.user_id);
+        if (showJoinDialog) {
+            dialogService.showProgress("Joining", "Joining room...", 100);
+        }
+        
         eventHandlerService.joinRoom(room_id_or_alias).then(function(roomId) {
             $scope.room_id = roomId;
             $scope.room = modelService.getRoom($scope.room_id);
@@ -359,7 +365,9 @@ angular.module('RoomController', ['ngSanitize', 'matrixFilter', 'mFileInput', 'a
             
             updatePresenceTimes();
             
-            
+            if (showJoinDialog) {
+                $rootScope.$broadcast('dialogs.wait.complete');
+            }
             
             // enable pagination on the NEXT digest cycle. If you don't do this,
             // a pagination will be immediately fired because there hasn't been
@@ -374,6 +382,10 @@ angular.module('RoomController', ['ngSanitize', 'matrixFilter', 'mFileInput', 'a
             }, 0);
         },
         function(err) {
+            if (showJoinDialog) {
+                $rootScope.$broadcast('dialogs.wait.complete');
+            }
+            
             dialogService.showError(err).then(function(r){
                 $location.url("/");	
             }, function(r) {

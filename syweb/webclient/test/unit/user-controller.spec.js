@@ -4,7 +4,8 @@ describe("UserController", function() {
     var targetUserId = "@target:bar";
     
     var dialogService = {
-        showError: function(){}
+        showError: function(){},
+        showProgress: function(){}
     };
     
     var matrixService = {

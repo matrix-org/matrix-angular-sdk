@@ -235,7 +235,7 @@ angular.module('RoomController')
                 var keycodePressed = event.which;
                 var UP_ARROW = 38;
                 var DOWN_ARROW = 40;
-                if (scope.roomId) {
+                if (scope && scope.roomId) {
                     if (keycodePressed === UP_ARROW) {
                         history.go(1);
                         event.preventDefault();
