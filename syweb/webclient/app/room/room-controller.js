@@ -328,8 +328,6 @@ angular.module('RoomController', ['ngSanitize', 'matrixFilter', 'mFileInput', 'a
     
     // Tries to find a suitable room ID for this room.
     $scope.onInit = function() {
-        console.log("onInit");
-
         // Extract the room identifier being loaded
         var room_id_or_alias;
         if ($routeParams.room_id_or_alias) { // provided in the url
