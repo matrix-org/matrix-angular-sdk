@@ -3,7 +3,7 @@ describe('EventHandlerService', function() {
     
     var testContainsBingWords, testPresenceState, testRoomName; // mPresence, mRoomNameFilter, notificationService
     var testUserId, testDisplayName, testBingWords; // matrixService.config
-    var testResolvedRoomId, testJoinSuccess, testRoomInitialSync; // matrixService
+    var testResolvedRoomId, testJoinSuccess, testRoomInitialSync, testConfig; // matrixService
     var testNowState, testOldState, testEvents, testChangedKey; // modelService
     
     var modelService = {
@@ -103,11 +103,7 @@ describe('EventHandlerService', function() {
             return defer.promise;
         },
         config: function() {
-            return {
-                user_id: testUserId,
-                display_name: testDisplayName,
-                bingWords: testBingWords
-            };
+            return testConfig;
         },
         sendTextMessage: function(roomId, input) {
             var defer = q.defer();
@@ -203,6 +199,12 @@ describe('EventHandlerService', function() {
                 rooms: [],
                 presence: []
             }
+        };
+        
+        testConfig = {
+            user_id: testUserId,
+            display_name: testDisplayName,
+            bingWords: testBingWords
         };
         
         testNowState = {
@@ -949,6 +951,49 @@ describe('EventHandlerService', function() {
         expect(testNowState.members["@aaa:matrix.org"].typing).toBe(false);
         expect(testNowState.members["@bbb:matrix.org"].typing).toBe(false);
         expect(testNowState.members["@ccc:matrix.org"]).toBeUndefined();
+    }));
+    
+    it('should display a notification to messages with bing words.', inject(
+    function(eventHandlerService) {
+        eventHandlerService.handleInitialSyncDone(testInitialSync);
+        testContainsBingWords = true;
+        
+        var event = {
+            content: {
+                body: "ping",
+                msgtype: "m.text"
+            },
+            user_id: "@someone:matrix.org",
+            room_id: "!foobar:matrix.org",
+            type: "m.room.message",
+            event_id: "wf3"
+        };
+        spyOn(notificationService, "showNotification");
+        _window.Notification = true;
+        eventHandlerService.handleEvent(event, true);
+        expect(notificationService.showNotification).toHaveBeenCalled();
+    }));
+    
+    it('should NOT display a notification if notifications are muted.', inject(
+    function(eventHandlerService) {
+        eventHandlerService.handleInitialSyncDone(testInitialSync);
+        testContainsBingWords = true;
+        testConfig.muteNotifications = true;
+        
+        var event = {
+            content: {
+                body: "ping",
+                msgtype: "m.text"
+            },
+            user_id: "@someone:matrix.org",
+            room_id: "!foobar:matrix.org",
+            type: "m.room.message",
+            event_id: "wf3"
+        };
+        spyOn(notificationService, "showNotification");
+        _window.Notification = true;
+        eventHandlerService.handleEvent(event, true);
+        expect(notificationService.showNotification).not.toHaveBeenCalled();
     }));
     
 });
