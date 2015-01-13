@@ -34,6 +34,11 @@ angular.module('webRtcService', [])
     };
 
     this.isWebRTCSupported = function () {
+        // need to recheck for web rtc. The owr.js script loads some of the $window globals but it is 
+        // loaded "at some point" after the page load. There's no callback for this, so we just need 
+        // to constantly recheck whenever someone wants to know if web rtc is supported. :/
+        this.init();
+        
         return !!(webRtc.GetUserMedia && webRtc.RtcPeerConnection && webRtc.RtcSessionDescription && webRtc.RtcIceCandidate);
     };
     
