@@ -186,6 +186,9 @@ function(matrixService, $rootScope, $window, $q, $timeout, $filter, mPresence, n
             if ("m.room.message" === event.type && (bingWords === undefined || bingWords.length === 0)) {
                 shouldBing = true;
             }
+            if (matrixService.config().muteNotifications) {
+                shouldBing = false;
+            }
             
             if (shouldBing && isIdle) {
                 var roomTitle = $filter("mRoomName")(event.room_id);

@@ -30,6 +30,15 @@ angular.module('SettingsController', ['matrixService', 'mFileUpload', 'mFileInpu
 
         return ret;
     };
+    
+    var setMuteNotifications = function(mute) {
+        var config = matrixService.config();
+        config.muteNotifications = mute;
+        matrixService.setConfig(config);
+        matrixService.saveConfig();
+        $scope.config = matrixService.config();
+    };
+    
     $scope.config = matrixService.config();
     
     $scope.httpUri = matrixService.getHttpUriForMxc;
@@ -227,5 +236,9 @@ angular.module('SettingsController', ['matrixService', 'mFileUpload', 'mFileInpu
             console.log("   -> User decision: " + permission);
             $scope.settings.notifications = permission;
         });
+    };
+    
+    $scope.toggleMute = function() {
+        setMuteNotifications(!$scope.config.muteNotifications);
     };
 }]);

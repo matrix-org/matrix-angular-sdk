@@ -51,11 +51,15 @@
         <h3>Desktop notifications</h3>
         <div class="section" ng-switch="settings.notifications">
             <div ng-switch-when="granted">
-                Notifications are enabled.
                 <div>
+                    <button ng-click="toggleMute()" style="font-size: 14pt">
+                        {{config.muteNotifications ? "Unmute desktop notifications" : "Mute desktop notifications"}}
+                    </button>
+                </div>
+                <div ng-hide="config.muteNotifications">
                     <label><input type="checkbox" ng-change="updateAudioNotification()" ng-model="settings.audioNotifications">Enable audio for notifications</label>
                 </div>
-                <div class="section">
+                <div class="section" ng-hide="config.muteNotifications">
                     <h4>Specific words to alert on:</h4>
                     <p>If blank, all messages will trigger an alert. Your username & display name always alerts.</p>
                     <input size=40 name="bingWords" ng-model="settings.bingWords" ng-list placeholder="Enter words separated with , (supports regex)"

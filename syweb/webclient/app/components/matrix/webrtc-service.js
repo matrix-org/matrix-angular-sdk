@@ -25,6 +25,7 @@ angular.module('webRtcService', [])
     this.FALLBACK_STUN_SERVER = 'stun:stun.l.google.com:19302';
     
     var webRtc = {};
+    var that = this;
 
     this.init = function() {
         webRtc.GetUserMedia = $window.navigator.getUserMedia || $window.navigator.webkitGetUserMedia || $window.navigator.mozGetUserMedia;
@@ -37,7 +38,7 @@ angular.module('webRtcService', [])
         // need to recheck for web rtc. The owr.js script loads some of the $window globals but it is 
         // loaded "at some point" after the page load. There's no callback for this, so we just need 
         // to constantly recheck whenever someone wants to know if web rtc is supported. :/
-        this.init();
+        that.init();
         
         return !!(webRtc.GetUserMedia && webRtc.RtcPeerConnection && webRtc.RtcSessionDescription && webRtc.RtcIceCandidate);
     };
