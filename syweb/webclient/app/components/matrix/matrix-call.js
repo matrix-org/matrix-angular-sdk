@@ -154,15 +154,17 @@ function MatrixCallFactory(webRtcService, matrixService, matrixPhoneService, mod
         //}
 
         var self = this;
-        $timeout(function() {
-            if (self.state == 'ringing') {
-                self.state = 'ended';
-                self.hangupParty = 'remote'; // effectively
-                self.stopAllMedia();
-                if (self.peerConn.signalingState != 'closed') self.peerConn.close();
-                if (self.onHangup) self.onHangup(self);
-            }
-        }, this.msg.lifetime - event.age);
+        if (event.age) {
+            $timeout(function() {
+                if (self.state == 'ringing') {
+                    self.state = 'ended';
+                    self.hangupParty = 'remote'; // effectively
+                    self.stopAllMedia();
+                    if (self.peerConn.signalingState != 'closed') self.peerConn.close();
+                    if (self.onHangup) self.onHangup(self);
+                }
+            }, this.msg.lifetime - event.age);
+        }
     };
 
     // perverse as it may seem, sometimes we want to instantiate a call with a hangup message
