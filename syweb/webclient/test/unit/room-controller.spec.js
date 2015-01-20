@@ -35,6 +35,7 @@ describe("RoomController ", function() {
         handleRoomMessages: function(room, data, live, dir){},
         sendMessage: function(rm,input){},
         resendMessage: function(event, cb){},
+        isInitialSyncComplete: function(){return true;},
         MEMBER_EVENT: "MEMBER_EVENT",
         LIVE_MESSAGE_EVENT: "LIVE_MESSAGE_EVENT"
     };
@@ -307,6 +308,72 @@ describe("RoomController ", function() {
         }, true);
         
         expect(scope.state.permission_denied).toBeDefined();
+    });
+    
+    it('should show a joining room dialog if the room is known but not joined and initial sync is complete.', function() {
+        // boilerplate
+        routeParams.room_id_or_alias = encodeURIComponent("!sdofh:matrix.org");
+        spyOn(eventHandlerService, "joinRoom").and.returnValue(resolve({}));
+        
+        // actual pre-conditions
+        spyOn(eventHandlerService, "isInitialSyncComplete").and.returnValue(true);
+        var knownRoom = {
+            isJoinedRoom: function(){}
+        };
+        spyOn(modelService, "getKnownRoom").and.returnValue(knownRoom);
+        spyOn(knownRoom, "isJoinedRoom").and.returnValue(false);
+        spyOn(dialogService, "showProgress");
+        
+        //test
+        scope.onInit();
+        expect(dialogService.showProgress).toHaveBeenCalled();
+    });
+    
+    it('should NOT show a joining room dialog if the room is known but not joined and initial sync is NOT complete.', function() {
+        // boilerplate
+        routeParams.room_id_or_alias = encodeURIComponent("!sdofh:matrix.org");
+        spyOn(eventHandlerService, "joinRoom").and.returnValue(resolve({}));
+        
+        // actual pre-conditions
+        spyOn(eventHandlerService, "isInitialSyncComplete").and.returnValue(false);
+        var knownRoom = {
+            isJoinedRoom: function(){}
+        };
+        spyOn(modelService, "getKnownRoom").and.returnValue(knownRoom);
+        spyOn(knownRoom, "isJoinedRoom").and.returnValue(false);
+        spyOn(dialogService, "showProgress");
+        
+        //test
+        scope.onInit();
+        expect(dialogService.showProgress).not.toHaveBeenCalled();
+    });
+    
+    it('should NOT show a joining room dialog if the room not known and initial sync is NOT complete.', function() {
+        // boilerplate
+        routeParams.room_id_or_alias = encodeURIComponent("!sdofh:matrix.org");
+        spyOn(eventHandlerService, "joinRoom").and.returnValue(resolve({}));
+        
+        // actual pre-conditions
+        spyOn(eventHandlerService, "isInitialSyncComplete").and.returnValue(false);
+        spyOn(dialogService, "showProgress");
+        
+        //test
+        scope.onInit();
+        expect(dialogService.showProgress).not.toHaveBeenCalled();
+    });
+    
+    it('should show a joining room dialog if the room not known and initial sync is complete.', function() {
+        // boilerplate
+        routeParams.room_id_or_alias = encodeURIComponent("!sdofh:matrix.org");
+        spyOn(eventHandlerService, "joinRoom").and.returnValue(resolve({}));
+        
+        // actual pre-conditions
+        spyOn(eventHandlerService, "isInitialSyncComplete").and.returnValue(true);
+        spyOn(dialogService, "showProgress");
+        
+        //test
+        scope.onInit();
+        expect(dialogService.showProgress).toHaveBeenCalled();
     });
     
     it('should be able to open the event info dialog.', function() {
