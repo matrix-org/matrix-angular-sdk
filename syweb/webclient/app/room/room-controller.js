@@ -349,7 +349,8 @@ angular.module('RoomController', ['ngSanitize', 'matrixFilter', 'mFileInput', 'a
         }
         
         var knownRoom = modelService.getKnownRoom(room_id_or_alias);
-        var showJoinDialog = !knownRoom || !knownRoom.isJoinedRoom($scope.state.user_id);
+        var isJoinedRoom = knownRoom && knownRoom.isJoinedRoom($scope.state.user_id);
+        var showJoinDialog = !isJoinedRoom && eventHandlerService.isInitialSyncComplete();
         if (showJoinDialog) {
             dialogService.showProgress("Joining", "Joining room...", 100);
         }

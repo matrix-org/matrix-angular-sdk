@@ -46,6 +46,7 @@ function(matrixService, $rootScope, $window, $q, $timeout, $filter, mPresence, n
     var REAP_POLL_MS = 1000 * 11; // check for eligible event IDs to reap every 11s
 
     var initialSyncDeferred;
+    var initialSyncComplete = false;
     
     // used for mapping mimetypes to thumbnails (if thumbnail is missing)
     var mimeTypeToIcon = {
@@ -59,6 +60,7 @@ function(matrixService, $rootScope, $window, $q, $timeout, $filter, mPresence, n
 
     var reset = function() {
         initialSyncDeferred = $q.defer();
+        initialSyncComplete = false;
         eventReapMap = {};
     };
     reset();
@@ -553,7 +555,7 @@ function(matrixService, $rootScope, $window, $q, $timeout, $filter, mPresence, n
                 var presence = response.data.presence;
                 this.handleEvents(presence, false);
             }
-
+            initialSyncComplete = true;
             initialSyncDeferred.resolve("");
         },
         
@@ -722,6 +724,10 @@ function(matrixService, $rootScope, $window, $q, $timeout, $filter, mPresence, n
         // Returns a promise that resolves when the initialSync request has been processed
         waitForInitialSyncCompletion: function() {
             return initialSyncDeferred.promise;
+        },
+        
+        isInitialSyncComplete: function() {
+            return initialSyncComplete;
         },
         
         eventContainsBingWord: function(event) {
