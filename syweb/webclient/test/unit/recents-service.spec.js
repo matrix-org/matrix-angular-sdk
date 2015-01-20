@@ -1,13 +1,18 @@
 describe('RecentsService', function() {
     var scope;
     var MSG_EVENT = "__test__";
+    var MEMBER_EVENT = "__member__";
     
-    var testEventContainsBingWord, testIsLive, testEvent, testDocumentTitle, testUserId;
+    var testEventContainsBingWord, testIsLive, testEvent, testDocumentTitle, testUserId, testInitialSyncComplete;
     
     var eventHandlerService = {
         MSG_EVENT: MSG_EVENT,
+        MEMBER_EVENT: MEMBER_EVENT,
         eventContainsBingWord: function(event) {
             return testEventContainsBingWord;
+        },
+        waitForInitialSyncCompletion: function(){
+            return testInitialSyncComplete.promise;
         }
     };
     
@@ -17,6 +22,10 @@ describe('RecentsService', function() {
                 user_id: testUserId
             };
         }
+    };
+    
+    var modelService = {
+        getRooms: function(){}
     };
     
     var doc = [
@@ -45,6 +54,7 @@ describe('RecentsService', function() {
         module(function ($provide) {
           $provide.value('eventHandlerService', eventHandlerService);
           $provide.value('matrixService', matrixService);
+          $provide.value('modelService', modelService);
           $provide.value('$document', doc);
         });
         
@@ -52,8 +62,11 @@ describe('RecentsService', function() {
         module('recentsService');
     });
     
-    beforeEach(inject(function($rootScope) {
+    beforeEach(inject(function($rootScope, _$q_) {
         scope = $rootScope;
+        $q = _$q_;
+        
+        testInitialSyncComplete = $q.defer();
     }));
 
     it('should start with no unread messages.', inject(
@@ -201,5 +214,58 @@ describe('RecentsService', function() {
         var oldTitle = doc[0].title;
         scope.$broadcast(MSG_EVENT, testEvent, testIsLive);
         expect(doc[0].title).toEqual(oldTitle);
+    }));
+    
+    // SYWEB-260
+    it('should highlight rooms you are invited to (event stream).', inject(
+    function(recentsService) {
+        recentsService.setSelectedRoomId("!someotherroomid:localhost");
+        testUserId = "@me:localhost";
+        var roomId = "!some_room:localhost"
+        var memberEvent = {
+            room_id: roomId,
+            content: {
+                membership: "invite"
+            },
+            state_key: testUserId,
+            user_id: "@some_inviter:localhost",
+            type: "m.room.member"
+        };
+        scope.$broadcast(MEMBER_EVENT, memberEvent, true);
+        
+        expect(recentsService.getUnreadBingMessages()[roomId]).toEqual(memberEvent);
+    }));
+    
+    it('should highlight rooms you are invited to (initialSync).', inject(
+    function(recentsService) {
+        recentsService.setSelectedRoomId("!someotherroomid:localhost");
+        testUserId = "@me:localhost";
+        var roomId = "!some_room:localhost"
+        var memberEvent = {
+            room_id: roomId,
+            content: {
+                membership: "invite"
+            },
+            state_key: testUserId,
+            user_id: "@some_inviter:localhost",
+            type: "m.room.member"
+        };
+        var rooms = {};
+        rooms[roomId] = {
+            getMembershipState: function(userId){
+                return "invite";
+            },
+            now: {
+                state: function(){
+                    return memberEvent;
+                }
+            }
+        };
+        spyOn(modelService, "getRooms").and.returnValue(rooms);
+        
+        testInitialSyncComplete.resolve({});
+        scope.$digest();
+        
+        expect(recentsService.getUnreadBingMessages()[roomId]).toEqual(memberEvent);
     }));
 });

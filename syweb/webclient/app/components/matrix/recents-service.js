@@ -27,8 +27,8 @@ This is preferable to polluting the $rootScope with recents specific info, and
 makes the dependency on this shared state *explicit*.
 */
 angular.module('recentsService', [])
-.factory('recentsService', ['$rootScope', '$document', 'eventHandlerService', 'matrixService', 
-function($rootScope, $document, eventHandlerService, matrixService) {
+.factory('recentsService', ['$rootScope', '$document', 'eventHandlerService', 'matrixService', 'modelService',
+function($rootScope, $document, eventHandlerService, matrixService, modelService) {
     // notify listeners when variables in the service are updated. We need to do
     // this since we do not tie them to any scope.
     var BROADCAST_SELECTED_ROOM_ID = "recentsService:BROADCAST_SELECTED_ROOM_ID(room_id)";
@@ -48,15 +48,19 @@ function($rootScope, $document, eventHandlerService, matrixService) {
         // room_id: bingEvent
     };
     
+    var addUnreadBing = function(event) {
+        if (!unreadBingMessages[event.room_id]) {
+            unreadBingMessages[event.room_id] = {};
+        }
+        unreadBingMessages[event.room_id] = event;
+        $rootScope.$broadcast(BROADCAST_UNREAD_BING_MESSAGES, event.room_id, event);
+    };
+    
     // listen for new unread messages
     $rootScope.$on(eventHandlerService.MSG_EVENT, function(ngEvent, event, isLive) {
         if (isLive && event.room_id !== selectedRoomId && matrixService.config().user_id !== event.user_id) {
             if (eventHandlerService.eventContainsBingWord(event)) {
-                if (!unreadBingMessages[event.room_id]) {
-                    unreadBingMessages[event.room_id] = {};
-                }
-                unreadBingMessages[event.room_id] = event;
-                $rootScope.$broadcast(BROADCAST_UNREAD_BING_MESSAGES, event.room_id, event);
+                addUnreadBing(event);
             }
         
             if (!unreadMessages[event.room_id]) {
@@ -67,6 +71,27 @@ function($rootScope, $document, eventHandlerService, matrixService) {
             updateTitleCount();
             $rootScope.$broadcast(BROADCAST_UNREAD_MESSAGES, event.room_id, unreadMessages[event.room_id]);
         }
+    });
+    
+    // bing for new invites
+    $rootScope.$on(eventHandlerService.MEMBER_EVENT, function(ngEvent, event, isLive) {
+        if (isLive && event.room_id !== selectedRoomId) {
+            if (matrixService.config().user_id === event.state_key && 
+                    event.content.membership === "invite") {
+                addUnreadBing(event);
+            }
+        }
+    });
+    // bing for invites from initialsync
+    eventHandlerService.waitForInitialSyncCompletion().then(function() {
+        var rooms = modelService.getRooms();
+        var me = matrixService.config().user_id;
+        Object.keys(rooms).forEach(function (room_id) {
+            var room = rooms[room_id];
+            if (room.getMembershipState(me) === "invite") {
+                addUnreadBing(room.now.state("m.room.member", me));
+            }
+        });
     });
     
     var updateTitleCount = function() {

@@ -216,9 +216,15 @@ function(matrixService, $rootScope, $q) {
             return d.promise;
         },
         
-        isJoinedRoom: function(user_id) {
+        getMembershipState: function(user_id) {
             var member = this.current_room_state.members[user_id];
-            return member && member.event.content && member.event.content.membership === "join";
+            if (member && member.event.content && member.event.content.membership) {
+                return member.event.content.membership;
+            };
+        },
+        
+        isJoinedRoom: function(user_id) {
+            return this.getMembershipState(user_id) === "join";
         }
     };
     
