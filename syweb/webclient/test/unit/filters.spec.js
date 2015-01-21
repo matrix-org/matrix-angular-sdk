@@ -147,24 +147,26 @@ describe('mRoomName filter', function() {
         expect(output).toEqual(testAlias);
     });
     
-    /**** ROOM ID ****/
+    /**** GROUP CHAT ****/
     
-    it("should show the room ID for public (public join_rules) rooms if a room name and alias don't exist.", function() {
-        testUserId = "@me:matrix.org";
-        testRoomState.setJoinRule("public");
-        testRoomState.setMember(testUserId, "join");
-        var output = mRoomName(roomId);
-        expect(output).toEqual(roomId);
-    });
-    
-    it("should show the room ID for private (invite join_rules) rooms if a room name and alias don't exist and there are >2 members.", function() {
+    it("should show the names of members in a private (invite join_rules)  room if a room name and alias don't exist and there are >2 members.", function() {
         testUserId = "@me:matrix.org";
         testRoomState.setJoinRule("public");
         testRoomState.setMember(testUserId, "join");
         testRoomState.setMember("@alice:matrix.org", "join");
         testRoomState.setMember("@bob:matrix.org", "join");
         var output = mRoomName(roomId);
-        expect(output).toEqual(roomId);
+        expect(output).toEqual("(2) @alice:matrix.org, @bob:matrix.org");
+    });
+    
+    it("should show the names of members in a public (public join_rules)  room if a room name and alias don't exist and there are >2 members.", function() {
+        testUserId = "@me:matrix.org";
+        testRoomState.setJoinRule("public");
+        testRoomState.setMember(testUserId, "join");
+        testRoomState.setMember("@alice:matrix.org", "join");
+        testRoomState.setMember("@bob:matrix.org", "join");
+        var output = mRoomName(roomId);
+        expect(output).toEqual("(2) @alice:matrix.org, @bob:matrix.org");
     });
     
     /**** SELF-CHAT ****/
@@ -181,6 +183,14 @@ describe('mRoomName filter', function() {
     it("should show your user ID for private (invite join_rules) rooms if a room name and alias don't exist and it is a self-chat and they don't have a display name set.", function() {
         testUserId = "@me:matrix.org";
         testRoomState.setJoinRule("private");
+        testRoomState.setMember(testUserId, "join");
+        var output = mRoomName(roomId);
+        expect(output).toEqual(testUserId);
+    });
+    
+    it("should show your user ID for public (public join_rules) rooms if a room name and alias don't exist and it is a self-chat and they don't have a display name set.", function() {
+        testUserId = "@me:matrix.org";
+        testRoomState.setJoinRule("public");
         testRoomState.setMember(testUserId, "join");
         var output = mRoomName(roomId);
         expect(output).toEqual(testUserId);
@@ -203,6 +213,16 @@ describe('mRoomName filter', function() {
         testUserId = "@me:matrix.org";
         otherUserId = "@alice:matrix.org";
         testRoomState.setJoinRule("private");
+        testRoomState.setMember(testUserId, "join");
+        testRoomState.setMember("@alice:matrix.org", "join");
+        var output = mRoomName(roomId);
+        expect(output).toEqual(otherUserId);
+    });
+    
+    it("should show the other user's ID for public (public join_rules) rooms if a room name and alias don't exist and it is a 1:1-chat and they don't have a display name set.", function() {
+        testUserId = "@me:matrix.org";
+        otherUserId = "@alice:matrix.org";
+        testRoomState.setJoinRule("public");
         testRoomState.setMember(testUserId, "join");
         testRoomState.setMember("@alice:matrix.org", "join");
         var output = mRoomName(roomId);

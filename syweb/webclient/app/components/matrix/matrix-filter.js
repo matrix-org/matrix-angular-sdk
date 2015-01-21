@@ -45,11 +45,31 @@ function($rootScope, matrixService, modelService, mUserDisplayNameFilter) {
         else if (alias) {
             roomName = alias;
         }
-        else if (Object.keys(room.members).length > 0 && !isPublicRoom) { // Do not rename public room
+        else if (Object.keys(room.members).length > 0) {
             var user_id = matrixService.config().user_id;
+            var numMembersInRoom = Object.keys(room.members).length;
             
-            // this is a "one to one" room and should have the name of the other user.
-            if (Object.keys(room.members).length === 2) {
+            
+            if (numMembersInRoom >= 3) {
+                // this is a group chat and should have the names of participants
+                // according to "(<num>) <name1>, <name2>, <name3> ..."
+                var memberNames = [];
+                for (var i in room.members) {
+                    if (!room.members.hasOwnProperty(i)) continue;
+                    var member = room.members[i].event;
+                    if (member.state_key === user_id) continue;
+                    
+                    var memberName = mUserDisplayNameFilter(member.state_key, room_id);
+                    if (!memberName) {
+                        memberName = member.state_key;
+                    }
+                    memberNames.push(memberName);
+                }
+                roomName = "(" + memberNames.length + ") "+memberNames.join(", ");
+            }
+            else if (numMembersInRoom === 2) {
+                // this is a "one to one" room and should have the name of the 
+                // other user.
                 for (var i in room.members) {
                     if (!room.members.hasOwnProperty(i)) continue;
 
@@ -63,7 +83,7 @@ function($rootScope, matrixService, modelService, mUserDisplayNameFilter) {
                     }
                 }
             }
-            else if (Object.keys(room.members).length === 1) {
+            else if (numMembersInRoom === 1) {
                 // this could be just us (self-chat) or could be the other person
                 // in a room if they have invited us to the room. Find out which.
                 var otherUserId = Object.keys(room.members)[0];
@@ -91,7 +111,7 @@ function($rootScope, matrixService, modelService, mUserDisplayNameFilter) {
                     }
                 }
             }
-            else if (Object.keys(room.members).length === 0) {
+            else if (numMembersInRoom === 0) {
                 // this shouldn't be possible
                 console.error("0 members in room >> " + room_id);
             }
