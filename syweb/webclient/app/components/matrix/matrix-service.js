@@ -460,14 +460,6 @@ angular.module('matrixService', [])
 
             return doRequest("GET", path, undefined, {});
         },
-        
-        createFilter: function(filterJson) {
-            var path = mkPath("/user/$user_id/filter", {
-                $user_id: config.user_id
-            });
-
-            return doRequest("POST", path, undefined, filterJson);
-        },
 
         setName: function(room_id, name) {
             var data = {
@@ -870,7 +862,93 @@ angular.module('matrixService', [])
 
         getTurnServer: function() {
             return doRequest("GET", "/voip/turnServer");
-        }
+        },
 
+        /***********************************************************************
+                                Version 2 Baseline 
+        ***********************************************************************/
+
+        createFilter: function(filterJson) {
+            var path = mkPath("/user/$user_id/filter", {
+                $user_id: config.user_id
+            });
+
+            return doRequest("POST", path, undefined, filterJson);
+        },
+
+        /*
+         * Perform a longpoll sync with the home server. All params are optional
+         * @param {String} since The batch token to use to obtain an incremental
+         *                       sync. If not specified, a full sync is done.
+         * @param {String} filter The filter token to apply to this request.
+         * @param {Number} limit The maximum number of events per room to 
+         *                       return. Default: 10.
+         * @param {Number} timeout The max time in ms to poll before returning.
+         *                         Default: 30000.
+         * @param {Object} opts Additional request options according to the V2 
+         *                      API.
+         */
+        sync: function(since, filter, limit, timeout, opts) {
+            var path = "/sync";
+
+            if (!limit) {
+                limit = 10;
+            }
+            if (!timeout) {
+                timeout = 30000;
+            }
+
+            var queryParams = {
+                since: since,
+                limit: limit,
+                filter: filter,
+                timeout: timeout
+            };
+
+            var knownOpts = [
+                "gap", "sort", "set_presence", "backfill",
+                "filter_type", "filter_room", "filter_sender", "filter_format",
+                "filter_event_id", "filter_select", "filter_bundle_updates"
+            ];
+            for (var i=0; i<knownOpts.length; i++) {
+                var option = opts[knownOpts[i]];
+                if (option) {
+                    queryParams[knownOpts[i]] = option;
+                }
+            }
+
+            return doRequest("GET", path, queryParams);
+        },
+
+        /*
+         * Perform a scrollback on a room.
+         * @param {String} roomId The room to scroll back in.
+         * @param {String} from The batch token scroll from.
+         * @param {Object} opts Additional request options according to the V2 
+         *                      API.
+         */
+        scrollback: function(roomId, from, opts) {
+            var path = mkPath("/rooms/$room_id/events", {
+                $room_id: roomId
+            });
+
+            var queryParams = {
+                from: from
+            };
+
+            var knownOpts = [
+                "gap", "sort", "backfill", // missing set_presence
+                "filter_type", "filter_room", "filter_sender", "filter_format",
+                "filter_event_id", "filter_select", "filter_bundle_updates"
+            ];
+            for (var i=0; i<knownOpts.length; i++) {
+                var option = opts[knownOpts[i]];
+                if (option) {
+                    queryParams[knownOpts[i]] = option;
+                }
+            }
+
+            return doRequest("GET", path, queryParams);
+        }
     };
 }]);
