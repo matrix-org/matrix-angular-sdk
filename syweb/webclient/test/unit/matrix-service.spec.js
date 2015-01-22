@@ -352,21 +352,6 @@ describe('MatrixService', function() {
         httpBackend.flush();
     }));
     
-    it('should be able to GET /rooms/$roomid/members', inject(
-    function(matrixService) {
-        matrixService.setConfig(CONFIG);
-        var roomId = "!wefuhewfuiw:example.com";
-        matrixService.getMemberList(roomId).then(function(response) {
-            expect(response.data).toEqual({});
-        });
-
-        httpBackend.expectGET(
-            URL + "/rooms/" + encodeURIComponent(roomId) +
-                    "/members?access_token=foobar")
-            .respond({});
-        httpBackend.flush();
-    }));
-    
     it('should be able to paginate a room', inject(
     function(matrixService) {
         matrixService.setConfig(CONFIG);
@@ -592,9 +577,73 @@ describe('MatrixService', function() {
             .respond({});
         httpBackend.flush();
     }));
-    
-    it('should be able to handle rate limiting from the server, if enabled.', inject(
+
+    it('should be able to POST a filter', inject(
     function(matrixService) {
+        var testConfig = angular.copy(CONFIG);
+        testConfig.user_id = "@bob:example.com";
+        matrixService.setConfig(testConfig);
+        var filter = {
+            types: ["m.*"],
+            not_senders: ["@somebot:localhost"]
+        };
+        var filterResponse = {
+            filter_token: "foo"
+        };
+        matrixService.createFilter(filter).then(function(response) {
+            expect(response.data).toEqual(filterResponse);
+        });
+        httpBackend.expectPOST(URL+"/user/"+
+            encodeURIComponent(testConfig.user_id)+
+            "/filter?access_token=foobar",
+            filter)
+            .respond(filterResponse);
+        httpBackend.flush();
+    }));
+
+    it('should be able to GET /rooms/{roomId}/events for scrollback.', inject(
+    function(matrixService) {
+        matrixService.setConfig(CONFIG);
+        var roomId = "!foo:bar";
+        var fromToken = "e13d14f2#3a424b234#";
+        var filterToken = "filterrrrr";
+        matrixService.scrollback(roomId, fromToken, filterToken).then(
+        function(response) {
+            expect(response.data).toEqual({});
+        });
+        httpBackend.expectGET(URL+"/rooms/"+encodeURIComponent(roomId)+
+            "/events?access_token=foobar"+
+            "&filter="+encodeURIComponent(filterToken)+
+            "&from="+encodeURIComponent(fromToken)+
+            "&limit=10"
+            )
+            .respond({});
+        httpBackend.flush();
+    }));
+
+    it('should be able to GET /sync incrementally with a filter.', inject(
+    function(matrixService) {
+        matrixService.setConfig(CONFIG);
+        // Worth noting that if you use '@' then this test will fail because
+        // Angular doesn't use encodeURIComponent but uses a looser definition
+        // which won't encode @.
+        var since = "foo#";
+        var filterToken = "e13d14f2#3a424b234#";
+        matrixService.sync(since, filterToken).then(function(response) {
+            expect(response.data).toEqual({});
+        });
+        httpBackend.expectGET(URL+"/sync?access_token=foobar"+
+            "&filter="+encodeURIComponent(filterToken)+
+            "&limit=10"+
+            "&since="+encodeURIComponent(since)+
+            "&timeout=30000"
+            )
+            .respond({});
+        httpBackend.flush();
+    }));
+    
+    it('should be able to handle rate limiting from the server, if enabled.',
+    inject(function(matrixService) {
         matrixService.setConfig(CONFIG);
         matrixService.shouldHandleRateLimiting(true);
         var roomId = "!fh38hfwfwef:example.com";
@@ -648,8 +697,8 @@ describe('MatrixService', function() {
         
     }));
     
-    it('should NOT handle rate limiting from the server if not enabled.', inject(
-    function(matrixService) {
+    it('should NOT handle rate limiting from the server if not enabled.',
+    inject(function(matrixService) {
         matrixService.setConfig(CONFIG);
         matrixService.shouldHandleRateLimiting(false);
         var roomId = "!fh38hfwfwef:example.com";

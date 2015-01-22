@@ -905,15 +905,17 @@ angular.module('matrixService', [])
                 timeout: timeout
             };
 
-            var knownOpts = [
-                "gap", "sort", "set_presence", "backfill",
-                "filter_type", "filter_room", "filter_sender", "filter_format",
-                "filter_event_id", "filter_select", "filter_bundle_updates"
-            ];
-            for (var i=0; i<knownOpts.length; i++) {
-                var option = opts[knownOpts[i]];
-                if (option) {
-                    queryParams[knownOpts[i]] = option;
+            if (opts) {
+                var knownOpts = [
+                    "gap", "sort", "set_presence", "backfill",
+                    "filter_type", "filter_room", "filter_sender", "filter_format",
+                    "filter_event_id", "filter_select", "filter_bundle_updates"
+                ];
+                for (var i=0; i<knownOpts.length; i++) {
+                    var option = opts[knownOpts[i]];
+                    if (option) {
+                        queryParams[knownOpts[i]] = option;
+                    }
                 }
             }
 
@@ -924,27 +926,38 @@ angular.module('matrixService', [])
          * Perform a scrollback on a room.
          * @param {String} roomId The room to scroll back in.
          * @param {String} from The batch token scroll from.
+         * @param {String} filter The filter token to apply to this request.
+         * @param {Number} limit The maximum number of events per room to 
+         *                       return. Default: 10.
          * @param {Object} opts Additional request options according to the V2 
          *                      API.
          */
-        scrollback: function(roomId, from, opts) {
+        scrollback: function(roomId, from, filter, limit, opts) {
             var path = mkPath("/rooms/$room_id/events", {
                 $room_id: roomId
             });
 
+            if (!limit) {
+                limit = 10;
+            }
+
             var queryParams = {
-                from: from
+                filter: filter,
+                from: from,
+                limit: limit
             };
 
-            var knownOpts = [
-                "gap", "sort", "backfill", // missing set_presence
-                "filter_type", "filter_room", "filter_sender", "filter_format",
-                "filter_event_id", "filter_select", "filter_bundle_updates"
-            ];
-            for (var i=0; i<knownOpts.length; i++) {
-                var option = opts[knownOpts[i]];
-                if (option) {
-                    queryParams[knownOpts[i]] = option;
+            if (opts) {
+                var knownOpts = [
+                    "gap", "sort", "backfill", // missing set_presence
+                    "filter_type", "filter_room", "filter_sender", "filter_format",
+                    "filter_event_id", "filter_select", "filter_bundle_updates"
+                ];
+                for (var i=0; i<knownOpts.length; i++) {
+                    var option = opts[knownOpts[i]];
+                    if (option) {
+                        queryParams[knownOpts[i]] = option;
+                    }
                 }
             }
 
