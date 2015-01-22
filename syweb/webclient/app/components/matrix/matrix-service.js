@@ -188,6 +188,13 @@ angular.module('matrixService', [])
         localStorage.setItem("config", JSON.stringify(config));
     };
 
+    var mkPath = function(pathTemplate, keyMap) {
+        angular.forEach(keyMap, function(value, key) {
+            pathTemplate = pathTemplate.replace(key, encodeURIComponent(value));
+        });
+        return pathTemplate;
+    };
+
     return {
         DEFAULT_TYPING_TIMEOUT_MS: DEFAULT_TYPING_TIMEOUT_MS,
         prefix: prefixPath,
@@ -449,6 +456,14 @@ angular.module('matrixService', [])
             return doRequest("GET", path, undefined, {});
         },
         
+        createFilter: function(filterJson) {
+            var path = mkPath("/user/$user_id/filter", {
+                $user_id: config.user_id
+            });
+
+            return doRequest("POST", path, undefined, filterJson);
+        },
+
         setName: function(room_id, name) {
             var data = {
                 name: name
