@@ -513,9 +513,10 @@ angular.module('matrixService', [])
                 user_id = config.user_id;
             }
         
-            var path = "/rooms/$room_id/typing/$user_id";
-            path = path.replace("$room_id", encodeURIComponent(room_id));
-            path = path.replace("$user_id", encodeURIComponent(user_id));
+            var path = mkPath("/rooms/$room_id/typing/$user_id", {
+                $room_id: room_id,
+                $user_id: user_id
+            });
             
             var content;
             
@@ -575,27 +576,18 @@ angular.module('matrixService', [])
         },
 
         redactEvent: function(room_id, event_id) {
-            var path = "/rooms/$room_id/redact/$event_id";
-            path = path.replace("$room_id", encodeURIComponent(room_id));
-            // TODO: encodeURIComponent when HS updated.
-            path = path.replace("$event_id", event_id);
+            var path = mkPath("/rooms/$room_id/redact/$event_id", {
+                $room_id: room_id,
+                $event_id: event_id
+            });
             var content = {};
             return doRequest("POST", path, undefined, content);
         },
-
-        // get a snapshot of the members in a room.
-        getMemberList: function(room_id) {
-            // Like the cmd client, escape room ids
-            room_id = encodeURIComponent(room_id);
-
-            var path = "/rooms/$room_id/members";
-            path = path.replace("$room_id", room_id);
-            return doRequest("GET", path);
-        },
         
         paginateBackMessages: function(room_id, from_token, limit) {
-            var path = "/rooms/$room_id/messages";
-            path = path.replace("$room_id", encodeURIComponent(room_id));
+            var path = mkPath("/rooms/$room_id/messages", {
+                $room_id: room_id
+            });
             var params = {
                 from: from_token,
                 limit: limit,
@@ -642,13 +634,16 @@ angular.module('matrixService', [])
         },
 
         setProfileInfo: function(data, info_segment) {
-            var path = "/profile/$user/" + info_segment;
-            path = path.replace("$user", encodeURIComponent(config.user_id));
+            var path = mkPath("/profile/$user/" + info_segment, {
+                $user: config.user_id
+            });
             return doRequest("PUT", path, undefined, data);
         },
 
         getProfileInfo: function(userId, info_segment) {
-            var path = "/profile/"+encodeURIComponent(userId);
+            var path = mkPath("/profile/$user", {
+                $user: userId
+            });
             if (info_segment) path += '/' + info_segment;
             return doRequest("GET", path);
         },
