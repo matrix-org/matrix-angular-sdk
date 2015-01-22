@@ -360,13 +360,18 @@ angular.module('matrixService', [])
         
         // get room state for a specific room
         roomState: function(room_id) {
-            var path = "/rooms/" + encodeURIComponent(room_id) + "/state";
+            var path = mkPath("/rooms/$room_id/state", {
+                $room_id: room_id
+            });
             return doRequest("GET", path);
         },
         
         // get room initialSync for a specific room
         roomInitialSync: function(room_id, limit) {
-            var path = "/rooms/" + encodeURIComponent(room_id) + "/initialSync";
+            var path = mkPath("/rooms/$room_id/initialSync", {
+                $room_id: room_id
+            });
+            
             if (!limit) {
                 limit = 30;
             }
@@ -374,10 +379,9 @@ angular.module('matrixService', [])
         },
 
         join: function(room_alias_or_id) {
-            var path = "/join/$room_alias_or_id";
-            room_alias_or_id = encodeURIComponent(room_alias_or_id);
-
-            path = path.replace("$room_alias_or_id", room_alias_or_id);
+            var path = mkPath("/join/$room_alias_or_id", {
+                $room_alias_or_id: room_alias_or_id
+            });
 
             // TODO: PUT with txn ID
             return doRequest("POST", path, undefined, {});
@@ -394,10 +398,10 @@ angular.module('matrixService', [])
         },
 
         membershipChange: function(room_id, user_id, membershipValue) {
-            // The REST path spec
-            var path = "/rooms/$room_id/$membership";
-            path = path.replace("$room_id", encodeURIComponent(room_id));
-            path = path.replace("$membership", encodeURIComponent(membershipValue));
+            var path = mkPath("/rooms/$room_id/$membership", {
+                $room_id: room_id,
+                $membership: membershipValue
+            });
 
             var data = {};
             if (user_id !== undefined) {
@@ -410,11 +414,10 @@ angular.module('matrixService', [])
 
         // Change the membership of an another user
         setMembership: function(room_id, user_id, membershipValue, reason) {
-            
-            // The REST path spec
-            var path = "/rooms/$room_id/state/m.room.member/$user_id";
-            path = path.replace("$room_id", encodeURIComponent(room_id));
-            path = path.replace("$user_id", user_id);
+            var path = mkPath("/rooms/$room_id/state/m.room.member/$user_id", {
+                $room_id: room_id,
+                $user_id: user_id
+            });
 
             return doRequest("PUT", path, undefined, {
                 membership : membershipValue,
@@ -424,8 +427,9 @@ angular.module('matrixService', [])
            
         // Bans a user from a room
         ban: function(room_id, user_id, reason) {
-            var path = "/rooms/$room_id/ban";
-            path = path.replace("$room_id", encodeURIComponent(room_id));
+            var path = mkPath("/rooms/$room_id/ban", {
+                $room_id: room_id
+            });
             
             return doRequest("POST", path, undefined, {
                 user_id: user_id,
@@ -448,10 +452,11 @@ angular.module('matrixService', [])
         
         // Retrieves the room ID corresponding to a room alias
         resolveRoomAlias:function(room_alias) {
-            var path = "/_matrix/client/api/v1/directory/room/$room_alias";
-            room_alias = encodeURIComponent(room_alias);
-
-            path = path.replace("$room_alias", room_alias);
+            var path = mkPath(
+                "/_matrix/client/api/v1/directory/room/$room_alias", {
+                    $room_alias: room_alias
+                }
+            );
 
             return doRequest("GET", path, undefined, {});
         },
@@ -480,30 +485,30 @@ angular.module('matrixService', [])
         
         
         sendStateEvent: function(room_id, eventType, content, state_key) {
-            var path = "/rooms/$room_id/state/"+ encodeURIComponent(eventType);
+            var path = "/rooms/$room_id/state/$event_type";
             if (state_key !== undefined) {
-                path += "/" + encodeURIComponent(state_key);
+                path += "/$state_key";
             }
-            room_id = encodeURIComponent(room_id);
-            path = path.replace("$room_id", room_id);
+            
+            path = mkPath(path, {
+                $room_id: room_id,
+                $event_type: eventType,
+                $state_key: state_key
+            });
 
             return doRequest("PUT", path, undefined, content);
         },
 
-        sendEvent: function(room_id, eventType, txn_id, content) {
-            // The REST path spec
-            var path = "/rooms/$room_id/send/"+eventType+"/$txn_id";
-
-            if (!txn_id) {
-                txn_id = "m" + new Date().getTime();
+        sendEvent: function(room_id, eventType, txnId, content) {
+            if (!txnId) {
+                txnId = "m" + new Date().getTime();
             }
-
-            // Like the cmd client, escape room ids
-            room_id = encodeURIComponent(room_id);            
-
-            // Customize it
-            path = path.replace("$room_id", room_id);
-            path = path.replace("$txn_id", txn_id);
+            
+            var path = mkPath("/rooms/$room_id/send/$event_type/$txn_id", {
+                $room_id: room_id,
+                $event_type: eventType,
+                $txn_id: txnId
+            });
 
             return doRequest("PUT", path, undefined, content);
         },
@@ -808,8 +813,10 @@ angular.module('matrixService', [])
         
         // Set the logged in user presence state
         setUserPresence: function(presence) {
-            var path = "/presence/$user_id/status";
-            path = path.replace("$user_id", encodeURIComponent(config.user_id));
+            var path = mkPath("/presence/$user_id/status", {
+                $user_id: config.user_id
+            });
+            
             return doRequest("PUT", path, undefined, {
                 presence: presence
             });
@@ -854,8 +861,9 @@ angular.module('matrixService', [])
             }
             content.users[user_id] = powerLevel;
                 
-            var path = "/rooms/$room_id/state/m.room.power_levels";
-            path = path.replace("$room_id", encodeURIComponent(room_id));
+            var path = mkPath("/rooms/$room_id/state/m.room.power_levels", {
+                $room_id: room_id
+            });
                 
             return doRequest("PUT", path, undefined, content);
         },
