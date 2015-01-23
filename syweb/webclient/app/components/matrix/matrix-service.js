@@ -1004,6 +1004,32 @@ angular.module('matrixService', [])
                         roomv2.limited = true;
                         roomv2.published = room.visibility === "public";
 
+                        if (!room.state) {
+                            room.state = [];
+                        }
+                        if (!room.messages) {
+                            room.messages = {
+                                chunk: []
+                            };
+                        }
+
+
+                        if (room.inviter && room.membership === "invite") {
+                            var me = config.user_id;
+                            var fakeEvent = {
+                                event_id: "__FAKE__" + room.room_id,
+                                user_id: room.inviter,
+                                origin_server_ts: 0,
+                                room_id: room.room_id,
+                                state_key: me,
+                                type: "m.room.member",
+                                content: {
+                                    membership: "invite"
+                                }
+                            };
+                            room.state.push(fakeEvent);
+                        }
+
                         // dump all events in the event map
                         var msgEvents = room.messages.chunk;
                         var stateEvents = room.state;

@@ -17,11 +17,7 @@ describe('syncService', function() {
     };
     
     var eventHandlerService = {
-        handleInitialSyncDone: function(response) {
-        
-        },
-        
-        handleEvents: function(chunk, isLive) {
+        onSync: function(response, isLive) {
         
         }
     };

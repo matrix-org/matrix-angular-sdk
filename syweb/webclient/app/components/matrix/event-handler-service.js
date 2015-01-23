@@ -383,6 +383,20 @@ function(matrixService, $rootScope, $window, $q, $timeout, $filter, mPresence, n
         return defer.promise;
     };
 
+    var unmapEvents = function(eventMap, eventList) {
+        var unmappedEvents = [];
+        for (var i=0; i<eventList.length; i++) {
+            var event = eventMap[eventList[i]];
+            if (!event) {
+                console.warn("No event found in map > "+eventList[i]);
+                continue;
+            }
+            event.event_id = eventList[i];
+            unmappedEvents.push(event);
+        }
+        return unmappedEvents;
+    };
+
     return {
         ROOM_CREATE_EVENT: ROOM_CREATE_EVENT,
         MSG_EVENT: MSG_EVENT,
@@ -465,6 +479,53 @@ function(matrixService, $rootScope, $window, $q, $timeout, $filter, mPresence, n
                 }
             }
         },
+
+        onSync: function(sync, isLive) {
+            for (var i=0; i<sync.rooms.length; i++) {
+                var roomData = sync.rooms[i];
+
+                if (roomData.limited) {
+                    modelService.removeRoom(roomData.room_id);
+                    var room = modelService.getRoom(roomData.room_id);
+                    this.onRoomSync(room, roomData);
+                }
+                else {
+                    this.handleEvents(roomData.events.batch, isLive);
+                }
+            }
+
+            this.handleEvents(sync.public_user_data, isLive);
+
+            if (!isLive) {
+                initialSyncComplete = true;
+                initialSyncDeferred.resolve("");
+            }
+        },
+
+        onRoomSync: function(room, response) {
+            console.log("onRoomSync: "+room.room_id+
+                " ("+response.state.length+" state events) "+
+                (response.events && response.events.batch ? response.events.batch.length : "No")+
+                " events");
+
+            room.current_room_state.storeStateEvents(
+                unmapEvents(response.event_map,response.state)
+            );
+            room.old_room_state.storeStateEvents(
+                unmapEvents(response.event_map, response.state)
+            );
+
+            // this should be done AFTER storing state events since these
+            // messages may make the old_room_state diverge.
+            if (response.events && response.events.batch) {
+                response.events.batch = unmapEvents(
+                    response.event_map, response.events.batch
+                );
+                this.handleRoomMessages(room.room_id, response.events.batch, false);
+                room.old_room_state.pagination_token = response.events.prev_batch;
+            }
+            recalculateRoomName(room.room_id);
+        },
         
         // isLiveEvents determines whether notifications should be shown, whether
         // messages get appended to the start/end of lists, etc.
@@ -475,20 +536,13 @@ function(matrixService, $rootScope, $window, $q, $timeout, $filter, mPresence, n
         },
 
         // Handle messages from /initialSync or /messages
-        handleRoomMessages: function(room_id, messages, isLiveEvents, dir) {
-            var events = messages.chunk;
-
+        handleRoomMessages: function(room_id, events, isLiveEvents, dir) {
             // Handles messages according to their time order
             if (dir && 'b' === dir) {
                 // paginateBackMessages requests messages to be in reverse chronological order
                 for (var i=0; i<events.length; i++) {
                     this.handleEvent(events[i], isLiveEvents);
                 }
-                
-                // Store how far back we've paginated
-                var room = modelService.getRoom(room_id);
-                room.old_room_state.pagination_token = messages.end;
-
             }
             else {
                 // InitialSync returns messages in chronological order, so invert
@@ -496,9 +550,6 @@ function(matrixService, $rootScope, $window, $q, $timeout, $filter, mPresence, n
                 for (var i=events.length - 1; i>=0; i--) {
                     this.handleEvent(events[i], isLiveEvents);
                 }
-                // Store where to start pagination
-                var room = modelService.getRoom(room_id);
-                room.old_room_state.pagination_token = messages.start;
             }
         },
         
@@ -518,45 +569,6 @@ function(matrixService, $rootScope, $window, $q, $timeout, $filter, mPresence, n
                 newRoom.old_room_state.pagination_token = response.messages.start;
             }
             recalculateRoomName(newRoom.room_id);
-        },
-
-        handleInitialSyncDone: function(response) {
-            var rooms = response.data.rooms;
-            if (rooms) {
-                console.log("processing "+rooms.length+" initialSync rooms.");
-                for (var i = 0; i < rooms.length; ++i) {
-                    var room = rooms[i];
-                
-                    // FIXME: This is ming: the HS should be sending down the m.room.member
-                    // event for the invite in .state but it isn't, so fudge it for now.
-                    if (room.inviter && room.membership === "invite") {
-                        var me = matrixService.config().user_id;
-                        var fakeEvent = {
-                            event_id: "__FAKE__" + room.room_id,
-                            user_id: room.inviter,
-                            origin_server_ts: 0,
-                            room_id: room.room_id,
-                            state_key: me,
-                            type: "m.room.member",
-                            content: {
-                                membership: "invite"
-                            }
-                        };
-                        if (!room.state) {
-                            room.state = [];
-                        }
-                        room.state.push(fakeEvent);
-                        console.log("RECV /initialSync invite >> "+room.room_id);
-                    }
-                
-                    var newRoom = modelService.getRoom(room.room_id);
-                    this.handleRoomInitialSync(newRoom, room);
-                }
-                var presence = response.data.presence;
-                this.handleEvents(presence, false);
-            }
-            initialSyncComplete = true;
-            initialSyncDeferred.resolve("");
         },
         
         resendMessage: function(annotatedEvent, sendCallback) {

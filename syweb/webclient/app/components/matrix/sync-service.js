@@ -99,6 +99,7 @@ eventHandlerService) {
         var connTimer = startConnectionTimer(); 
         // monitors if there has been a *successful* response, and if not, says 
         // you're on a bad connection.
+        var isLive = settings.from !== undefined;
 
         // run the stream from the latest token
         matrixService.sync(settings.from, settings.filterId, MAX_EVENTS, 
@@ -121,8 +122,7 @@ eventHandlerService) {
                 
                 settings.from = response.data.next_batch;
                 
-                
-                eventHandlerService.handleEvents(response.data.chunk, true);
+                eventHandlerService.onSync(response.data, isLive);
                 
                 deferred.resolve(response);
                 

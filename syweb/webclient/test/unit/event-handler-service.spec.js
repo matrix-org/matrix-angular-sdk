@@ -195,10 +195,8 @@ describe('EventHandlerService', function() {
             event_id: "foobar"
         };
         testInitialSync = {
-            data: {
-                rooms: [],
-                presence: []
-            }
+            rooms: [],
+            public_user_data: []
         };
         
         testConfig = {
@@ -281,7 +279,7 @@ describe('EventHandlerService', function() {
 
     it('joinRoom: should be able to join a room from a room ID.', inject(
     function(eventHandlerService) {
-        eventHandlerService.handleInitialSyncDone(testInitialSync);
+        eventHandlerService.onSync(testInitialSync);
         var roomId = "!foobar:matrix.org";
         testRoomInitialSync.state = [
             {
@@ -317,7 +315,7 @@ describe('EventHandlerService', function() {
     
     it('joinRoom: should be able to join a room from a room alias.', inject(
     function(eventHandlerService) {
-        eventHandlerService.handleInitialSyncDone(testInitialSync);
+        eventHandlerService.onSync(testInitialSync);
         var roomAlias = "#flibble:matrix.org";
         testRoomInitialSync.state = [
             {
@@ -356,7 +354,7 @@ describe('EventHandlerService', function() {
     // SYWEB-181
     it('should inject events into a room when joining if there are some.', inject(
     function(eventHandlerService) {
-        eventHandlerService.handleInitialSyncDone(testInitialSync);
+        eventHandlerService.onSync(testInitialSync);
         var roomId = "!foobar:matrix.org";
         testRoomInitialSync.state = [
             {
@@ -417,7 +415,7 @@ describe('EventHandlerService', function() {
     
     it('should NOT join a room that has been joined already.', inject(
     function(eventHandlerService) {
-        eventHandlerService.handleInitialSyncDone(testInitialSync);
+        eventHandlerService.onSync(testInitialSync);
         var roomId = "!foobar:matrix.org";
         testNowState.setMember(testUserId, "join");
         
@@ -443,7 +441,7 @@ describe('EventHandlerService', function() {
             promiseResult = err;
         });
         expect(promiseResult).toBeUndefined();
-        eventHandlerService.handleInitialSyncDone(testInitialSync);
+        eventHandlerService.onSync(testInitialSync);
         scope.$digest(); // resolve stuff
         expect(promiseResult).toBeDefined();
     }));
@@ -479,7 +477,7 @@ describe('EventHandlerService', function() {
     it('should be able to handle multiple events.', inject(
     function(eventHandlerService) {
         spyOn(modelService, "setUser");
-        eventHandlerService.handleInitialSyncDone(testInitialSync);
+        eventHandlerService.onSync(testInitialSync);
         
         var eventA = {
             content: {
@@ -516,7 +514,7 @@ describe('EventHandlerService', function() {
     
     it('should be able to process m.presence events.', inject(
     function(eventHandlerService) {
-        eventHandlerService.handleInitialSyncDone(testInitialSync);
+        eventHandlerService.onSync(testInitialSync);
         
         spyOn(modelService, "setUser");
         var event = {
@@ -534,7 +532,7 @@ describe('EventHandlerService', function() {
     it('should be able to process redaction events and remove the redacted event.', inject(
     function(eventHandlerService) {
         var badEventId = "wefiuwehf";
-        eventHandlerService.handleInitialSyncDone(testInitialSync);
+        eventHandlerService.onSync(testInitialSync);
         
         var event = {
             content: {
@@ -563,7 +561,7 @@ describe('EventHandlerService', function() {
     
     it('should be able to process generic room state events.', inject(
     function(eventHandlerService) {
-        eventHandlerService.handleInitialSyncDone(testInitialSync);
+        eventHandlerService.onSync(testInitialSync);
         
         spyOn(testNowState, "storeStateEvent");
         var event = {
@@ -582,7 +580,7 @@ describe('EventHandlerService', function() {
     
     it('should suppress duplicate event IDs received from /events.', inject(
     function(eventHandlerService) {
-        eventHandlerService.handleInitialSyncDone(testInitialSync);
+        eventHandlerService.onSync(testInitialSync);
         var eventId = "wefiuwehf";
         
         var event = {
@@ -681,7 +679,7 @@ describe('EventHandlerService', function() {
     //     suppression after EVENT_ID_LIFETIME_MS.
     it('should reap event IDs after EVENT_ID_LIFETIME_MS.', inject(
     function(eventHandlerService) {
-        eventHandlerService.handleInitialSyncDone(testInitialSync);
+        eventHandlerService.onSync(testInitialSync);
         var eventId = "wefiuwehf";
         
         var event = {
@@ -724,7 +722,7 @@ describe('EventHandlerService', function() {
     
     it('should display a notification for incoming invites.', inject(
     function(eventHandlerService) {
-        eventHandlerService.handleInitialSyncDone(testInitialSync);
+        eventHandlerService.onSync(testInitialSync);
         
         var event = {
             content: {
@@ -763,92 +761,11 @@ describe('EventHandlerService', function() {
             roomId, 
             jasmine.any(Number)
         );
-    })); 
-    
-    it('should be able to handle global initial sync data', inject(
-    function(eventHandlerService) {
-        // a joined room with messages
-        var roomId = "!rooma:matrix.org";
-        var theRoom = {
-            current_room_state: {
-                storeStateEvents: function(){}
-            },
-            old_room_state: {
-                storeStateEvents: function(){}
-            },
-            room_id: roomId,
-            addMessageEvent: function(){},
-            addOrReplaceMessageEvent: function(){},
-            mutateRoomMemberState: function(){},
-            getChangedKeyForMemberEvent: function(){}
-        };
-        testInitialSync.data.rooms.push(angular.copy(testRoomInitialSync));
-        
-        var roomAmember = "@roomamember:matrix.org";
-        testInitialSync.data.rooms[0].state = [
-            mkEvent("m.room.member", {membership:"join"}, roomId, testUserId),
-            mkEvent("m.room.member", {membership:"join"}, roomId, roomAmember, roomAmember)
-        ];
-        testInitialSync.data.rooms[0].messages.chunk = [
-            mkEvent("m.room.member", {membership:"join"}, roomId, testUserId),
-            mkEvent("m.room.member", {membership:"join"}, roomId, roomAmember, roomAmember),
-            mkEvent("m.room.message", {body:"hi",msgtype:"m.text"}, roomId),
-            mkEvent("m.room.message", {body:"bye",msgtype:"m.text"}, roomId, undefined, roomAmember)
-        ];
-        testInitialSync.data.rooms[0].room_id = roomId;
-        spyOn(modelService, "getRoom").and.returnValue(theRoom);
-        spyOn(theRoom.current_room_state, "storeStateEvents");
-        spyOn(theRoom.old_room_state, "storeStateEvents");
-        spyOn(theRoom, "addOrReplaceMessageEvent");
-        spyOn(theRoom, "addMessageEvent");
-        spyOn(theRoom, "getChangedKeyForMemberEvent");
-        
-        // an invited room
-        var inviterUserId = "@inviter:matrix.org";
-        var inviteRoomId = "!invite:matrix.org";
-        testInitialSync.data.rooms.push({
-            inviter: inviterUserId,
-            room_id: inviteRoomId,
-            membership: "invite"
-        });
-        
-        // some presence
-        testInitialSync.data.presence.push({
-            content: {status:"online"},
-            user_id: roomAmember,
-            type: "m.presence"
-        });
-        spyOn(modelService, "setUser");
-    
-        eventHandlerService.handleInitialSyncDone(testInitialSync);
-        
-        // expect injected fake invite event
-        expect(testInitialSync.data.rooms[1].state.length).toEqual(1);
-        
-        // expect presence stuff
-        expect(modelService.setUser).toHaveBeenCalledWith(
-            testInitialSync.data.presence[0]
-        );
-        
-        // expect room state & msgs stored
-        expect(theRoom.current_room_state.storeStateEvents).toHaveBeenCalledWith(
-            testInitialSync.data.rooms[0].state
-        );
-        // addOrReplace since it was sent by us and we may need to replace local echo
-        expect(theRoom.addOrReplaceMessageEvent).toHaveBeenCalledWith(
-            testInitialSync.data.rooms[0].messages.chunk[2],
-            true
-        );
-        // add since it wasn't sent by us and so doesn't need to replace a local echo
-        expect(theRoom.addMessageEvent).toHaveBeenCalledWith(
-            testInitialSync.data.rooms[0].messages.chunk[3],
-            true
-        );
     }));
     
     it('should be able to process m.typing events.', inject(
     function(eventHandlerService) {
-        eventHandlerService.handleInitialSyncDone(testInitialSync);
+        eventHandlerService.onSync(testInitialSync);
         testNowState.members = {
             "@aaa:matrix.org": {
                 typing: false
@@ -871,7 +788,7 @@ describe('EventHandlerService', function() {
     
     it('should clobber m.typing events.', inject(
     function(eventHandlerService) {
-        eventHandlerService.handleInitialSyncDone(testInitialSync);
+        eventHandlerService.onSync(testInitialSync);
         testNowState.members = {
             "@aaa:matrix.org": {
                 typing: false
@@ -906,7 +823,7 @@ describe('EventHandlerService', function() {
     
     it('should treat an empty m.typing user_ids array as no-one is typing.', inject(
     function(eventHandlerService) {
-        eventHandlerService.handleInitialSyncDone(testInitialSync);
+        eventHandlerService.onSync(testInitialSync);
         testNowState.members = {
             "@aaa:matrix.org": {
                 typing: false
@@ -930,7 +847,7 @@ describe('EventHandlerService', function() {
     
     it('should ignore unknown user_ids in m.typing.', inject(
     function(eventHandlerService) {
-        eventHandlerService.handleInitialSyncDone(testInitialSync);
+        eventHandlerService.onSync(testInitialSync);
         testNowState.members = {
             "@aaa:matrix.org": {
                 typing: false
@@ -955,7 +872,7 @@ describe('EventHandlerService', function() {
     
     it('should display a notification to messages with bing words.', inject(
     function(eventHandlerService) {
-        eventHandlerService.handleInitialSyncDone(testInitialSync);
+        eventHandlerService.onSync(testInitialSync);
         testContainsBingWords = true;
         
         var event = {
@@ -976,7 +893,7 @@ describe('EventHandlerService', function() {
     
     it('should NOT display a notification if notifications are muted.', inject(
     function(eventHandlerService) {
-        eventHandlerService.handleInitialSyncDone(testInitialSync);
+        eventHandlerService.onSync(testInitialSync);
         testContainsBingWords = true;
         testConfig.muteNotifications = true;
         
