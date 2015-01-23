@@ -339,24 +339,6 @@ angular.module('matrixService', [])
             
             return doRequest("POST", path, undefined, req);
         },
-
-        // Get the user's current state: his presence, the list of his rooms with
-        // the last {limit} events
-        initialSync: function(limit, feedback) {
-            // The REST path spec
-
-            var path = "/initialSync";
-
-            var params = {};
-            if (limit) {
-                params.limit = limit;
-            }
-            if (feedback) {
-                params.feedback = feedback;
-            }
-
-            return doRequest("GET", path, params);
-        },
         
         // get room state for a specific room
         roomState: function(room_id) {
@@ -864,6 +846,8 @@ angular.module('matrixService', [])
          *                      API.
          */
         sync: function(since, filter, limit, timeout, timeoutPromise, opts) {
+            // XXX return _shim_v1(since, limit, timeout, timeoutPromise);
+
             var path = "/sync";
 
             if (!limit) {
@@ -944,6 +928,31 @@ angular.module('matrixService', [])
             }
 
             return doRequest("GET", path, queryParams);
-        }
+        },
+
+        _shim_v1: function(since, limit, timeout, timeoutPromise) {
+            if (since) {
+                // do an event stream poll then shim into v2 sync format.
+            }
+            else {
+                // shim v1 initial sync into v2 sync format.
+            }
+        },
+
+        _v1_initialSync: function(limit, feedback) {
+            // The REST path spec
+
+            var path = "/initialSync";
+
+            var params = {};
+            if (limit) {
+                params.limit = limit;
+            }
+            if (feedback) {
+                params.feedback = feedback;
+            }
+
+            return doRequest("GET", path, params);
+        },
     };
 }]);

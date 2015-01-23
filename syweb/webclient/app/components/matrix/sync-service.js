@@ -48,7 +48,7 @@ eventHandlerService) {
     var setBadConnection = function(isBad) {
         if (badConnection != isBad) {
             badConnection = isBad;
-            console.log("[EventStream] BROADCAST setBadConnection -> "+isBad);
+            console.log("[Sync] BROADCAST setBadConnection -> "+isBad);
             $rootScope.$emit(BROADCAST_BAD_CONNECTION, badConnection);
         }
     };
@@ -56,7 +56,7 @@ eventHandlerService) {
     var timeout = $q.defer();
     
     var killConnection = function(reason) {
-        console.log("[EventStream] killConnection -> "+reason);
+        console.log("[Sync] killConnection -> "+reason);
         timeout.resolve(reason);
         timeout = $q.defer();
     };
@@ -75,14 +75,14 @@ eventHandlerService) {
     // open. This is typically used when logging out, to kill the stream 
     // immediately and stop retrying.
     var interrupt = function(shouldPoll) {
-        console.log("[EventStream] interrupt("+shouldPoll+") "+
+        console.log("[Sync] interrupt("+shouldPoll+") "+
                     JSON.stringify(settings));
         settings.shouldPoll = shouldPoll;
         settings.isActive = false;
         killConnection("interrupted");
     };
 
-    var doEventStream = function(deferred) {
+    var doSync = function(deferred) {
         settings.shouldPoll = true;
         settings.isActive = true;
         deferred = deferred || $q.defer();
@@ -104,13 +104,13 @@ eventHandlerService) {
                 
                 $timeout.cancel(connTimer);
                 if (!settings.isActive) {
-                    console.log("[EventStream] Got response but now inactive. "+
+                    console.log("[Sync] Got response but now inactive. "+
                         "Dropping data.");
                     return;
                 }
                 
                 console.log(
-                    "[EventStream] Got response from "+settings.from+
+                    "[Sync] Got response from "+settings.from+
                     " to "+response.data.end
                 );
                 
@@ -122,14 +122,14 @@ eventHandlerService) {
                 deferred.resolve(response);
                 
                 if (settings.shouldPoll) {
-                    $timeout(doEventStream, 0);
+                    $timeout(doSync, 0);
                 }
                 else {
-                    console.log("[EventStream] Stopping poll.");
+                    console.log("[Sync] Stopping poll.");
                 }
             },
             function(error) {
-                console.error("[EventStream] failed /events request, retrying...");
+                console.error("[Sync] failed /events request, retrying...");
                 $timeout.cancel(connTimer);
                 failedAttempts += 1;
                 if (failedAttempts >= MAX_FAILED_ATTEMPTS) {
@@ -143,10 +143,10 @@ eventHandlerService) {
                 deferred.reject(error);
                 
                 if (settings.shouldPoll) {
-                    $timeout(doEventStream, ERR_TIMEOUT_MS);
+                    $timeout(doSync, ERR_TIMEOUT_MS);
                 }
                 else {
-                    console.log("[EventStream] Stopping polling.");
+                    console.log("[Sync] Stopping polling.");
                 }
             }
         );
@@ -154,7 +154,7 @@ eventHandlerService) {
         return deferred.promise;
     }; 
 
-    var startEventStream = function(deferred) {
+    var startSync = function(deferred) {
         settings.shouldPoll = true;
         settings.isActive = true;
         if (!deferred) {
@@ -172,13 +172,13 @@ eventHandlerService) {
 
                 // Start event streaming from that point
                 settings.from = response.data.end;
-                console.log("[EventStream] initialSync complete. Using token "+settings.from);
-                doEventStream(deferred);        
+                console.log("[Sync] initialSync complete. Using token "+settings.from);
+                doSync(deferred);        
             },
             function(error) {
-                console.error("[EventStream] initialSync failed, retrying...");
+                console.error("[Sync] initialSync failed, retrying...");
                 $timeout(function() {
-                    startEventStream(deferred);
+                    startSync(deferred);
                 }, ERR_TIMEOUT_MS);
             }
         );
@@ -197,17 +197,17 @@ eventHandlerService) {
         // when the page is opened.
         resume: function() {
             if (settings.isActive) {
-                console.log("[EventStream] Already active, ignoring resume()");
+                console.log("[Sync] Already active, ignoring resume()");
                 return;
             }
         
-            console.log("[EventStream] resume "+JSON.stringify(settings));
-            return startEventStream();
+            console.log("[Sync] resume "+JSON.stringify(settings));
+            return startSync();
         },
         
         // pause the stream. Resuming it will continue from the current position
         pause: function() {
-            console.log("[EventStream] pause "+JSON.stringify(settings));
+            console.log("[Sync] pause "+JSON.stringify(settings));
             // kill any running stream
             interrupt(false);
         },
@@ -215,7 +215,7 @@ eventHandlerService) {
         // stop the stream and wipe the position in the stream. Typically used
         // when logging out / logged out.
         stop: function() {
-            console.log("[EventStream] stop "+JSON.stringify(settings));
+            console.log("[Sync] stop "+JSON.stringify(settings));
             // kill any running stream
             interrupt(false);
             // clear the latest token

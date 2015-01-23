@@ -38,19 +38,6 @@ describe('MatrixService', function() {
             .respond({});
         httpBackend.flush();
     }));
-
-    it('should be able to GET /initialSync', inject(function(matrixService) {
-        matrixService.setConfig(CONFIG);
-        var limit = 15;
-        matrixService.initialSync(limit).then(function(response) {
-            expect(response.data).toEqual([]);
-        });
-
-        httpBackend.expectGET(
-            URL + "/initialSync?access_token=foobar&limit=15")
-            .respond([]);
-        httpBackend.flush();
-    }));
     
     it('should be able to GET /rooms/$roomid/state', inject(
     function(matrixService) {
