@@ -846,7 +846,7 @@ angular.module('matrixService', [])
          *                      API.
          */
         sync: function(since, filter, limit, timeout, timeoutPromise, opts) {
-            // XXX return _shim_v1(since, limit, timeout, timeoutPromise);
+            return this._shim_v1(since, limit, timeout, timeoutPromise);
 
             var path = "/sync";
 
@@ -931,25 +931,122 @@ angular.module('matrixService', [])
         },
 
         _shim_v1: function(since, limit, timeout, timeoutPromise) {
+            var d = $q.defer();
             if (since) {
+                console.log("/sync -> Shim doing /events");
                 // do an event stream poll then shim into v2 sync format.
+                doRequest("GET", "/events", {from: since, timeout: timeout}).then(
+                function(response) {
+                    var presenceData = [];
+                    var roomsData = [];
+
+                    for (var i=0; i<response.data.chunk.length; i++) {
+                        var ev = response.data.chunk[i];
+                        if (ev.type === "m.presence") {
+                            presenceData.push(ev);
+                        } 
+                        else if (ev.room_id) {
+                            var room = undefined;
+                            for(var j=0; j<roomsData.length; j++) {
+                                if (roomsData[j].room_id === ev.room_id) {
+                                    room = roomsData[j];
+                                    break;
+                                }
+                            }
+                            if (!room) {
+                                room = {
+                                    room_id: ev.room_id,
+                                    limited: false, // we never limit
+                                    event_map: {},
+                                    events: {
+                                        batch: [],
+                                        prev_batch: "_"
+                                    },
+                                    state: []
+                                };
+                                roomsData.push(room);
+                            }
+                            room.event_map[ev.event_id] = ev;
+                            if (ev.state_key != null) { // undef or null
+                                room.state.push(ev.event_id);
+                            }
+                            room.events.batch.push(ev.event_id);
+                        }
+                        else {
+                            console.error("SHIM ERROR: Unknown event: "+ev.type);
+                        }
+                    }
+
+                    var syncJson = {
+                        next_batch: response.data.end,
+                        public_user_data: presenceData,
+                        rooms: roomsData
+                    };
+                    response.data = syncJson;
+                    d.resolve(response);
+                },
+                function(error) {
+                    d.reject(error);
+                });
             }
             else {
+                console.log("/sync -> Shim doing /initialSync");
                 // shim v1 initial sync into v2 sync format.
+                this._v1_initialSync(limit).then(function(response) {
+                    var presenceData = response.data.presence;
+                    var roomsData = response.data.rooms;
+                    var roomsv2Data = [];
+
+                    for (var i=0; i<roomsData.length; i++) {
+                        var room = roomsData[i];
+                        var roomv2 = {};
+                        roomv2.room_id = room.room_id;
+                        roomv2.limited = true;
+                        roomv2.published = room.visibility === "public";
+
+                        // dump all events in the event map
+                        var msgEvents = room.messages.chunk;
+                        var stateEvents = room.state;
+                        var allTheEvents = stateEvents.concat(msgEvents);
+                        var eventMap = {};
+                        for (var e=0; e<allTheEvents.length; e++) {
+                            var ev = allTheEvents[e];
+                            eventMap[ev.event_id] = ev;
+                        }
+
+                        // now the events themselves are in the map, convert
+                        // state and msgEvents to arrays of event ids
+                        roomv2.events = Object.keys(msgEvents).map(function(i) {
+                            return msgEvents[i].event_id;
+                        });
+                        roomv2.state = Object.keys(stateEvents).map(function(i) {
+                            return stateEvents[i].event_id;
+                        });
+                        roomv2.event_map = eventMap;
+                        roomsv2Data.push(roomv2);
+                    }
+
+                    var syncJson = {
+                        next_batch: response.data.end,
+                        public_user_data: presenceData,
+                        rooms: roomsv2Data
+                    };
+                    response.data = syncJson;
+                    d.resolve(response);
+                },
+                function(error) {
+                    d.reject(error);
+                });
             }
+            return d.promise;
         },
 
-        _v1_initialSync: function(limit, feedback) {
-            // The REST path spec
-
+        _v1_initialSync: function(limit) {
             var path = "/initialSync";
 
             var params = {};
             if (limit) {
                 params.limit = limit;
-            }
-            if (feedback) {
-                params.feedback = feedback;
             }
 
             return doRequest("GET", path, params);

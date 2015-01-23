@@ -22,12 +22,19 @@ repolling the event stream, and provides methods to resume/pause/stop the event
 stream. This service is not responsible for parsing event data. For that, see 
 the eventHandlerService.
 */
+// TODO:
+// It would be preferable to change the architecture at this point to look more
+// like:
+// => SyncService --broadcast[room]--> Room object
+//      |   +--broadcast[event]-----> Event Handler
+//      +----broadcast[user]-------> User object
+// which would reduce the amount of gluing that the Event Handler is currently
+// doing.
 angular.module('syncService', [])
 .factory('syncService', ['$q', '$timeout', '$rootScope', 'matrixService', 
 'eventHandlerService', function($q, $timeout, $rootScope, matrixService, 
 eventHandlerService) {
     var BROADCAST_BAD_CONNECTION = "syncService.BROADCAST_BAD_CONNECTION(isBad)";
-    var END = "END";
     var SERVER_TIMEOUT_MS = 30000;
     var ERR_TIMEOUT_MS = 5000;
     
@@ -37,7 +44,7 @@ eventHandlerService) {
     var MAX_EVENTS = 15;
     
     var settings = {
-        from: "END",
+        from:  undefined,
         filterId: undefined,
         to: undefined,
         limit: undefined,
@@ -86,15 +93,13 @@ eventHandlerService) {
         settings.shouldPoll = true;
         settings.isActive = true;
         deferred = deferred || $q.defer();
-
         
         // monitors if the connection is *still ongoing* after X time then 
         // knifes it as we cannot trust the server side timeout.
         var connTimer = startConnectionTimer(); 
         // monitors if there has been a *successful* response, and if not, says 
         // you're on a bad connection.
-        
-        
+
         // run the stream from the latest token
         matrixService.sync(settings.from, settings.filterId, MAX_EVENTS, 
                            SERVER_TIMEOUT_MS, timeout.promise).then(
@@ -114,7 +119,7 @@ eventHandlerService) {
                     " to "+response.data.end
                 );
                 
-                settings.from = response.data.end;
+                settings.from = response.data.next_batch;
                 
                 
                 eventHandlerService.handleEvents(response.data.chunk, true);
@@ -152,38 +157,6 @@ eventHandlerService) {
         );
 
         return deferred.promise;
-    }; 
-
-    var startSync = function(deferred) {
-        settings.shouldPoll = true;
-        settings.isActive = true;
-        if (!deferred) {
-            deferred = $q.defer();
-        }
-
-        // Initial sync: get all information and the last 8 messages of all rooms of the user
-        // 8 messages isn't enough for a full page, but we'll do another request if they view
-        // that room. 8 is required though: any less and some rooms may not give any messages
-        // to display (e.g. if only 5, you may get room alias / room create / power level 
-        // / join rules / room member join, which contains no messages for the recents list..
-        matrixService.initialSync(8, false).then(
-            function(response) {
-                eventHandlerService.handleInitialSyncDone(response);
-
-                // Start event streaming from that point
-                settings.from = response.data.end;
-                console.log("[Sync] initialSync complete. Using token "+settings.from);
-                doSync(deferred);        
-            },
-            function(error) {
-                console.error("[Sync] initialSync failed, retrying...");
-                $timeout(function() {
-                    startSync(deferred);
-                }, ERR_TIMEOUT_MS);
-            }
-        );
-
-        return deferred.promise;
     };
     
     return {
@@ -202,7 +175,7 @@ eventHandlerService) {
             }
         
             console.log("[Sync] resume "+JSON.stringify(settings));
-            return startSync();
+            return doSync();
         },
         
         // pause the stream. Resuming it will continue from the current position
@@ -219,7 +192,7 @@ eventHandlerService) {
             // kill any running stream
             interrupt(false);
             // clear the latest token
-            settings.from = END;
+            settings.from = undefined;
         },
 
         setFilterId: function(filterId) {

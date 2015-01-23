@@ -608,7 +608,7 @@ describe('MatrixService', function() {
         httpBackend.flush();
     }));
 
-    it('should be able to GET /sync incrementally with a filter.', inject(
+    xit('should be able to GET /sync incrementally with a filter.', inject(
     function(matrixService) {
         matrixService.setConfig(CONFIG);
         // Worth noting that if you use '@' then this test will fail because

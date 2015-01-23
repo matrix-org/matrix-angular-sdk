@@ -60,16 +60,6 @@ describe('syncService', function() {
         scope = $rootScope;
         timeout = $timeout;
     }));
-
-    it('should start with /initialSync then go onto /events', inject(
-    function(syncService) {
-        spyOn(eventHandlerService, "handleInitialSyncDone");
-        spyOn(eventHandlerService, "handleEvents");
-        syncService.resume();
-        scope.$digest(); // initialSync request
-        expect(eventHandlerService.handleInitialSyncDone).toHaveBeenCalledWith(testInitialSync);
-        expect(eventHandlerService.handleEvents).toHaveBeenCalledWith(testEventStream.data.chunk, true);
-    }));
     
     it('should use the end token in the next /sync request', inject(
     function(syncService) {
@@ -77,7 +67,10 @@ describe('syncService', function() {
         syncService.setFilterId(filterId);
         spyOn(matrixService, "sync").and.callThrough();
         syncService.resume();
-        scope.$digest(); // initialSync request
+        expect(matrixService.sync).toHaveBeenCalledWith(undefined, filterId,
+            syncService.MAX_EVENTS, syncService.SERVER_TIMEOUT, jasmine.any(Object));
+        scope.$digest(); // first sync
+        timeout.flush();
         expect(matrixService.sync).toHaveBeenCalledWith("foo", filterId,
             syncService.MAX_EVENTS, syncService.SERVER_TIMEOUT, jasmine.any(Object));
     }));
