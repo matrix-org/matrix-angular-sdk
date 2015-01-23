@@ -215,6 +215,23 @@ function(matrixService, $rootScope, $q) {
             
             return d.promise;
         },
+
+        scrollback: function(filter, limit, opts) {
+            var d = $q.defer();
+            var that = this;
+            var roomId = this.room_id;
+            var batchToken = this.old_room_state.pagination_token;
+            matrixService.scrollback(roomId, batchToken, filter, limit, opts).then(
+            function(response) {
+                that.old_room_state.pagination_token = response.messages.start;
+                d.resolve(response);
+            },
+            function(error) {
+                d.reject(error);
+            });
+
+            return d.promise;
+        },
         
         getMembershipState: function(user_id) {
             var member = this.current_room_state.members[user_id];

@@ -71,7 +71,7 @@ describe("RegisterController ", function() {
         }
     };
     
-    var eventStreamService = {
+    var syncService = {
         resume: function(){}
     };
     
@@ -97,7 +97,7 @@ describe("RegisterController ", function() {
                 '$rootScope': $rootScope, 
                 '$location': $location,
                 'matrixService': matrixService,
-                'eventStreamService': eventStreamService,
+                'syncService': syncService,
                 'dialogService': dialogService
             });
         })

@@ -15,8 +15,8 @@
  */
  
 angular.module('RegisterController', ['matrixService'])
-.controller('RegisterController', ['$scope', '$rootScope', '$location', 'matrixService', 'eventStreamService', 'dialogService',
-                                    function($scope, $rootScope, $location, matrixService, eventStreamService, dialogService) {
+.controller('RegisterController', ['$scope', '$rootScope', '$location', 'matrixService', 'dialogService',
+                                    function($scope, $rootScope, $location, matrixService, dialogService) {
     'use strict';
     
     var config = window.webClientConfig;

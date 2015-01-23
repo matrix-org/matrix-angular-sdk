@@ -1,4 +1,4 @@
-describe('EventStreamService', function() {
+describe('syncService', function() {
     var q, scope, timeout;
 
     var testInitialSync, testEventStream;
@@ -52,7 +52,7 @@ describe('EventStreamService', function() {
         });
         
         // tested service
-        module('eventStreamService');
+        module('syncService');
     });
     
     beforeEach(inject(function($q, $rootScope, $timeout) {
@@ -62,25 +62,25 @@ describe('EventStreamService', function() {
     }));
 
     it('should start with /initialSync then go onto /events', inject(
-    function(eventStreamService) {
+    function(syncService) {
         spyOn(eventHandlerService, "handleInitialSyncDone");
         spyOn(eventHandlerService, "handleEvents");
-        eventStreamService.resume();
+        syncService.resume();
         scope.$digest(); // initialSync request
         expect(eventHandlerService.handleInitialSyncDone).toHaveBeenCalledWith(testInitialSync);
         expect(eventHandlerService.handleEvents).toHaveBeenCalledWith(testEventStream.data.chunk, true);
     }));
     
     it('should use the end token in /initialSync for the next /events request', inject(
-    function(eventStreamService) {
+    function(syncService) {
         spyOn(matrixService, "getEventStream").and.callThrough();
-        eventStreamService.resume();
+        syncService.resume();
         scope.$digest(); // initialSync request
-        expect(matrixService.getEventStream).toHaveBeenCalledWith("foo", eventStreamService.SERVER_TIMEOUT, jasmine.any(Object));
+        expect(matrixService.getEventStream).toHaveBeenCalledWith("foo", syncService.SERVER_TIMEOUT, jasmine.any(Object));
     }));
     
     it('should cancel the /events request when paused.', inject(
-    function(eventStreamService) {
+    function(syncService) {
         var timeout = undefined; // this is the promise provided to $http.timeout
         var timeoutResolved = false; // flag to see if the cancel request was made
         var request = q.defer().promise; // the http request which we're blocking on
@@ -91,18 +91,18 @@ describe('EventStreamService', function() {
             });
             return request;
         });
-        eventStreamService.resume();
+        syncService.resume();
         scope.$digest(); // initialSync request
         expect(timeout).toBeDefined();
         expect(timeoutResolved).toBeFalsy();
-        eventStreamService.pause();
+        syncService.pause();
         scope.$digest(); // resolving the timeout
         expect(timeoutResolved).toBeTruthy();
         
     }));
     
     it('should cancel the /events request when stopped.', inject(
-    function(eventStreamService) {
+    function(syncService) {
         var timeout = undefined; // this is the promise provided to $http.timeout
         var timeoutResolved = false; // flag to see if the cancel request was made
         var request = q.defer().promise; // the http request which we're blocking on
@@ -113,18 +113,18 @@ describe('EventStreamService', function() {
             });
             return request;
         });
-        eventStreamService.resume();
+        syncService.resume();
         scope.$digest(); // initialSync request
         expect(timeout).toBeDefined();
         expect(timeoutResolved).toBeFalsy();
-        eventStreamService.stop();
+        syncService.stop();
         scope.$digest(); // resolving the timeout
         expect(timeoutResolved).toBeTruthy();
         
     }));
     
     it('should broadcast a bad connection if there are multiple failed attempts.', inject(
-    function(eventStreamService) {
+    function(syncService) {
         var request = q.defer(); // the http request which we're blocking on
         var timesCalled = 0;
         var isBadConnection = false;
@@ -132,27 +132,27 @@ describe('EventStreamService', function() {
             timesCalled += 1;
             return request.promise;
         });
-        scope.$on(eventStreamService.BROADCAST_BAD_CONNECTION, function(ngEvent, isBad) {
+        scope.$on(syncService.BROADCAST_BAD_CONNECTION, function(ngEvent, isBad) {
             isBadConnection = isBad;
         });
         
-        eventStreamService.resume();
+        syncService.resume();
         scope.$digest(); // initialSync request
         
-        for (var i=0; i<eventStreamService.MAX_FAILED_ATTEMPTS; i++) {
+        for (var i=0; i<syncService.MAX_FAILED_ATTEMPTS; i++) {
             request.reject({data:{status:0}}); // reject no connection.
             request = q.defer(); // make a new promise in prep for the next request
             scope.$digest(); // invoke the .then
             timeout.flush(); // flush the waiting period.
         }
         
-        expect(timesCalled).toBe(eventStreamService.MAX_FAILED_ATTEMPTS + 1);
+        expect(timesCalled).toBe(syncService.MAX_FAILED_ATTEMPTS + 1);
         expect(isBadConnection).toBe(true);
         
     }));
     
     it('should broadcast a good connection if a successful attempt goes through after bad ones.', inject(
-    function(eventStreamService) {
+    function(syncService) {
         var request = q.defer(); // the http request which we're blocking on
         var timesCalled = 0;
         var isBadConnection = false;
@@ -160,14 +160,14 @@ describe('EventStreamService', function() {
             timesCalled += 1;
             return request.promise;
         });
-        scope.$on(eventStreamService.BROADCAST_BAD_CONNECTION, function(ngEvent, isBad) {
+        scope.$on(syncService.BROADCAST_BAD_CONNECTION, function(ngEvent, isBad) {
             isBadConnection = isBad;
         });
         
-        eventStreamService.resume();
+        syncService.resume();
         scope.$digest(); // initialSync request
         
-        for (var i=0; i<(eventStreamService.MAX_FAILED_ATTEMPTS + 1); i++) {
+        for (var i=0; i<(syncService.MAX_FAILED_ATTEMPTS + 1); i++) {
             request.reject({data:{status:0}}); // reject no connection.
             request = q.defer(); // make a new promise in prep for the next request
             scope.$digest(); // invoke the .then

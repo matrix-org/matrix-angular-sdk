@@ -43,7 +43,6 @@ describe("SettingsController ", function() {
         authEmail: function(){}
     };
     
-    var eventStreamService = {};
     var mFileUpload = {
         uploadFile: function(){}
     };

@@ -22,9 +22,9 @@ repolling the event stream, and provides methods to resume/pause/stop the event
 stream. This service is not responsible for parsing event data. For that, see 
 the eventHandlerService.
 */
-angular.module('eventStreamService', [])
-.factory('eventStreamService', ['$q', '$timeout', '$rootScope', 'matrixService', 'eventHandlerService', function($q, $timeout, $rootScope, matrixService, eventHandlerService) {
-    var BROADCAST_BAD_CONNECTION = "eventStreamService.BROADCAST_BAD_CONNECTION(isBad)";
+angular.module('syncService', [])
+.factory('syncService', ['$q', '$timeout', '$rootScope', 'matrixService', 'eventHandlerService', function($q, $timeout, $rootScope, matrixService, eventHandlerService) {
+    var BROADCAST_BAD_CONNECTION = "syncService.BROADCAST_BAD_CONNECTION(isBad)";
     var END = "END";
     var SERVER_TIMEOUT_MS = 30000;
     var ERR_TIMEOUT_MS = 5000;

@@ -20,9 +20,9 @@ limitations under the License.
 
 'use strict';
 
-angular.module('MatrixWebClientController', ['matrixService', 'mPresence', 'eventStreamService'])
-.controller('MatrixWebClientController', ['$scope', '$location', '$rootScope', '$timeout', 'matrixService', 'mPresence', 'eventStreamService', 'eventHandlerService', 'matrixPhoneService', 'modelService', 'eventReaperService', 'notificationService', 'mUserDisplayNameFilter', 'MatrixCall', 'dialogService', 'webRtcService',
-                               function($scope, $location, $rootScope, $timeout, matrixService, mPresence, eventStreamService, eventHandlerService, matrixPhoneService, modelService, eventReaperService, notificationService, mUserDisplayNameFilter, MatrixCall, dialogService, webRtcService) {
+angular.module('MatrixWebClientController', ['matrixService', 'mPresence', 'syncService'])
+.controller('MatrixWebClientController', ['$scope', '$location', '$rootScope', '$timeout', 'matrixService', 'mPresence', 'syncService', 'eventHandlerService', 'matrixPhoneService', 'modelService', 'eventReaperService', 'notificationService', 'mUserDisplayNameFilter', 'MatrixCall', 'dialogService', 'webRtcService',
+                               function($scope, $location, $rootScope, $timeout, matrixService, mPresence, syncService, eventHandlerService, matrixPhoneService, modelService, eventReaperService, notificationService, mUserDisplayNameFilter, MatrixCall, dialogService, webRtcService) {
          
     // Check current URL to avoid to display the logout button on the login page
     $scope.location = $location.path();
@@ -59,7 +59,7 @@ angular.module('MatrixWebClientController', ['matrixService', 'mPresence', 'even
     $scope.logout = function() {
         
         // kill the event stream
-        eventStreamService.stop();
+        syncService.stop();
 
         // Do not update presence anymore
         mPresence.stop();
@@ -83,7 +83,7 @@ angular.module('MatrixWebClientController', ['matrixService', 'mPresence', 'even
         $scope.logout();
     });
     
-    $rootScope.$on(eventStreamService.BROADCAST_BAD_CONNECTION, function(ngEvent, isBad) {
+    $rootScope.$on(syncService.BROADCAST_BAD_CONNECTION, function(ngEvent, isBad) {
         $rootScope.isBadConnection = isBad;
     });
     
@@ -91,7 +91,7 @@ angular.module('MatrixWebClientController', ['matrixService', 'mPresence', 'even
         // update header
         $scope.user_id = matrixService.config().user_id;
         // start stream
-        eventStreamService.resume();
+        syncService.resume();
         mPresence.start();
         // refresh turn servers
         MatrixCall.getTurnServer();
