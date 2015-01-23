@@ -9,7 +9,7 @@ describe('syncService', function() {
             defer.resolve(testInitialSync);
             return defer.promise;
         },
-        getEventStream: function(from, svrTimeout, cliTimeout) {
+        sync: function(from, svrTimeout, cliTimeout) {
             var defer = q.defer();
             defer.resolve(testEventStream);
             return defer.promise;
@@ -71,12 +71,15 @@ describe('syncService', function() {
         expect(eventHandlerService.handleEvents).toHaveBeenCalledWith(testEventStream.data.chunk, true);
     }));
     
-    it('should use the end token in /initialSync for the next /events request', inject(
+    it('should use the end token in the next /sync request', inject(
     function(syncService) {
-        spyOn(matrixService, "getEventStream").and.callThrough();
+        var filterId = "flibble";
+        syncService.setFilterId(filterId);
+        spyOn(matrixService, "sync").and.callThrough();
         syncService.resume();
         scope.$digest(); // initialSync request
-        expect(matrixService.getEventStream).toHaveBeenCalledWith("foo", syncService.SERVER_TIMEOUT, jasmine.any(Object));
+        expect(matrixService.sync).toHaveBeenCalledWith("foo", filterId,
+            syncService.MAX_EVENTS, syncService.SERVER_TIMEOUT, jasmine.any(Object));
     }));
     
     it('should cancel the /events request when paused.', inject(
@@ -84,7 +87,8 @@ describe('syncService', function() {
         var timeout = undefined; // this is the promise provided to $http.timeout
         var timeoutResolved = false; // flag to see if the cancel request was made
         var request = q.defer().promise; // the http request which we're blocking on
-        spyOn(matrixService, "getEventStream").and.callFake(function(from, timeoutMs, promise) {
+        spyOn(matrixService, "sync").and.callFake(function(from, filterId, limit, 
+                                                  timeoutMs, promise) {
             timeout = promise;
             timeout.then(function(r){
                 timeoutResolved = true;
@@ -106,7 +110,8 @@ describe('syncService', function() {
         var timeout = undefined; // this is the promise provided to $http.timeout
         var timeoutResolved = false; // flag to see if the cancel request was made
         var request = q.defer().promise; // the http request which we're blocking on
-        spyOn(matrixService, "getEventStream").and.callFake(function(from, timeoutMs, promise) {
+        spyOn(matrixService, "sync").and.callFake(function(from, filterId, limit, 
+                                                  timeoutMs, promise) {
             timeout = promise;
             timeout.then(function(r){
                 timeoutResolved = true;
@@ -128,7 +133,7 @@ describe('syncService', function() {
         var request = q.defer(); // the http request which we're blocking on
         var timesCalled = 0;
         var isBadConnection = false;
-        spyOn(matrixService, "getEventStream").and.callFake(function(from, timeoutMs, promise) {
+        spyOn(matrixService, "sync").and.callFake(function(from, timeoutMs, promise) {
             timesCalled += 1;
             return request.promise;
         });
@@ -156,7 +161,7 @@ describe('syncService', function() {
         var request = q.defer(); // the http request which we're blocking on
         var timesCalled = 0;
         var isBadConnection = false;
-        spyOn(matrixService, "getEventStream").and.callFake(function(from, timeoutMs, promise) {
+        spyOn(matrixService, "sync").and.callFake(function(from, timeoutMs, promise) {
             timesCalled += 1;
             return request.promise;
         });

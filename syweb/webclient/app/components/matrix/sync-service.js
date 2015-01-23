@@ -23,7 +23,9 @@ stream. This service is not responsible for parsing event data. For that, see
 the eventHandlerService.
 */
 angular.module('syncService', [])
-.factory('syncService', ['$q', '$timeout', '$rootScope', 'matrixService', 'eventHandlerService', function($q, $timeout, $rootScope, matrixService, eventHandlerService) {
+.factory('syncService', ['$q', '$timeout', '$rootScope', 'matrixService', 
+'eventHandlerService', function($q, $timeout, $rootScope, matrixService, 
+eventHandlerService) {
     var BROADCAST_BAD_CONNECTION = "syncService.BROADCAST_BAD_CONNECTION(isBad)";
     var END = "END";
     var SERVER_TIMEOUT_MS = 30000;
@@ -32,9 +34,11 @@ angular.module('syncService', [])
     var badConnection = false;
     var failedAttempts = 0;
     var MAX_FAILED_ATTEMPTS = 4;
+    var MAX_EVENTS = 15;
     
     var settings = {
         from: "END",
+        filterId: undefined,
         to: undefined,
         limit: undefined,
         shouldPoll: true,
@@ -68,8 +72,8 @@ angular.module('syncService', [])
     
     
     // interrupts the stream. Only valid if there is a stream conneciton 
-    // open. This is typically used when logging out, to kill the stream immediately
-    // and stop retrying.
+    // open. This is typically used when logging out, to kill the stream 
+    // immediately and stop retrying.
     var interrupt = function(shouldPoll) {
         console.log("[EventStream] interrupt("+shouldPoll+") "+
                     JSON.stringify(settings));
@@ -84,22 +88,24 @@ angular.module('syncService', [])
         deferred = deferred || $q.defer();
 
         
-        // monitors if the connection is *still ongoing* after X time then knifes it
-        // as we cannot trust the server side timeout.
+        // monitors if the connection is *still ongoing* after X time then 
+        // knifes it as we cannot trust the server side timeout.
         var connTimer = startConnectionTimer(); 
         // monitors if there has been a *successful* response, and if not, says 
         // you're on a bad connection.
         
         
         // run the stream from the latest token
-        matrixService.getEventStream(settings.from, SERVER_TIMEOUT_MS, timeout.promise).then(
+        matrixService.sync(settings.from, settings.filterId, MAX_EVENTS, 
+                           SERVER_TIMEOUT_MS, timeout.promise).then(
             function(response) {
                 failedAttempts = 0;
                 setBadConnection(false);
                 
                 $timeout.cancel(connTimer);
                 if (!settings.isActive) {
-                    console.log("[EventStream] Got response but now inactive. Dropping data.");
+                    console.log("[EventStream] Got response but now inactive. "+
+                        "Dropping data.");
                     return;
                 }
                 
@@ -185,6 +191,7 @@ angular.module('syncService', [])
         SERVER_TIMEOUT: SERVER_TIMEOUT_MS,
         MAX_FAILED_ATTEMPTS: MAX_FAILED_ATTEMPTS,
         BROADCAST_BAD_CONNECTION: BROADCAST_BAD_CONNECTION,
+        MAX_EVENTS: MAX_EVENTS,
     
         // resume the stream from whereever it last got up to. Typically used
         // when the page is opened.
@@ -213,6 +220,10 @@ angular.module('syncService', [])
             interrupt(false);
             // clear the latest token
             settings.from = END;
+        },
+
+        setFilterId: function(filterId) {
+            settings.filterId = filterId;
         }
     };
 

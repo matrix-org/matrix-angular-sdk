@@ -753,33 +753,6 @@ angular.module('matrixService', [])
             
             return config.homeserver + prefix + serverAndMediaId + (Object.keys(params).length === 0 ? "" : ("?" + jQuery.param(params)));
         },
-        
-
-        /**
-         * Start listening on /events
-         * @param {String} from the token from which to listen events to
-         * @param {Integer} serverTimeout the time in ms the server will hold open the connection
-         * @param {Integer} clientTimeout the timeout in ms used at the client HTTP request level
-         * @returns a promise
-         */
-        getEventStream: function(from, serverTimeout, clientTimeout) {
-            var path = "/events";
-            var params = {
-                from: from,
-                timeout: serverTimeout
-            };
-
-            var $httpParams;
-            if (clientTimeout) {
-                // If the Internet connection is lost, this timeout is used to be able to
-                // cancel the current request and notify the client so that it can retry with a new request.
-                $httpParams = {
-                    timeout: clientTimeout
-                };
-            }
-
-            return doRequest("GET", path, params, undefined, $httpParams);
-        },
 
         // Indicates if user authentications details are stored in cache
         isUserLoggedIn: function() {
@@ -885,10 +858,12 @@ angular.module('matrixService', [])
          *                       return. Default: 10.
          * @param {Number} timeout The max time in ms to poll before returning.
          *                         Default: 30000.
+         * @param {Promise} timeoutPromise The promise to pass to 
+         *                                 $http.params.timeout
          * @param {Object} opts Additional request options according to the V2 
          *                      API.
          */
-        sync: function(since, filter, limit, timeout, opts) {
+        sync: function(since, filter, limit, timeout, timeoutPromise, opts) {
             var path = "/sync";
 
             if (!limit) {
@@ -919,7 +894,14 @@ angular.module('matrixService', [])
                 }
             }
 
-            return doRequest("GET", path, queryParams);
+            // This allows the caller to cancel this request be rejecting this
+            // promise. This is usually done because we can't trust TCP-level
+            // timeouts when the connection is lost.
+            var $httpParams = {
+                timeout: timeoutPromise
+            };
+
+            return doRequest("GET", path, queryParams, undefined, $httpParams);
         },
 
         /*
