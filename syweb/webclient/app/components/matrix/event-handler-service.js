@@ -490,7 +490,10 @@ function(matrixService, $rootScope, $window, $q, $timeout, $filter, mPresence, n
                     this.onRoomSync(room, roomData);
                 }
                 else {
-                    this.handleEvents(roomData.events.batch, isLive);
+                    this.handleEvents(
+                        unmapEvents(roomData.event_map, roomData.events.batch),
+                        isLive
+                    );
                 }
             }
 
