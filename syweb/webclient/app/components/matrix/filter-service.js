@@ -18,6 +18,24 @@
 
 /*
  * This service manages the provisioning and storage of filters.
+ *
+ * Usage (new filter):
+ *   var filter = filterService.newFilter();
+ *   filter.includeRooms("!foo:bar");
+ *   filter.excludeTypes("com.*");
+ *   filter.includeSenders(["@alice:baz", "@bob:baz"]);
+ *   filter.data.public_user_data = true;
+ *   filter.create().then(function(filter) {
+ *       // from now on use the token
+ *       doSomething(filter.id);
+ *   });
+ *
+ * Usage (expired token):
+ *   filterService.regenerateFilter(expiredToken).then(function(filter) {
+ *       // clobber expired token with new one
+ *       doSomething(filter.id);
+ *   });
+ *
  */
 angular.module('filterService', [])
 .service('filterService', ['$q', '$window', 'matrixService', 
@@ -44,7 +62,7 @@ function ($q, $window, matrixService) {
             bundle_relates_to: undefined // v2.1
         };
 
-        this.filter_token = undefined;
+        this.id = undefined;
     };
 
     var removeAll = function(arr, item) {
@@ -64,7 +82,7 @@ function ($q, $window, matrixService) {
 
     var persistFilter = function(filter) {
         $window.localStorage.setItem(
-            filterService.LS_FILTER_PREFIX + filter.filter_token,
+            filterService.LS_FILTER_PREFIX + filter.id,
             JSON.stringify(filter.data)
         );
     };
@@ -92,7 +110,7 @@ function ($q, $window, matrixService) {
         }
 
         matrixService.createFilter(filter.data).then(function(response) {
-            filter.filter_token = response.filter_token;
+            filter.id = response.filter_id;
             persistFilter(filter);
             defer.resolve(filter);
         },

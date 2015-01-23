@@ -25,7 +25,7 @@ describe('FilterService', function() {
         $rootScope = _$rootScope_;
     }));
 
-    it('should set Filter.filter_token from the response.', inject(
+    it('should set Filter.id from the /filter response.', inject(
     function(filterService) {
         var token = "tok";
 
@@ -36,12 +36,12 @@ describe('FilterService', function() {
         f.create();
 
         defer.resolve({
-            filter_token: token
+            filter_id: token
         })
 
         $rootScope.$digest();
 
-        expect(f.filter_token).toEqual(token);
+        expect(f.id).toEqual(token);
     }));
 
     it('should be able to regenerate filters based on localStorage.', inject(
@@ -65,11 +65,11 @@ describe('FilterService', function() {
         f.create();
 
         defer.resolve({
-            filter_token: token
+            filter_id: token
         })
         $rootScope.$digest();
         expect($window.localStorage.setItem).toHaveBeenCalled();
-        expect(f.filter_token).toEqual(token);
+        expect(f.id).toEqual(token);
         expect(f.data.rooms).toEqual(["!foo:bar"]);
 
         // ... some time passes and the token is no longer valid...
@@ -82,11 +82,11 @@ describe('FilterService', function() {
         });
         expect($window.localStorage.getItem).toHaveBeenCalled();
         defer.resolve({
-            filter_token: "new_tok"
+            filter_id: "new_tok"
         });
         $rootScope.$digest();
 
-        expect(regeneratedFilter.filter_token).toEqual("new_tok");
+        expect(regeneratedFilter.id).toEqual("new_tok");
         expect(regeneratedFilter.data.rooms).toEqual(["!foo:bar"]);
     }));
     
