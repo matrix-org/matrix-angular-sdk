@@ -564,7 +564,7 @@ function(matrixService, $rootScope, $window, $q, $timeout, $filter, mPresence, n
             // this should be done AFTER storing state events since these
             // messages may make the old_room_state diverge.
             if (response.messages) {
-                this.handleRoomMessages(newRoom.room_id, response.messages, false);
+                this.handleRoomMessages(newRoom.room_id, response.messages.chunk, false);
                 newRoom.current_room_state.pagination_token = response.messages.end;
                 newRoom.old_room_state.pagination_token = response.messages.start;
             }

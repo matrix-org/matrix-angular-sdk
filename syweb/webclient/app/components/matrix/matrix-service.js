@@ -1042,9 +1042,11 @@ angular.module('matrixService', [])
 
                         // now the events themselves are in the map, convert
                         // state and msgEvents to arrays of event ids
-                        roomv2.events = Object.keys(msgEvents).map(function(i) {
+                        roomv2.events = {};
+                        roomv2.events.batch = Object.keys(msgEvents).map(function(i) {
                             return msgEvents[i].event_id;
                         });
+                        roomv2.events.prev_batch = room.messages.start;
                         roomv2.state = Object.keys(stateEvents).map(function(i) {
                             return stateEvents[i].event_id;
                         });
