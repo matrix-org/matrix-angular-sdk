@@ -61,20 +61,6 @@ describe('syncService', function() {
         timeout = $timeout;
     }));
     
-    it('should use the end token in the next /sync request', inject(
-    function(syncService) {
-        var filterId = "flibble";
-        syncService.setFilterId(filterId);
-        spyOn(matrixService, "sync").and.callThrough();
-        syncService.resume();
-        expect(matrixService.sync).toHaveBeenCalledWith(undefined, filterId,
-            syncService.MAX_EVENTS, syncService.SERVER_TIMEOUT, jasmine.any(Object));
-        scope.$digest(); // first sync
-        timeout.flush();
-        expect(matrixService.sync).toHaveBeenCalledWith("foo", filterId,
-            syncService.MAX_EVENTS, syncService.SERVER_TIMEOUT, jasmine.any(Object));
-    }));
-    
     it('should cancel the /events request when paused.', inject(
     function(syncService) {
         var timeout = undefined; // this is the promise provided to $http.timeout
