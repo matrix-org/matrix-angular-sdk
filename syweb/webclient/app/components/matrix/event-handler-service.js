@@ -595,13 +595,15 @@ function(matrixService, $rootScope, $window, $q, $timeout, $filter, mPresence, n
             }
             
             var echo = false;
+            var txnId = "txn" + new Date().getTime();
             if (!promise) { // not a non-echoable command
                 echo = true;
+
                 if (isEmote) {
-                    promise = matrixService.sendEmoteMessage(roomId, input.substring(4));
+                    promise = matrixService.sendEmoteMessage(roomId, input.substring(4), txnId);
                 }
                 else {
-                    promise = matrixService.sendTextMessage(roomId, input);
+                    promise = matrixService.sendTextMessage(roomId, input, txnId);
                 }
             }
             
