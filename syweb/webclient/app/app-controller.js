@@ -103,7 +103,14 @@ dialogService, webRtcService, filterManagerService) {
         mPresence.start();
         // refresh turn servers
         MatrixCall.getTurnServer();
+
+        // configure filters
         filterManagerService.generateFilters();
+        syncService.setFilterId(
+            filterManagerService.getFilterIdForRequest(
+                filterManagerService.REQUESTS.SYNC
+            )
+        );
     };
     
     if (matrixService.isUserLoggedIn()) {

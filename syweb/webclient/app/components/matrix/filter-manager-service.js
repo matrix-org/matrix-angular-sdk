@@ -35,11 +35,12 @@ function ($window, filterService) {
     };
 
     var loadStoredFilters = function() {
-        filters[that.REQUESTS.SYNC] = 
-            $window.localStorage.getItem(LS_PREFIX + that.REQUESTS.SYNC);
-
-        filters[that.REQUESTS.SCROLLBACK] = 
-            $window.localStorage.getItem(LS_PREFIX + that.REQUESTS.SCROLLBACK);
+        // for each request enum, try to load the filter ID from local storage
+        for (var key in that.REQUESTS) {
+            if (!that.REQUESTS.hasOwnProperty(key)) continue;
+            filters[that.REQUESTS[key]] = 
+                $window.localStorage.getItem(LS_PREFIX + that.REQUESTS[key]);
+        }
     };
 
     var saveFilter = function(requestEnum, filterId) {
@@ -73,11 +74,11 @@ function ($window, filterService) {
 
     this.generateFilters = function() {
         loadStoredFilters();
-        if (!filters[that.REQUESTS.SCROLLBACK]) {
-            createFilter(that.REQUESTS.SCROLLBACK);
-        }
-        if (!filters[that.REQUESTS.SYNC]) {
-            createFilter(that.REQUESTS.SYNC);
+        for (var key in that.REQUESTS) {
+            if (!that.REQUESTS.hasOwnProperty(key)) continue;
+            if (!filters[that.REQUESTS[key]]) {
+                createFilter(that.REQUESTS[key]);
+            }
         }
     };
 

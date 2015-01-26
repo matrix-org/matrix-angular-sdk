@@ -413,7 +413,6 @@ function(matrixService, $rootScope, $q) {
         
         removeRoom: function(roomId) {
             delete rooms[roomId];
-            console.log("Deleted room "+roomId);
         },
         
         getRooms: function() {
