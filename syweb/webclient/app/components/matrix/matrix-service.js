@@ -852,6 +852,15 @@ angular.module('matrixService', [])
         ***********************************************************************/
 
         createFilter: function(filterJson) {
+            console.log("v2 filter -> "+JSON.stringify(filterJson));
+
+            // return a fudged filter response for now. We need to do this because
+            // /sync *CANNOT* begin until there is a filter ID!
+            return $q.when({
+                filter_id: "_not_implemented_yet_"
+            });
+            ///////////////////////////////////////////////////
+
             var path = mkPath("/user/$user_id/filter", {
                 $user_id: config.user_id
             });
@@ -874,6 +883,7 @@ angular.module('matrixService', [])
          *                      API.
          */
         sync: function(since, filter, limit, timeout, timeoutPromise, opts) {
+            console.log("v2 sync -> since="+since+", filter="+filter+", limit="+limit+", timeout="+timeout);
             return this._shim_v1(since, limit, timeout, timeoutPromise);
 
             var path = "/sync";
@@ -927,6 +937,7 @@ angular.module('matrixService', [])
          *                      API.
          */
         scrollback: function(roomId, from, filter, limit, opts) {
+            console.log("v2 scrollback -> "+roomId+", from="+from+", filter="+filter+", limit="+limit);
             return this._shim_v1_scrollback(roomId, from, limit);
 
             var path = mkPath("/rooms/$room_id/events", {
@@ -1211,10 +1222,11 @@ angular.module('matrixService', [])
             */
 
             this.paginateBackMessages(roomId, from, limit).then(function(response) {
-                var v2response = {};
-                v2response.batch = response.chunk;
-                v2response.prev_batch = response.end;
-                d.resolve(v2response);
+                response.data.batch = response.data.chunk;
+                response.data.prev_batch = response.data.end;
+                response.data.chunk = undefined;
+                response.data.end = undefined;
+                d.resolve(response);
             },
             function(err) {
                 d.reject(err);

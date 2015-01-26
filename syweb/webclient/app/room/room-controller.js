@@ -14,9 +14,17 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-angular.module('RoomController', ['ngSanitize', 'matrixFilter', 'mFileInput', 'angular-peity'])
-.controller('RoomController', ['$modal', '$scope', '$timeout', '$routeParams', '$location', '$rootScope', 'matrixService', 'eventHandlerService', 'mFileUpload', 'MatrixCall', 'modelService', 'recentsService', 'mUserDisplayNameFilter', 'dialogService', 'typingService',
-                               function($modal, $scope, $timeout, $routeParams, $location, $rootScope, matrixService, eventHandlerService, mFileUpload, MatrixCall, modelService, recentsService, mUserDisplayNameFilter, dialogService, typingService) {
+angular.module('RoomController', 
+    ['ngSanitize', 'matrixFilter', 'mFileInput', 'angular-peity'])
+.controller('RoomController', ['$modal', '$scope', '$timeout', '$routeParams', 
+'$location', '$rootScope', 'matrixService', 'eventHandlerService', 
+'mFileUpload', 'MatrixCall', 'modelService', 'recentsService', 
+'mUserDisplayNameFilter', 'dialogService', 'typingService', 
+'filterManagerService',
+function($modal, $scope, $timeout, $routeParams, $location, $rootScope, 
+matrixService, eventHandlerService, mFileUpload, MatrixCall, modelService, 
+recentsService, mUserDisplayNameFilter, dialogService, typingService,
+filterManagerService) {
    'use strict';
     var MESSAGES_PER_PAGINATION = 30;
     var THUMBNAIL_SIZE = 320;
@@ -223,12 +231,16 @@ angular.module('RoomController', ['ngSanitize', 'matrixFilter', 'mFileInput', 'a
         var originalTopRow = $("#messageTable>tbody>tr:first")[0];
         
         // Paginate events from the point in cache
-        matrixService.paginateBackMessages($scope.room_id, $scope.room.old_room_state.pagination_token, numItems).then(
+        matrixService.scrollback($scope.room_id, 
+            $scope.room.old_room_state.pagination_token, 
+            filterManagerService.getFilterIdForRequest(
+                filterManagerService.REQUESTS.SCROLLBACK
+            ),numItems).then(
             function(response) {
 
-                eventHandlerService.handleRoomMessages($scope.room_id, response.data.chunk, false, 'b');
-                modelService.getRoom($scope.room_id).old_room_state.pagination_token = response.data.end;
-                if (response.data.chunk.length < MESSAGES_PER_PAGINATION) {
+                eventHandlerService.handleRoomMessages($scope.room_id, response.data.batch, false, 'b');
+                modelService.getRoom($scope.room_id).old_room_state.pagination_token = response.data.prev_batch;
+                if (response.data.batch.length < MESSAGES_PER_PAGINATION) {
                     // no more messages to paginate. this currently never gets turned true again, as we never
                     // expire paginated contents in the current implementation.
                     $scope.state.can_paginate = false;

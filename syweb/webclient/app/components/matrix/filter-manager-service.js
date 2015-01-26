@@ -20,8 +20,8 @@
  * This service controls which filters are set for which requests.
  */
 angular.module('filterManagerService', [])
-.service('filterManagerService', ['$window', 'filterService', 
-function ($window, filterService) {
+.service('filterManagerService', ['$window', '$q', 'filterService', 
+function ($window, $q, filterService) {
     var that = this;
     var LS_PREFIX = "filterManagerService.filter.";
 
@@ -61,25 +61,35 @@ function ($window, filterService) {
         }
 
         if (f) {
+            var defer = $q.defer();
             f.create().then(function(filter) {
                 saveFilter(requestEnum, filter.id);
+                defer.resolve(filter);
             },
             function(err) {
                 console.error("Unable to create filter for "+requestEnum);
                 console.error(err);
+                defer.reject(err);
             });
+            return defer.promise;
+        }
+        else {
+            return $q.reject("Unknown enum: "+requestEnum);
         }
     };
 
 
     this.generateFilters = function() {
         loadStoredFilters();
+        var promises = [];
         for (var key in that.REQUESTS) {
             if (!that.REQUESTS.hasOwnProperty(key)) continue;
             if (!filters[that.REQUESTS[key]]) {
-                createFilter(that.REQUESTS[key]);
+                promises.push(createFilter(that.REQUESTS[key]));
             }
         }
+
+        return $q.all(promises);
     };
 
     this.getFilterIdForRequest = function(requestEnum) {

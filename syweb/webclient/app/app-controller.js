@@ -94,23 +94,34 @@ dialogService, webRtcService, filterManagerService) {
     $rootScope.$on(syncService.BROADCAST_BAD_CONNECTION, function(ngEvent, isBad) {
         $rootScope.isBadConnection = isBad;
     });
+
+
+    var configureFilters = function() {
+        filterManagerService.generateFilters().then(function() {
+            syncService.setFilterId(
+                filterManagerService.getFilterIdForRequest(
+                    filterManagerService.REQUESTS.SYNC
+                )
+            );
+            // start stream (which relies on filters)
+            syncService.resume();
+        },
+        function(err) {
+            console.error("Unable to configure filters: "+JSON.stringify(err));
+            $timeout(configureFilters, 3000);
+        });
+
+    };
     
     $rootScope.onLoggedIn = function() {
         // update header
         $scope.user_id = matrixService.config().user_id;
-        // start stream
-        syncService.resume();
+        // start monitoring presence
         mPresence.start();
         // refresh turn servers
         MatrixCall.getTurnServer();
 
-        // configure filters
-        filterManagerService.generateFilters();
-        syncService.setFilterId(
-            filterManagerService.getFilterIdForRequest(
-                filterManagerService.REQUESTS.SYNC
-            )
-        );
+        configureFilters();
     };
     
     if (matrixService.isUserLoggedIn()) {
