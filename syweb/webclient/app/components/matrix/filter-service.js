@@ -110,7 +110,7 @@ function ($q, $window, matrixService) {
         }
 
         matrixService.createFilter(filter.data).then(function(response) {
-            filter.id = response.filter_id;
+            filter.id = response.data.filter_id;
             persistFilter(filter);
             defer.resolve(filter);
         },

@@ -857,7 +857,9 @@ angular.module('matrixService', [])
             // return a fudged filter response for now. We need to do this because
             // /sync *CANNOT* begin until there is a filter ID!
             return $q.when({
-                filter_id: "_not_implemented_yet_"
+                data: {
+                    filter_id: "_not_implemented_yet_"
+                }
             });
             ///////////////////////////////////////////////////
 

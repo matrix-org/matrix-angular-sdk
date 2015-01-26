@@ -68,7 +68,6 @@ function ($window, $q, filterService) {
             },
             function(err) {
                 console.error("Unable to create filter for "+requestEnum);
-                console.error(err);
                 defer.reject(err);
             });
             return defer.promise;
