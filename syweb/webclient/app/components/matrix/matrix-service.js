@@ -39,6 +39,7 @@ angular.module('matrixService', [])
     // Current version of permanent storage
     var configVersion = 0;
     var prefixPath = "/_matrix/client/api/v1";
+    var prefixV2Path = "/_matrix/client/v2_alpha";
     var handleRateLimiting = true;
     var rateLimitMaxMs = 1000 * 20; // 20s
     
@@ -65,6 +66,33 @@ angular.module('matrixService', [])
         
         if (path.indexOf(prefixPath) !== 0) {
             path = prefixPath + path;
+        }
+        
+        return doBaseRequest(config.homeserver, method, path, params, data, undefined, $httpParams);
+    };
+
+    // XXX Gross duplication
+    var doV2Request = function(method, path, params, data, $httpParams) {
+        if (!config) {
+            // try to load it
+            loadConfig();
+            if (!config) {
+                console.error("No config exists. Cannot perform request to "+path);
+                var defer = $q.defer();
+                defer.reject("No config");
+                return defer.promise;
+            }
+        }
+    
+        // Inject the access token
+        if (!params) {
+            params = {};
+        }
+        
+        params.access_token = config.access_token;
+        
+        if (path.indexOf(prefixV2Path) !== 0) {
+            path = prefixV2Path + path;
         }
         
         return doBaseRequest(config.homeserver, method, path, params, data, undefined, $httpParams);
@@ -828,7 +856,7 @@ angular.module('matrixService', [])
                 $user_id: config.user_id
             });
 
-            return doRequest("POST", path, undefined, filterJson);
+            return doV2Request("POST", path, undefined, filterJson);
         },
 
         /*
@@ -885,7 +913,7 @@ angular.module('matrixService', [])
                 timeout: timeoutPromise
             };
 
-            return doRequest("GET", path, queryParams, undefined, $httpParams);
+            return doV2Request("GET", path, queryParams, undefined, $httpParams);
         },
 
         /*
@@ -899,6 +927,8 @@ angular.module('matrixService', [])
          *                      API.
          */
         scrollback: function(roomId, from, filter, limit, opts) {
+            return this._shim_v1_scrollback(roomId, from, limit);
+
             var path = mkPath("/rooms/$room_id/events", {
                 $room_id: roomId
             });
@@ -927,13 +957,47 @@ angular.module('matrixService', [])
                 }
             }
 
-            return doRequest("GET", path, queryParams);
+            return doV2Request("GET", path, queryParams);
         },
 
         _shim_v1: function(since, limit, timeout, timeoutPromise) {
             var d = $q.defer();
             if (since) {
                 console.log("/sync -> Shim doing /events");
+
+                /* Version 1
+                {
+                    chunk: [event,event,...]
+                    start: token,
+                    end: token
+                }
+                    
+                Version 2
+                {
+                    next_batch: token,
+                    public_user_data:[
+                        presence events (not room specific)
+                    ],
+                    rooms: [
+                        room_id: string,
+                        limited: false,
+                        <<published: true|false>> MISSING
+                        event_map: {
+                            event_id: {event},
+                            ...
+                        },
+                        events: {
+                            batch: [event_id, event_id, ...],
+                            prev_batch: token
+                        },
+                        state: [
+                            event_id, event_id, ...
+                        ]
+                    ]
+                }
+                */
+
+
                 // do an event stream poll then shim into v2 sync format.
                 doRequest("GET", "/events", {from: since, timeout: timeout}).then(
                 function(response) {
@@ -991,6 +1055,54 @@ angular.module('matrixService', [])
             }
             else {
                 console.log("/sync -> Shim doing /initialSync");
+
+
+                /* Version 1
+                {
+                    end: token,
+                    presence: [event,event,...],
+                    rooms:[
+                        {
+                            room_id: string,
+                            membership: string,
+                            visibility: public|private,
+                            messages: {
+                                chunk: [event, event, ...],
+                                start: token,
+                                end: token
+                            },
+                            state: [
+                                event, event, ...
+                            ]
+                        }
+                    ]
+                }
+                    
+                Version 2
+                {
+                    next_batch: token,
+                    public_user_data:[
+                        presence events (not room specific)
+                    ],
+                    rooms: [
+                        room_id: string,
+                        limited: true,
+                        published: true|false,
+                        event_map: {
+                            event_id: {event},
+                            ...
+                        },
+                        events: {
+                            batch: [event_id, event_id, ...],
+                            prev_batch: token
+                        },
+                        state: [
+                            event_id, event_id, ...
+                        ]
+                    ]
+                }
+                */
+
                 // shim v1 initial sync into v2 sync format.
                 this._v1_initialSync(limit).then(function(response) {
                     var presenceData = response.data.presence;
@@ -1079,5 +1191,35 @@ angular.module('matrixService', [])
 
             return doRequest("GET", path, params);
         },
+
+        _shim_v1_scrollback: function(roomId, from, limit) {
+            var d = $q.defer();
+
+            /*
+            Version 1:
+            {
+                chunk: [event,event,...],
+                start: token,
+                end: token
+            }
+
+            Version 2:
+            {
+                batch: [event,event,...],
+                prev_batch: token
+            }
+            */
+
+            this.paginateBackMessages(roomId, from, limit).then(function(response) {
+                var v2response = {};
+                v2response.batch = response.chunk;
+                v2response.prev_batch = response.end;
+                d.resolve(v2response);
+            },
+            function(err) {
+                d.reject(err);
+            });
+            return d.promise;
+        }
     };
 }]);
