@@ -36,7 +36,9 @@ describe('FilterService', function() {
         f.create();
 
         defer.resolve({
-            filter_id: token
+            data: {
+                filter_id: token
+            }
         })
 
         $rootScope.$digest();
@@ -65,7 +67,9 @@ describe('FilterService', function() {
         f.create();
 
         defer.resolve({
-            filter_id: token
+            data: {
+                filter_id: token
+            }
         })
         $rootScope.$digest();
         expect($window.localStorage.setItem).toHaveBeenCalled();
@@ -82,7 +86,9 @@ describe('FilterService', function() {
         });
         expect($window.localStorage.getItem).toHaveBeenCalled();
         defer.resolve({
-            filter_id: "new_tok"
+            data: {
+               filter_id: "new_tok"
+            }
         });
         $rootScope.$digest();
 

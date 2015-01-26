@@ -566,7 +566,7 @@ describe('MatrixService', function() {
         httpBackend.flush();
     }));
 
-    it('should be able to POST a filter', inject(
+    xit('should be able to POST a filter', inject(
     function(matrixService) {
         var testConfig = angular.copy(CONFIG);
         testConfig.user_id = "@bob:example.com";

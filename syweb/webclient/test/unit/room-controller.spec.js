@@ -60,6 +60,12 @@ describe("RoomController ", function() {
     var typingService = {
         setTyping: function(){}
     };
+    var filterManagerService = {
+        getFilterIdForRequest: function(){},
+        REQUESTS: {
+            SCROLLBACK: "sb"
+        }
+    }
     
     beforeEach(function() {
         module('RoomController');
@@ -126,7 +132,8 @@ describe("RoomController ", function() {
                 'dialogService': dialogService,
                 '$routeParams': routeParams,
                 '$modal': modal,
-                'typingService': typingService
+                'typingService': typingService,
+                'filterManagerService': filterManagerService
             });
         })
     );
