@@ -38,6 +38,8 @@ var matrixWebClient = angular.module('matrixWebClient', [
     'modelService',
     'commandsService',
     'typingService',
+    'filterService',
+    'filterManagerService',
     'infinite-scroll',
     'ui.bootstrap',
     'dialogs.main',

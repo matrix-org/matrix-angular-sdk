@@ -20,9 +20,17 @@ limitations under the License.
 
 'use strict';
 
-angular.module('MatrixWebClientController', ['matrixService', 'mPresence', 'syncService'])
-.controller('MatrixWebClientController', ['$scope', '$location', '$rootScope', '$timeout', 'matrixService', 'mPresence', 'syncService', 'eventHandlerService', 'matrixPhoneService', 'modelService', 'eventReaperService', 'notificationService', 'mUserDisplayNameFilter', 'MatrixCall', 'dialogService', 'webRtcService',
-                               function($scope, $location, $rootScope, $timeout, matrixService, mPresence, syncService, eventHandlerService, matrixPhoneService, modelService, eventReaperService, notificationService, mUserDisplayNameFilter, MatrixCall, dialogService, webRtcService) {
+angular.module('MatrixWebClientController', 
+['matrixService', 'mPresence', 'syncService'])
+.controller('MatrixWebClientController', ['$scope', '$location', '$rootScope', 
+'$timeout', 'matrixService', 'mPresence', 'syncService', 'eventHandlerService',
+'matrixPhoneService', 'modelService', 'eventReaperService', 
+'notificationService', 'mUserDisplayNameFilter', 'MatrixCall', 'dialogService',
+'webRtcService', 'filterManagerService',
+function($scope, $location, $rootScope, $timeout, matrixService, mPresence, 
+syncService, eventHandlerService, matrixPhoneService, modelService, 
+eventReaperService, notificationService, mUserDisplayNameFilter, MatrixCall, 
+dialogService, webRtcService, filterManagerService) {
          
     // Check current URL to avoid to display the logout button on the login page
     $scope.location = $location.path();
@@ -95,6 +103,7 @@ angular.module('MatrixWebClientController', ['matrixService', 'mPresence', 'sync
         mPresence.start();
         // refresh turn servers
         MatrixCall.getTurnServer();
+        filterManagerService.generateFilters();
     };
     
     if (matrixService.isUserLoggedIn()) {

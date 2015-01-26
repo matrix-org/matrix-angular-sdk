@@ -117,7 +117,7 @@ eventHandlerService) {
                 
                 console.log(
                     "[Sync] Got response from "+settings.from+
-                    " to "+response.data.end
+                    " to "+response.data.next_batch
                 );
                 
                 settings.from = response.data.next_batch;
