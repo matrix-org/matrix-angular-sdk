@@ -618,7 +618,10 @@ function(matrixService, $rootScope, $window, $q, $timeout, $filter, mPresence, n
                     origin_server_ts: new Date().getTime(), // fake a timestamp
                     room_id: roomId,
                     type: "m.room.message",
-                    user_id: matrixService.config().user_id
+                    user_id: matrixService.config().user_id,
+                    unsigned: {
+                        txn_id: txnId
+                    }
                 };
                 var annotatedEvent = modelService.getRoom(roomId).addMessageEvent(echoMessage);
                 annotatedEvent._original_input = input;

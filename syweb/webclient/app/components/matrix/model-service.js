@@ -104,10 +104,11 @@ function(matrixService, $rootScope, $q) {
             // is to find a message among the latest ones
             for (var i = this.aevents.length - 1; i >= 0; i--) {
                 var storedEvent = this.aevents[i];
-                var storedTxnId = storedEvent.unsigned ? storedEvent.unsigned.txn_id : undefined;
+                var storedTxnId = storedEvent.event.unsigned ? storedEvent.event.unsigned.txn_id : undefined;
                 var txnId = event.unsigned ? event.unsigned.txn_id : undefined;
 
-                if (storedEvent.event.event_id === event.event_id || storedTxnId == txnId) {
+                if (storedEvent.event.event_id === event.event_id || 
+                        (storedTxnId !== undefined && storedTxnId === txnId)) {
                     // It's clobbering time!
                     this.aevents[i] = new AnnotatedEvent(event);
                     this.setMessageMemberInfo(this.aevents[i], toFront);

@@ -1012,7 +1012,9 @@ angular.module('matrixService', [])
 
 
                 // do an event stream poll then shim into v2 sync format.
-                doRequest("GET", "/events", {from: since, timeout: timeout}).then(
+                doRequest("GET", "/events", {from: since, timeout: timeout}, undefined, {
+                    timeout: timeoutPromise
+                }).then(
                 function(response) {
                     var presenceData = [];
                     var roomsData = [];
