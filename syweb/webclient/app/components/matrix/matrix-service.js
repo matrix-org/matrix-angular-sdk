@@ -877,7 +877,6 @@ angular.module('matrixService', [])
          */
         sync: function(since, filter, limit, timeout, timeoutPromise, opts) {
             console.log("v2 sync -> since="+since+", filter="+filter+", limit="+limit+", timeout="+timeout);
-            return this._shim_v1(since, limit, timeout, timeoutPromise);
 
             var path = "/sync";
 

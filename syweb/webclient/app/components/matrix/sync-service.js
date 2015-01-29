@@ -121,6 +121,8 @@ eventHandlerService) {
                 );
                 
                 settings.from = response.data.next_batch;
+
+                // XXX FIXME TODO remap sender -> user_id and unsigned.age to age
                 
                 eventHandlerService.onSync(response.data, isLive);
                 
