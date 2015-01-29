@@ -21,10 +21,9 @@
  *
  * Usage (new filter):
  *   var filter = filterService.newFilter();
- *   filter.includeRooms("!foo:bar");
- *   filter.excludeTypes("com.*");
- *   filter.includeSenders(["@alice:baz", "@bob:baz"]);
- *   filter.data.public_user_data = true;
+ *   filter.room.state.includeRooms("!foo:bar");
+ *   filter.room.state.excludeTypes("com.*");
+ *   filter.room.events.includeSenders(["@alice:baz", "@bob:baz"]);
  *   filter.create().then(function(filter) {
  *       // from now on use the token
  *       doSomething(filter.id);
@@ -43,26 +42,58 @@ function ($q, $window, matrixService) {
     var filterService = this;
     filterService.LS_FILTER_PREFIX = "matrix.filterService.cachedFilter_";
 
-    var Filter = function Filter() {
+    var Definition = function Definition(jsonData) {
         this.data = {
             types: [],
             not_types: [],
             rooms: [],
             not_rooms: [],
             senders: [],
-            not_senders: [],
+            not_senders: []
+        };
+        if (jsonData) {
+            this.data = jsonData;
+        }
+    };
 
-            public_user_data: undefined, // true|false
-            private_user_data: undefined, // true|false
+    var Filter = function Filter(jsonBlob) {
+        this.id = undefined;
+        this.data = {
+            room: {
+                state: undefined, // Definition
+                events: undefined // Definition
+            },
+            public_user_data: undefined, // Definition
+            private_user_data: undefined // Definition
 
+            /*
             format: undefined, // normal/trimmed
             select: [],
 
             bundle_updates: undefined, // true|false
-            bundle_relates_to: undefined // v2.1
+            bundle_relates_to: undefined // v2.1 */
         };
 
-        this.id = undefined;
+        if (!jsonBlob) {
+            return;
+        }
+
+        if (jsonBlob.public_user_data) {
+            this.data.public_user_data = new Definition(jsonBlob.public_user_data);
+        }
+        if (jsonBlob.private_user_data) {
+            this.data.private_user_data = new Definition(jsonBlob.private_user_data);
+        }
+        if (jsonBlob.room) {
+            if (jsonBlob.room.state) {
+                this.data.room.state = new Definition(jsonBlob.room.state);
+            }
+            if (jsonBlob.room.events) {
+                this.data.room.events = new Definition(jsonBlob.room.events);
+            }
+        }
+
+        
     };
 
     var removeAll = function(arr, item) {
@@ -83,7 +114,7 @@ function ($q, $window, matrixService) {
     var persistFilter = function(filter) {
         $window.localStorage.setItem(
             filterService.LS_FILTER_PREFIX + filter.id,
-            JSON.stringify(filter.data)
+            JSON.stringify(filter.json())
         );
     };
 
@@ -99,17 +130,7 @@ function ($q, $window, matrixService) {
     var provisionFilter = function(filter) {
         var defer = $q.defer();
 
-        // strip undefined/empty array entries since they weren't used.
-        var keys = Object.keys(filter.data);
-        for (var i=0; i<keys.length; i++) {
-            var key = keys[i];
-            var val = filter.data[key];
-            if ((val === undefined) || (angular.isArray(val) && val.length == 0)) {
-                delete filter.data[key];
-            }
-        }
-
-        matrixService.createFilter(filter.data).then(function(response) {
+        matrixService.createFilter(filter.json()).then(function(response) {
             filter.id = response.data.filter_id;
             persistFilter(filter);
             defer.resolve(filter);
@@ -119,10 +140,71 @@ function ($q, $window, matrixService) {
         });
         return defer.promise;
     };
-    
+
     Filter.prototype = {
         create: function() {
             return provisionFilter(this);
+        },
+        json: function() {
+            var filterJson = {
+                room: {}
+            };
+            if (this.data.room.state) {
+                filterJson.room.state = this.data.room.state.json();
+            }
+            if (this.data.room.events) {
+                filterJson.room.events = this.data.room.events.json();
+            }
+            if (this.data.public_user_data) {
+                filterJson.public_user_data = this.data.public_user_data.json();
+            }
+            if (this.data.private_user_data) {
+                filterJson.private_user_data = this.data.private_user_data.json();
+            }
+            if (Object.keys(filterJson.room).length == 0) {
+                delete filterJson.room;
+            }
+            return filterJson;
+        },
+        setRoomEvents: function(definition) {
+            this.data.room.events = definition;
+        },
+        setRoomState: function(definition) {
+            this.data.room.state = definition;
+        },
+        setPublicUserData: function(definition) {
+            this.data.public_user_data = definition;
+        },
+        setPrivateUserData: function(definition) {
+            this.data.private_user_data = definition;
+        },
+        getRoomEventsDefinition: function() {
+            return this.data.room.events;
+        },
+        getRoomStateDefinition: function() {
+            return this.data.room.state;
+        },
+        getPublicUserDataDefinition: function() {
+            return this.data.public_user_data;
+        },
+        getPrivateUserDataDefinition: function() {
+            return this.data.private_user_data;
+        },
+    };
+    
+    Definition.prototype = {
+        json: function() {
+            // strip undefined/empty array entries since they weren't used.
+            var definition = angular.copy(this.data);
+            var keys = Object.keys(definition);
+            for (var i=0; i<keys.length; i++) {
+                var key = keys[i];
+                var val = definition[key];
+                if ((val === undefined) || (angular.isArray(val) && val.length == 0)) {
+                    delete definition[key];
+                }
+            }
+            return definition;
         },
         includeRooms: function(roomIds) {
             this._incl(this.data.rooms, this.data.not_rooms, roomIds);
@@ -180,13 +262,16 @@ function ($q, $window, matrixService) {
         return new Filter();
     };
 
+    this.newDefinition = function() {
+        return new Definition();
+    };
+
     // regenerate a filter from the JSON (e.g. if the HS has expired it)
     this.regenerateFilter = function(filterToken) {
         var jsonBlob = getCachedFilterJson(filterToken);
         if (jsonBlob) {
             // resubmit this
-            var filter = new Filter();
-            filter.data = jsonBlob;
+            var filter = new Filter(jsonBlob);
             return filter.create();
         }
         else {

@@ -854,15 +854,6 @@ angular.module('matrixService', [])
         createFilter: function(filterJson) {
             console.log("v2 filter -> "+JSON.stringify(filterJson));
 
-            // return a fudged filter response for now. We need to do this because
-            // /sync *CANNOT* begin until there is a filter ID!
-            return $q.when({
-                data: {
-                    filter_id: "_not_implemented_yet_"
-                }
-            });
-            ///////////////////////////////////////////////////
-
             var path = mkPath("/user/$user_id/filter", {
                 $user_id: config.user_id
             });

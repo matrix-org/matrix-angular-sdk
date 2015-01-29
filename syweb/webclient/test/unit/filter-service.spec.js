@@ -63,7 +63,9 @@ describe('FilterService', function() {
         })
 
         var f = filterService.newFilter();
-        f.includeRooms("!foo:bar");
+        var d = filterService.newDefinition();
+        d.includeRooms("!foo:bar");
+        f.setRoomState(d);
         f.create();
 
         defer.resolve({
@@ -74,7 +76,7 @@ describe('FilterService', function() {
         $rootScope.$digest();
         expect($window.localStorage.setItem).toHaveBeenCalled();
         expect(f.id).toEqual(token);
-        expect(f.data.rooms).toEqual(["!foo:bar"]);
+        expect(f.getRoomStateDefinition().data.rooms).toEqual(["!foo:bar"]);
 
         // ... some time passes and the token is no longer valid...
 
@@ -93,7 +95,7 @@ describe('FilterService', function() {
         $rootScope.$digest();
 
         expect(regeneratedFilter.id).toEqual("new_tok");
-        expect(regeneratedFilter.data.rooms).toEqual(["!foo:bar"]);
+        expect(regeneratedFilter.getRoomStateDefinition().data.rooms).toEqual(["!foo:bar"]);
     }));
     
     it('should be able to include rooms.', inject(
@@ -104,11 +106,17 @@ describe('FilterService', function() {
         spyOn(matrixService, "createFilter").and.returnValue(defer.promise);
 
         var f = filterService.newFilter();
-        f.includeRooms([roomA, roomB]);
+        var d = filterService.newDefinition();
+        d.includeRooms([roomA, roomB]);
+        f.setRoomEvents(d);
         f.create();
 
         expect(matrixService.createFilter).toHaveBeenCalledWith({
-            rooms: [roomA, roomB]
+            room: {
+                events: {
+                    rooms: [roomA, roomB]
+                }
+            }
         });
     }));
 
@@ -120,11 +128,15 @@ describe('FilterService', function() {
         spyOn(matrixService, "createFilter").and.returnValue(defer.promise);
 
         var f = filterService.newFilter();
-        f.excludeRooms([roomA, roomB]);
+        var d = filterService.newDefinition();
+        d.excludeRooms([roomA, roomB]);
+        f.setPublicUserData(d);
         f.create();
 
         expect(matrixService.createFilter).toHaveBeenCalledWith({
-            not_rooms: [roomA, roomB]
+            public_user_data: {
+                not_rooms: [roomA, roomB]
+            }
         });
     }));
 
@@ -135,11 +147,15 @@ describe('FilterService', function() {
         spyOn(matrixService, "createFilter").and.returnValue(defer.promise);
 
         var f = filterService.newFilter();
-        f.includeTypes(types);
+        var d = filterService.newDefinition();
+        d.includeTypes(types);
+        f.setPrivateUserData(d);
         f.create();
 
         expect(matrixService.createFilter).toHaveBeenCalledWith({
-            types: types
+            private_user_data: {
+                types: types
+            }
         });
     }));
 
@@ -151,13 +167,19 @@ describe('FilterService', function() {
         spyOn(matrixService, "createFilter").and.returnValue(defer.promise);
 
         var f = filterService.newFilter();
-        f.excludeTypes(excludeTypes);
-        f.includeTypes(types);
+        var d = filterService.newDefinition();
+        d.excludeTypes(excludeTypes);
+        d.includeTypes(types);
+        f.setRoomState(d);
         f.create();
 
         expect(matrixService.createFilter).toHaveBeenCalledWith({
-            types: types,
-            not_types: excludeTypes
+            room: {
+                state: {
+                    types: types,
+                    not_types: excludeTypes
+                }
+            }
         });
     }));
 
@@ -168,11 +190,17 @@ describe('FilterService', function() {
         spyOn(matrixService, "createFilter").and.returnValue(defer.promise);
 
         var f = filterService.newFilter();
-        f.includeSenders(senders);
+        var d = filterService.newDefinition();
+        d.includeSenders(senders);
+        f.setRoomEvents(d);
         f.create();
 
         expect(matrixService.createFilter).toHaveBeenCalledWith({
-            senders: [senders]
+            room: {
+                events: {
+                    senders: [senders]
+                }
+            }
         });
     }));
 
@@ -183,11 +211,15 @@ describe('FilterService', function() {
         spyOn(matrixService, "createFilter").and.returnValue(defer.promise);
 
         var f = filterService.newFilter();
-        f.excludeSenders(senders);
+        var d = filterService.newDefinition();
+        d.excludeSenders(senders);
+        f.setPublicUserData(d);
         f.create();
 
         expect(matrixService.createFilter).toHaveBeenCalledWith({
-            not_senders: [senders]
+            public_user_data: {
+                not_senders: [senders]
+            }
         });
     }));
 
@@ -200,13 +232,19 @@ describe('FilterService', function() {
         spyOn(matrixService, "createFilter").and.returnValue(defer.promise);
 
         var f = filterService.newFilter();
-        f.includeRooms([roomA, roomB, roomC]);
-        f.excludeRooms(roomB);
+        var d = filterService.newDefinition();
+        d.includeRooms([roomA, roomB, roomC]);
+        d.excludeRooms(roomB);
+        f.setRoomState(d);
         f.create();
 
         expect(matrixService.createFilter).toHaveBeenCalledWith({
-            rooms: [roomA, roomC],
-            not_rooms: [roomB]
+            room: {
+                state: {
+                    rooms: [roomA, roomC],
+                    not_rooms: [roomB]
+                }
+            }
         });
     }));
 
@@ -219,13 +257,19 @@ describe('FilterService', function() {
         spyOn(matrixService, "createFilter").and.returnValue(defer.promise);
 
         var f = filterService.newFilter();
-        f.excludeRooms([roomA, roomB, roomC, roomB, roomB]);
-        f.includeRooms(roomB);
+        var d = filterService.newDefinition();
+        d.excludeRooms([roomA, roomB, roomC, roomB, roomB]);
+        d.includeRooms(roomB);
+        f.setRoomEvents(d);
         f.create();
 
         expect(matrixService.createFilter).toHaveBeenCalledWith({
-            not_rooms: [roomA, roomC],
-            rooms: [roomB]
+            room: {
+                events: {
+                    not_rooms: [roomA, roomC],
+                    rooms: [roomB]
+                }
+            }
         });
     }));
 
@@ -236,11 +280,15 @@ describe('FilterService', function() {
         spyOn(matrixService, "createFilter").and.returnValue(defer.promise);
 
         var f = filterService.newFilter();
-        f.excludeRooms(roomA);
+        var d = filterService.newDefinition();
+        d.excludeRooms(roomA);
+        f.setPrivateUserData(d);
         f.create();
 
         expect(matrixService.createFilter).toHaveBeenCalledWith({
-            not_rooms: [roomA]
+            private_user_data: {
+                not_rooms: [roomA]
+            }
         });
     }));
 });
