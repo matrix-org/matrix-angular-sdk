@@ -51,13 +51,29 @@ function ($window, $q, filterService) {
     var createFilter = function(requestEnum) {
         console.log("createFilter -> "+requestEnum);
         var f = undefined;
+        var displayableEventTypes = [
+            "m.room.message",
+            "m.room.topic",
+            "m.room.name",
+            "m.room.member"
+        ];
+
         if (requestEnum === that.REQUESTS.SCROLLBACK) {
             f = filterService.newFilter();
-            f.includeTypes("m.*");
+            var definition = filterService.newDefinition();
+            definition.includeTypes(displayableEventTypes);
+            f.setRoomEvents(definition);
         }
         else if (requestEnum === that.REQUESTS.SYNC) {
             f = filterService.newFilter();
-            f.includeTypes("m.*");
+            // get everything for room.state
+            var roomStateDefinition = filterService.newDefinition();
+            roomStateDefinition.includeTypes("*");
+            // get only displayable stuff for room.events
+            var roomEventsDefinition = filterService.newDefinition();
+            roomEventsDefinition.includeTypes(displayableEventTypes);
+            f.setRoomEvents(roomEventsDefinition);
+            f.setRoomState(roomStateDefinition);
         }
 
         if (f) {
