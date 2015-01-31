@@ -89,6 +89,20 @@ eventHandlerService) {
         killConnection("interrupted");
     };
 
+	// XXX: horrible compatibility shim to turn v2 events into v1 ones.
+	var mangleEvents = function(events) {
+		for (var i=0; i<events.length; i++) {
+			if (event.sender) {
+				event.user_id = event.sender;
+				delete event.sender;
+			}
+			if (event.unsigned && event.unsigned.age) {
+				event.age = event.unsigned.age;
+				delete event.unsigned.age;
+			}
+		}
+	};
+
     var doSync = function(deferred) {
         settings.shouldPoll = true;
         settings.isActive = true;
@@ -123,6 +137,16 @@ eventHandlerService) {
                 settings.from = response.data.next_batch;
 
                 // XXX FIXME TODO remap sender -> user_id and unsigned.age to age
+				mangleEvents(response.data.private_user_data);
+				mangleEvents(response.data.public_user_data);
+				for (var i=0; i<response.data.rooms; i++) {
+					for (var key in response.data.rooms[i].event_map) {
+						if (response.data.rooms[i].event_map.hasOwnProperty(key)) {
+							mangleEvents(response.data.response.data.rooms[i].event_map[key]);
+						}
+					}
+					mangleEvents(response.data.rooms[i].ephemeral); // XXX: is it this or typing?
+				}
                 
                 eventHandlerService.onSync(response.data, isLive);
                 
