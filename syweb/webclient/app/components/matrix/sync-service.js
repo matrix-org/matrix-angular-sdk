@@ -91,6 +91,7 @@ eventHandlerService) {
 
 	// XXX: horrible compatibility shim to turn v2 events into v1 ones.
 	var mangleEvents = function(events) {
+		if (!events) return;
 		for (var i=0; i<events.length; i++) {
 			if (event.sender) {
 				event.user_id = event.sender;
