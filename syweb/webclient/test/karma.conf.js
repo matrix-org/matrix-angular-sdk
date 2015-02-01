@@ -23,6 +23,7 @@ module.exports = function(config) {
       '../lib/angular.js',
       '../lib/angular-*.js',
       '../lib/jquery.peity.min.js',
+      '../lib/d3.v3.min.js',
       '../lib/ng-infinite-scroll-matrix.js',
       '../lib/ui-bootstrap*',
       '../lib/elastic.js', 
