@@ -160,11 +160,17 @@
             </div>
         </div>
     </div>
+
+    <div id="chart"
+        ng-hide="state.permission_denied" 
+        ng-style="{ 'visibility': state.messages_visibility }"
+    ></div>
     
     <div id="messageTableWrapper" 
          ng-hide="state.permission_denied" 
          ng-style="{ 'visibility': state.messages_visibility }"
          keep-scroll>
+         
         <table id="messageTable" infinite-scroll="paginateMore()" aria-live="polite" role="log">
             <tr ng-repeat="msg in room.aevents"
                 ng-class="(room.aevents[$index - 1].e.user_id !== msg.e.user_id ? 'differentUser' : '') + (msg.e.user_id === state.user_id ? ' mine' : '')" scroll-item>

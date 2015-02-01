@@ -25,7 +25,14 @@ angular.module('RoomController', ['ngSanitize', 'matrixFilter', 'mFileInput', 'a
     $scope.containsBingWord = eventHandlerService.eventContainsBingWord;
 
     // Room ids. Computed and resolved in onInit
-    $scope.room_id = undefined;
+	$scope.room_id = undefined;
+	
+	// ...but we need it to avoid dropping initial history on the floor.
+    if ($routeParams.room_id_or_alias) { // provided in the url
+        var room_id_or_alias;
+    	room_id_or_alias = decodeURIComponent($routeParams.room_id_or_alias);
+		if (room_id_or_alias && room_id_or_alias[0] == "!") $scope.room_id = room_id_or_alias;
+	}
 
     $scope.state = {
         user_id: matrixService.config().user_id,
@@ -181,7 +188,92 @@ angular.module('RoomController', ['ngSanitize', 'matrixFilter', 'mFileInput', 'a
             $scope.room = newRoom;
         }
     });
-    
+
+	var data = []; // d3 data
+	var updateChart; // function
+
+	(function() {
+		var margin = {top: 20, right: 20, bottom: 30, left: 50},
+		    width = 800 - margin.left - margin.right,
+		    height = $("#chart").innerHeight() - margin.top - margin.bottom;
+
+		var parseDate = d3.time.format("%H:%M:%S").parse;
+
+		var x = d3.time.scale()
+		    .range([0, width]);
+
+		var y = d3.scale.linear()
+		    .range([height, 0]);
+
+		var xAxis = d3.svg.axis()
+		    .scale(x)
+		    .orient("bottom");
+
+		var yAxis = d3.svg.axis()
+		    .scale(y)
+		    .orient("left");
+
+		var line = d3.svg.line()
+		    .x(function(d) { return x(d.time); })
+		    .y(function(d) { return y(d.val); });
+
+		var svg = d3.select("#chart").append("svg")
+		    .attr("width", width + margin.left + margin.right)
+		    .attr("height", height + margin.top + margin.bottom)
+		  .append("g")
+		    .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+		svg.append("g")
+		    .attr("class", "x axis")
+		    .attr("transform", "translate(0," + height + ")")
+		    .call(xAxis);
+        
+		svg.append("g")
+		    .attr("class", "y axis")
+		    .call(yAxis)
+		  .append("text")
+		    .attr("transform", "rotate(-90)")
+		    .attr("y", 6)
+		    .attr("dy", ".71em")
+		    .style("text-anchor", "end")
+		    .text("rpm");
+        
+		svg.append("path")
+		    .datum(data)
+		    .attr("class", "line")
+		    .attr("d", line);
+		
+		updateChart = function() {
+			x.domain(d3.extent(data, function(d) { return d.time; }));
+			y.domain(d3.extent(data, function(d) { return d.val; }));
+
+			var sel = svg.transition();
+	        sel.select(".line")   // change the line
+	            .duration(150)
+	            .attr("d", line(data[0]));
+	        sel.select(".x.axis") // change the x axis
+	            .duration(150)
+	            .call(xAxis);
+	        sel.select(".y.axis") // change the y axis
+	            .duration(150)
+	            .call(yAxis);
+			};
+		
+	})();
+	
+	
+    $scope.$on(eventHandlerService.MSG_EVENT, function(ngEvent, event, isLive) {
+		if (event.room_id === $scope.room_id) { // update our D3 viz
+			if (event.content.msgtype === "uk.org.leonerd.EngineData") {
+				data.push({
+					time: event.origin_server_ts,
+					val: event.content.rpm,
+				});
+				updateChart();
+			}
+		}
+	});
+	
     $scope.$on(eventHandlerService.MEMBER_EVENT, function(ngEvent, event, isLive) {
         // if there is a live event affecting us
         if (isLive && event.room_id === $scope.room_id && event.state_key === $scope.state.user_id) {
