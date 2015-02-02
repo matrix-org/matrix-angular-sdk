@@ -89,6 +89,12 @@ eventHandlerService) {
         killConnection("interrupted");
     };
 
+    var setEventKeys = function(event, room_id, event_id) {
+        event.room_id = room_id;
+        event.event_id = event_id;
+        return event;
+    };
+
     // XXX: horrible compatibility shim to turn v2 events into v1 ones.
     var mangleEvents = function(events) {
         if (!events) return;
@@ -145,6 +151,11 @@ eventHandlerService) {
 					for (var key in response.data.rooms[i].event_map) {
 						if (response.data.rooms[i].event_map.hasOwnProperty(key)) {
 							mangleEvents([response.data.rooms[i].event_map[key]]);
+                            setEventKeys(
+                                response.data.rooms[i].event_map[key],
+                                response.data.rooms[i].room_id,
+                                key
+                            );
 						}
 					}
 					mangleEvents(response.data.rooms[i].ephemeral); // XXX: is it this or typing?

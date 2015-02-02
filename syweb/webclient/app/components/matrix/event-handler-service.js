@@ -243,7 +243,6 @@ function(matrixService, $rootScope, $window, $q, $timeout, $filter, mPresence, n
         // =======================
         
         var room = modelService.getRoom(event.room_id);
-        
         if (event.user_id !== matrixService.config().user_id) {
             room.addMessageEvent(event, !isLiveEvent);
             if (isLiveEvent) {
@@ -483,9 +482,8 @@ function(matrixService, $rootScope, $window, $q, $timeout, $filter, mPresence, n
         onSync: function(sync, isLive) {
             for (var i=0; i<sync.rooms.length; i++) {
                 var roomData = sync.rooms[i];
-
-                if (roomData.limited) {
-                    modelService.removeRoom(roomData.room_id);
+                var isUnknownRoom = modelService.getKnownRoom(roomData.room_id) === undefined;
+                if (roomData.limited || isUnknownRoom) {
                     var room = modelService.getRoom(roomData.room_id);
                     this.onRoomSync(room, roomData);
                 }
@@ -510,9 +508,8 @@ function(matrixService, $rootScope, $window, $q, $timeout, $filter, mPresence, n
                 " ("+response.state.length+" state events) "+
                 (response.events && response.events.batch ? response.events.batch.length : "No")+
                 " events");
-
             room.current_room_state.storeStateEvents(
-                unmapEvents(response.event_map,response.state)
+                unmapEvents(response.event_map, response.state)
             );
             room.old_room_state.storeStateEvents(
                 unmapEvents(response.event_map, response.state)
