@@ -250,7 +250,7 @@ angular.module('RoomController', ['ngSanitize', 'matrixFilter', 'mFileInput', 'a
 			var sel = svg.transition();
 	        sel.select(".line")   // change the line
 	            .duration(150)
-	            .attr("d", line(data[0]));
+	            .attr("d", line(data));
 	        sel.select(".x.axis") // change the x axis
 	            .duration(150)
 	            .call(xAxis);
