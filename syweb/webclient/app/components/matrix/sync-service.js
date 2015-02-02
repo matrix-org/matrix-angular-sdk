@@ -147,19 +147,21 @@ eventHandlerService) {
                 // XXX FIXME TODO remap sender -> user_id and unsigned.age to age
 				mangleEvents(response.data.private_user_data);
 				mangleEvents(response.data.public_user_data);
-				for (var i=0; i<response.data.rooms.length; i++) {
-					for (var key in response.data.rooms[i].event_map) {
-						if (response.data.rooms[i].event_map.hasOwnProperty(key)) {
-							mangleEvents([response.data.rooms[i].event_map[key]]);
-                            setEventKeys(
-                                response.data.rooms[i].event_map[key],
-                                response.data.rooms[i].room_id,
-                                key
-                            );
-						}
-					}
-					mangleEvents(response.data.rooms[i].ephemeral); // XXX: is it this or typing?
-				}
+                if (response.data.rooms) {
+    				for (var i=0; i<response.data.rooms.length; i++) {
+    					for (var key in response.data.rooms[i].event_map) {
+    						if (response.data.rooms[i].event_map.hasOwnProperty(key)) {
+    							mangleEvents([response.data.rooms[i].event_map[key]]);
+                                setEventKeys(
+                                    response.data.rooms[i].event_map[key],
+                                    response.data.rooms[i].room_id,
+                                    key
+                                );
+    						}
+    					}
+    					mangleEvents(response.data.rooms[i].ephemeral);
+    				}
+                }
                 
                 eventHandlerService.onSync(response.data, isLive);
                 
