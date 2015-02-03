@@ -44,6 +44,23 @@ angular.module('matrixWebClient')
         }
     };
 }])
+.directive('errSrc', function() {
+    // This directive provides "fallback" functionality in case ng-src fails with
+    // an error. This is useful when loading images, which can display a placeholder
+    // on 404, rather than an ugly broken link.
+    return {
+        link: function(scope, element, attrs) {
+            element.on('error', function() {
+                if (attrs.src != attrs.errSrc) {
+                    attrs.$set('src', attrs.errSrc);
+                }
+            });
+            scope.$on('$destroy', function() {
+                element.off("error");
+            });
+        }
+    }
+})
 .directive('asjson', function() {
     return {
         restrict: 'A',
