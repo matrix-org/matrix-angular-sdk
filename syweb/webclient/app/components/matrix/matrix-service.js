@@ -698,6 +698,25 @@ angular.module('matrixService', [])
 
             return doBaseRequest(url.base, "POST", url.path, url.params, file, headers, $httpParams);
         },
+
+        getIdenticonUri: function(identiconString, width, height) {
+            if (!identiconString) {
+                return;
+            }
+            if (!width) {
+                width = 96;
+            }
+            if (!height) {
+                height = 96;
+            }
+            var params = {
+                width: width,
+                height: height
+            };
+
+            var prefix = "/_matrix/media/v1/identicon/";
+            return config.homeserver + prefix + encodeURIComponent(identiconString) + (Object.keys(params).length === 0 ? "" : ("?" + jQuery.param(params)));
+        },
         
         /**
          * Get the content repository url with query parameters. This is useful

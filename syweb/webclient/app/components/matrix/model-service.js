@@ -368,6 +368,13 @@ function(matrixService, $rootScope, $q) {
                 return matrixService.getHttpUriForMxc(uri, width, height, resizeMethod);
             }
             return uri;
+        },
+        identicon: function(width, height) {
+            var userId = undefined;
+            if (this.event && this.event.user_id) {
+                userId = this.event.user_id;
+            }
+            return matrixService.getIdenticonUri(userId, width, height);
         }
     };
     
