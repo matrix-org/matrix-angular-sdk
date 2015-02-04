@@ -815,6 +815,14 @@ textarea, input {
     color: #00F;
 }
 
+.messageNotice {
+    color: #555;
+}
+
+.avatarNotice {
+    opacity: 0.5;
+}
+
 #room-fullscreen-image {
     position: absolute;
     top: 0px;

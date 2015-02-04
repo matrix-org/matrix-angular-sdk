@@ -183,7 +183,8 @@
                           this by reading off the m.presence url -->
                     <img class="avatarImage mouse-pointer" ng-src="{{ msg.httpUri(msg.sender.event.content.avatar_url, 96, 96, 'crop') || msg.httpUri(room.now.members[msg.e.user_id].event.content.avatar_url, 96, 96, 'crop') || msg.identicon() }}"
                     err-src="img/default-profile.png" width="32" height="32" title="{{msg.e.user_id}}"
-                         ng-hide="room.aevents[$index - 1].e.user_id === msg.e.user_id || msg.e.user_id === state.user_id" ng-click="$parent.goToUserPage(msg.e.user_id)"/>
+                         ng-hide="room.aevents[$index - 1].e.user_id === msg.e.user_id || msg.e.user_id === state.user_id" ng-click="$parent.goToUserPage(msg.e.user_id)"
+                         ng-class="msg.e.content.msgtype == 'm.notice' ? 'avatarNotice' : ''"/>
                 </td>
                 <td class="msg" ng-class="(!msg.e.content.membership && ('m.room.topic' !== msg.e.type && 'm.room.name' !== msg.e.type))? (msg.e.content.msgtype === 'm.emote' ? 'emote text' : 'text') : 'membership text'">
                     <div class="bubble" ng-dblclick="openJson(msg)" ng-mouseover="state.showTs = 1" ng-mouseout="state.showTs = 0">
@@ -227,6 +228,12 @@
 
                             <span ng-switch-when="m.text"
                                   class="message"
+                                  fix-width="false && msg.e.user_id === state.user_id" 
+                                  ng-class="containsBingWord(msg.event) && msg.e.user_id != state.user_id ? msg.css_class + ' messageBing' : msg.css_class"
+                                  ng-bind-html="(msg.e.content.format === 'org.matrix.custom.html') ? (msg.e.content.formatted_body | unsanitizedLinky:'_blank') : (msg.e.content.body | escapeHTML | unsanitizedLinky:'_blank') "/>
+
+                            <span ng-switch-when="m.notice"
+                                  class="message messageNotice"
                                   fix-width="false && msg.e.user_id === state.user_id" 
                                   ng-class="containsBingWord(msg.event) && msg.e.user_id != state.user_id ? msg.css_class + ' messageBing' : msg.css_class"
                                   ng-bind-html="(msg.e.content.format === 'org.matrix.custom.html') ? (msg.e.content.formatted_body | unsanitizedLinky:'_blank') : (msg.e.content.body | escapeHTML | unsanitizedLinky:'_blank') "/>
