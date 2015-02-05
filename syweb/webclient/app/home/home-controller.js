@@ -23,6 +23,7 @@ angular.module('HomeController', ['matrixService', 'eventHandlerService', 'Recen
     $scope.config = matrixService.config();
     $scope.httpUri = matrixService.getHttpUriForMxc;
     $scope.public_rooms = undefined;
+    $scope.favourite_rooms = [];
     $scope.newRoomId = "";
     $scope.feedback = "";
     
@@ -58,6 +59,13 @@ angular.module('HomeController', ['matrixService', 'eventHandlerService', 'Recen
                     if (room.aliases && room.aliases.length > 0) {
                         room.room_display_name = room.aliases[0];
                         room.room_alias = room.aliases[0];
+
+						if (room.room_alias == "#matrix:matrix.org" || 
+							room.room_alias == "#matrix-dev:matrix.org" || 
+							room.room_alias == "#matrix-fr:matrix.org")
+						{
+							room.is_favourite = true;
+						}
                     }
                     else if (room.name) {
                         room.room_display_name = room.name;

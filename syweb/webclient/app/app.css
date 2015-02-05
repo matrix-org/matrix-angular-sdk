@@ -396,6 +396,7 @@ textarea, input {
 
 .roomHighlight {
     font-weight: bold;
+    background-color: #ffd;
 }
 
 .publicRoomSpinner {
