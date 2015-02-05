@@ -115,8 +115,30 @@ angular.module('notificationService', ['matrixService'])
             }
         },
 
+        addGlobalRoomRule : function(room_id, actions) {
+            var body = {
+                actions: actions
+            }
+            return matrixService.addPushRule('global', 'room', room_id, body);
+        },
+
+        addGlobalSenderRule : function(sender_id, actions) {
+            var body = {
+                actions: actions
+            }
+            return matrixService.addPushRule('global', 'sender', sender_id, body);
+        },
+
         deleteGlobalContentRule: function(rule_id) {
-                return matrixService.deletePushRule('global', 'content', rule_id);
+            return matrixService.deletePushRule('global', 'content', rule_id);
+        },
+
+        deleteGlobalRoomRule: function(room_id) {
+            return matrixService.deletePushRule('global', 'room', room_id);
+        },
+
+        deleteGlobalSenderRule: function(sender_id) {
+            return matrixService.deletePushRule('global', 'sender', sender_id);
         },
     
         containsBingWord: function(userId, displayName, bingWords, content) {

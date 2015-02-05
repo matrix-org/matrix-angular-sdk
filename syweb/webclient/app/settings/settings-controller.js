@@ -16,9 +16,9 @@ limitations under the License.
 
 'use strict';
 
-angular.module('SettingsController', ['matrixService', 'mFileUpload', 'mFileInput'])
-.controller('SettingsController', ['$scope', 'matrixService', 'notificationService', 'mFileUpload', 'dialogService',
-                              function($scope, matrixService, notificationService, mFileUpload, dialogService) {
+angular.module('SettingsController', ['matrixService', 'modelService', 'eventHandlerService', 'mFileUpload', 'mFileInput'])
+.controller('SettingsController', ['$scope', 'matrixService', 'modelService', 'eventHandlerService', 'notificationService', 'mFileUpload', 'dialogService',
+                              function($scope, matrixService, modelService, eventHandlerService, notificationService, mFileUpload, dialogService) {
     // XXX: duplicated from register
     var generateClientSecret = function() {
         var ret = "";
@@ -46,6 +46,12 @@ angular.module('SettingsController', ['matrixService', 'mFileUpload', 'mFileInpu
     };
 
     $scope.content_rule_add_action = 'notify';
+    $scope.room_rule_add_action = 'notify';
+    $scope.sender_rule_add_action = 'notify';
+
+    eventHandlerService.waitForInitialSyncCompletion().then(function() {
+        $scope.rooms = modelService.getRooms();
+    });
     
     $scope.config = matrixService.config();
     
@@ -258,8 +264,36 @@ angular.module('SettingsController', ['matrixService', 'mFileUpload', 'mFileInpu
         });
     };
 
+    $scope.addRoomRule = function(room_id, actions) {
+        notificationService.addGlobalRoomRule(room_id, actions).then(function() {
+            notificationService.clearRulesCache();
+            fetchRules();
+        });
+    };
+
+    $scope.addSenderRule = function(sender_id, actions) {
+        notificationService.addGlobalSenderRule(sender_id, actions).then(function() {
+            notificationService.clearRulesCache();
+            fetchRules();
+        });
+    };
+
     $scope.deleteContentRule = function(rule) {
         notificationService.deleteGlobalContentRule(rule['rule_id']).then(function() {
+            notificationService.clearRulesCache();
+            fetchRules();
+        });
+    };
+
+    $scope.deleteRoomRule = function(rule) {
+        notificationService.deleteGlobalRoomRule(rule['rule_id']).then(function() {
+            notificationService.clearRulesCache();
+            fetchRules();
+        });
+    };
+
+    $scope.deleteSenderRule = function(rule) {
+        notificationService.deleteGlobalSenderRule(rule['rule_id']).then(function() {
             notificationService.clearRulesCache();
             fetchRules();
         });

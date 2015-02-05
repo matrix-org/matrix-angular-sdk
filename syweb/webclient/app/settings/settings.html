@@ -64,7 +64,47 @@
                                 <option value="notify">Always Notify</option>
                                 <option value="dont_notify">Never Notify</option>
                             </select>
-                            <input type="submit" value="Add Word" />
+                            <input type="submit" value="Add" ng-disabled="!content_rule_add_input" />
+                        </form>
+                    </li>
+                </ul>
+            </div>
+            <h4>Rooms</h4>
+            <div class="section">
+                <ul>
+                    <li ng-repeat="rule in settings.rules.room">
+                        <button  ng-click="deleteRoomRule(rule)" ng-disabled="rule.default">Delete</button>
+                        '{{rooms[rule.rule_id].name}}': <span ng-repeat="a in rule.actions"><i>{{stringForAction(a)}}</i> </span>
+                    </li>
+                    <li>
+                        <form ng-submit="addRoomRule(room_rule_add_input, [ room_rule_add_action ])">
+                            <select ng-model="room_rule_add_input">
+                                <option ng-repeat="(room_id, room) in rooms" value="{{room_id}}">{{room.name}}</option>
+                            </select>
+                            <select ng-model="room_rule_add_action">
+                                <option value="notify">Always Notify</option>
+                                <option value="dont_notify">Never Notify</option>
+                            </select>
+                            <input type="submit" value="Add" ng-disabled="!room_rule_add_input" />
+                        </form>
+                    </li>
+                </ul>
+            </div>
+            <h4>Senders</h4>
+            <div class="section">
+                <ul>
+                    <li ng-repeat="rule in settings.rules.sender">
+                        <button  ng-click="deleteSenderRule(rule)" ng-disabled="rule.default">Delete</button>
+                        '{{rule.rule_id}}': <span ng-repeat="a in rule.actions"><i>{{stringForAction(a)}}</i> </span>
+                    </li>
+                    <li>
+                        <form ng-submit="addSenderRule(sender_rule_add_input, [ sender_rule_add_action ])">
+                            <input type="text" ng-model="sender_rule_add_input" />
+                            <select ng-model="sender_rule_add_action">
+                                <option value="notify">Always Notify</option>
+                                <option value="dont_notify">Never Notify</option>
+                            </select>
+                            <input type="submit" value="Add" ng-disabled="!sender_rule_add_input" />
                         </form>
                     </li>
                 </ul>
