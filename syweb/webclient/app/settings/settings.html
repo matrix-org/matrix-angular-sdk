@@ -47,6 +47,30 @@
             </table>
         </div>
         <br/>
+
+        <h3>Notifications</h3>
+        <div class="section">
+            <h4>Words to Alert On</h4>
+            <div class="section">
+                <ul>
+                    <li ng-repeat="rule in settings.rules.content">
+                        <button  ng-click="deleteContentRule(rule)" ng-disabled="rule.default">Delete</button>
+                        '{{rule.pattern}}': <span ng-repeat="a in rule.actions"><i>{{stringForAction(a)}}</i> </span>
+                    </li>
+                    <li>
+                        <form ng-submit="addContentRule(content_rule_add_input, [ content_rule_add_action ])">
+                            <input type="text" ng-model="content_rule_add_input" />
+                            <select ng-model="content_rule_add_action">
+                                <option value="notify">Always Notify</option>
+                                <option value="dont_notify">Never Notify</option>
+                            </select>
+                            <input type="submit" value="Add Word" />
+                        </form>
+                    </li>
+                </ul>
+            </div>
+        </div>
+        <br/>
         
         <h3>Desktop notifications</h3>
         <div class="section" ng-switch="settings.notifications">

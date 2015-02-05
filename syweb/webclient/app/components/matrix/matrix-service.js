@@ -871,6 +871,20 @@ angular.module('matrixService', [])
 
         getTurnServer: function() {
             return doRequest("GET", "/voip/turnServer");
+        },
+
+        getPushRules: function() {
+            return doRequest("GET", "/pushrules/");
+        },
+
+        addPushRule: function(scope, kind, rule_id, body) {
+            var path = "/pushrules/"+scope+"/"+kind+"/"+rule_id;
+            return doRequest("PUT", path, undefined, body);
+        },
+
+        deletePushRule: function(scope, kind, rule_id) {
+            var path = "/pushrules/"+scope+"/"+kind+"/"+rule_id;
+            return doRequest("DELETE", path);
         }
 
     };
