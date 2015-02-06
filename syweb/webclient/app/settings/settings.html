@@ -58,7 +58,7 @@
                         '{{rule.pattern}}': <span ng-repeat="a in rule.actions"><i>{{stringForAction(a)}}</i> </span>
                     </li>
                     <li>
-                        <form ng-submit="addContentRule(content_rule_add_input, [ rule_add_action.content ])">
+                        <form ng-submit="addContentRule(content_rule_add_input, [ rule_add_action.content ]); content_rule_add_input = '';">
                             <input type="text" ng-model="content_rule_add_input" />
                             <select ng-model="rule_add_action.content">
                                 <option value="notify">Always Notify</option>
@@ -98,7 +98,7 @@
                         '{{rule.rule_id}}': <span ng-repeat="a in rule.actions"><i>{{stringForAction(a)}}</i> </span>
                     </li>
                     <li>
-                        <form ng-submit="addSenderRule(sender_rule_add_input, [ rule_add_action.sender ])">
+                        <form ng-submit="addSenderRule(sender_rule_add_input, [ rule_add_action.sender ]); sender_rule_add_input = '';">
                             <input type="text" ng-model="sender_rule_add_input" />
                             <select ng-model="rule_add_action.sender">
                                 <option value="notify">Always Notify</option>
