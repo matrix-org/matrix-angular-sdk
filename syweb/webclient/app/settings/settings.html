@@ -48,10 +48,26 @@
         </div>
         <br/>
 
-        <h3>Notifications</h3>
+        <h3>Push Notifications</h3>
         <div class="section">
-            <h4>Words to Alert On</h4>
+            <p>
+                Rules are applied in order; the first rule which matches defines the outcome for the message.<br/>
+                So: Per-word notifications are more important than per-room notifications which are more important than per-sender notifications.<br/>
+                For multiple rules of the same kind, the first one in the list that matches takes priority.<br/>
+            </p>
+            <h4>Per-Word notifications</h4>
             <div class="section">
+                <p>
+                    Words match case insensitively, and may include a *
+                    wildcard. So:<br/>
+                    <b>foo</b> matches the string <i>foo</i>
+                    surrounded by word delimiters (e.g. punctuation and
+                    whitespace or start/end of line).<br/>
+                    <b>foo*</b> matches any
+                    such word that begins <i>foo</i>.<br/>
+                    <b>*foo*</b> matches any
+                    such word which includes the 3 letters <i>foo</i>.
+                </p>
                 <ul>
                     <li ng-repeat="rule in settings.rules.content">
                         <button  ng-click="deleteContentRule(rule)" ng-disabled="rule.default">Delete</button>
@@ -69,17 +85,17 @@
                     </li>
                 </ul>
             </div>
-            <h4>Rooms</h4>
+            <h4>Per-Room notifications</h4>
             <div class="section">
                 <ul>
                     <li ng-repeat="rule in settings.rules.room">
                         <button  ng-click="deleteRoomRule(rule)" ng-disabled="rule.default">Delete</button>
-                        '{{rooms[rule.rule_id].name}}': <span ng-repeat="a in rule.actions"><i>{{stringForAction(a)}}</i> </span>
+                        Room: '{{rooms[rule.rule_id].name}}': <span ng-repeat="a in rule.actions"><i>{{stringForAction(a)}}</i> </span>
                     </li>
                     <li>
                         <form ng-submit="addRoomRule(room_rule_add_input, [ rule_add_action.room ])">
                             <select ng-model="room_rule_add_input">
-                                <option ng-repeat="(room_id, room) in rooms" value="{{room_id}}">{{room.name}}</option>
+                                <option ng-repeat="(room_id, room) in rooms" value="{{room_id}}">{{room.name}} (Room)</option>
                             </select>
                             <select ng-model="rule_add_action.room">
                                 <option value="notify">Always Notify</option>
@@ -90,8 +106,9 @@
                     </li>
                 </ul>
             </div>
-            <h4>Senders</h4>
+            <h4>Per-Sender notifications</h4>
             <div class="section">
+                <p>e.g. <b>@user:matrix.org</b></p>
                 <ul>
                     <li ng-repeat="rule in settings.rules.sender">
                         <button  ng-click="deleteSenderRule(rule)" ng-disabled="rule.default">Delete</button>
@@ -113,6 +130,9 @@
         <br/>
         
         <h3>Desktop notifications</h3>
+        <p>
+            <i><b>These are currently not synchronised with Push Notification settings, but will be shortly...</b></i>
+        </p>
         <div class="section" ng-switch="settings.notifications">
             <div ng-switch-when="granted">
                 <div>
