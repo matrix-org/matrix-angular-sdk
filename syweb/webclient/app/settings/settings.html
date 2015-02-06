@@ -47,6 +47,70 @@
             </table>
         </div>
         <br/>
+
+        <h3>Notifications</h3>
+        <div class="section">
+            <h4>Words to Alert On</h4>
+            <div class="section">
+                <ul>
+                    <li ng-repeat="rule in settings.rules.content">
+                        <button  ng-click="deleteContentRule(rule)" ng-disabled="rule.default">Delete</button>
+                        '{{rule.pattern}}': <span ng-repeat="a in rule.actions"><i>{{stringForAction(a)}}</i> </span>
+                    </li>
+                    <li>
+                        <form ng-submit="addContentRule(content_rule_add_input, [ rule_add_action.content ]); content_rule_add_input = '';">
+                            <input type="text" ng-model="content_rule_add_input" />
+                            <select ng-model="rule_add_action.content">
+                                <option value="notify">Always Notify</option>
+                                <option value="dont_notify">Never Notify</option>
+                            </select>
+                            <input type="submit" value="Add" ng-disabled="!content_rule_add_input" />
+                        </form>
+                    </li>
+                </ul>
+            </div>
+            <h4>Rooms</h4>
+            <div class="section">
+                <ul>
+                    <li ng-repeat="rule in settings.rules.room">
+                        <button  ng-click="deleteRoomRule(rule)" ng-disabled="rule.default">Delete</button>
+                        '{{rooms[rule.rule_id].name}}': <span ng-repeat="a in rule.actions"><i>{{stringForAction(a)}}</i> </span>
+                    </li>
+                    <li>
+                        <form ng-submit="addRoomRule(room_rule_add_input, [ rule_add_action.room ])">
+                            <select ng-model="room_rule_add_input">
+                                <option ng-repeat="(room_id, room) in rooms" value="{{room_id}}">{{room.name}}</option>
+                            </select>
+                            <select ng-model="rule_add_action.room">
+                                <option value="notify">Always Notify</option>
+                                <option value="dont_notify">Never Notify</option>
+                            </select>
+                            <input type="submit" value="Add" ng-disabled="!room_rule_add_input" />
+                        </form>
+                    </li>
+                </ul>
+            </div>
+            <h4>Senders</h4>
+            <div class="section">
+                <ul>
+                    <li ng-repeat="rule in settings.rules.sender">
+                        <button  ng-click="deleteSenderRule(rule)" ng-disabled="rule.default">Delete</button>
+                        '{{rule.rule_id}}': <span ng-repeat="a in rule.actions"><i>{{stringForAction(a)}}</i> </span>
+                    </li>
+                    <li>
+                        <form ng-submit="addSenderRule(sender_rule_add_input, [ rule_add_action.sender ]); sender_rule_add_input = '';">
+                            <input type="text" ng-model="sender_rule_add_input" />
+                            <select ng-model="rule_add_action.sender">
+                                <option value="notify">Always Notify</option>
+                                <option value="dont_notify">Never Notify</option>
+                            </select>
+                            <input type="submit" value="Add" ng-disabled="!sender_rule_add_input" />
+                        </form>
+                    </li>
+                </ul>
+            </div>
+        </div>
+        <br/>
         
         <h3>Desktop notifications</h3>
         <div class="section" ng-switch="settings.notifications">

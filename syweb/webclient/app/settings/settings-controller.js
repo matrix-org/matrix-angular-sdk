@@ -16,9 +16,9 @@ limitations under the License.
 
 'use strict';
 
-angular.module('SettingsController', ['matrixService', 'mFileUpload', 'mFileInput'])
-.controller('SettingsController', ['$scope', 'matrixService', 'mFileUpload', 'dialogService',
-                              function($scope, matrixService, mFileUpload, dialogService) {
+angular.module('SettingsController', ['matrixService', 'modelService', 'eventHandlerService', 'mFileUpload', 'mFileInput'])
+.controller('SettingsController', ['$scope', 'matrixService', 'modelService', 'eventHandlerService', 'notificationService', 'mFileUpload', 'dialogService',
+                              function($scope, matrixService, modelService, eventHandlerService, notificationService, mFileUpload, dialogService) {
     // XXX: duplicated from register
     var generateClientSecret = function() {
         var ret = "";
@@ -38,6 +38,22 @@ angular.module('SettingsController', ['matrixService', 'mFileUpload', 'mFileInpu
         matrixService.saveConfig();
         $scope.config = matrixService.config();
     };
+
+    function fetchRules() {
+        notificationService.getGlobalRulesets().then(function(rulesets) {
+            $scope.settings.rules = rulesets;
+        });
+    };
+
+    $scope.rule_add_action = {
+        content: "notify",
+        room: "notify",
+        sender: "notify"
+    };
+
+    eventHandlerService.waitForInitialSyncCompletion().then(function() {
+        $scope.rooms = modelService.getRooms();
+    });
     
     $scope.config = matrixService.config();
     
@@ -76,6 +92,7 @@ angular.module('SettingsController', ['matrixService', 'mFileUpload', 'mFileInpu
                 $scope.feedback = "Can't load avatar URL";
             } 
         );
+        fetchRules();
     };
 
     $scope.$watch("profile.avatarFile", function(newValue, oldValue) {
@@ -240,5 +257,58 @@ angular.module('SettingsController', ['matrixService', 'mFileUpload', 'mFileInpu
     
     $scope.toggleMute = function() {
         setMuteNotifications(!$scope.config.muteNotifications);
+    };
+
+    $scope.addContentRule = function(pattern, actions) {
+        notificationService.addGlobalContentRule(pattern, actions).then(function() {
+            notificationService.clearRulesCache();
+            fetchRules();
+        });
+    };
+
+    $scope.addRoomRule = function(room_id, actions) {
+        notificationService.addGlobalRoomRule(room_id, actions).then(function() {
+            notificationService.clearRulesCache();
+            fetchRules();
+        });
+    };
+
+    $scope.addSenderRule = function(sender_id, actions) {
+        notificationService.addGlobalSenderRule(sender_id, actions).then(function() {
+            notificationService.clearRulesCache();
+            fetchRules();
+        });
+    };
+
+    $scope.deleteContentRule = function(rule) {
+        notificationService.deleteGlobalContentRule(rule['rule_id']).then(function() {
+            notificationService.clearRulesCache();
+            fetchRules();
+        });
+    };
+
+    $scope.deleteRoomRule = function(rule) {
+        notificationService.deleteGlobalRoomRule(rule['rule_id']).then(function() {
+            notificationService.clearRulesCache();
+            fetchRules();
+        });
+    };
+
+    $scope.deleteSenderRule = function(rule) {
+        notificationService.deleteGlobalSenderRule(rule['rule_id']).then(function() {
+            notificationService.clearRulesCache();
+            fetchRules();
+        });
+    };
+
+    $scope.stringForAction = function(a) {
+        if (a == 'notify') {
+            return "Always Notify";
+        } else if (a == 'dont_notify') {
+            return "Never Notify";
+        } else if (a.set_tweak == 'sound') {
+            return "custom sound";
+        }
+        return "other action";
     };
 }]);

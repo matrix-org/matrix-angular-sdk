@@ -871,6 +871,23 @@ angular.module('matrixService', [])
 
         getTurnServer: function() {
             return doRequest("GET", "/voip/turnServer");
+        },
+
+        getPushRules: function() {
+            return doRequest("GET", "/pushrules/");
+        },
+
+        addPushRule: function(scope, kind, rule_id, body) {
+            // NB. Scope not uri encoded because devices need the '/'
+            var path = "/pushrules/"+scope+"/"+encodeURIComponent(kind)+
+                "/"+encodeURIComponent(rule_id);
+            return doRequest("PUT", path, undefined, body);
+        },
+
+        deletePushRule: function(scope, kind, rule_id) {
+            var path = "/pushrules/"+scope+"/"+encodeURIComponent(kind)+
+                "/"+encodeURIComponent(rule_id);
+            return doRequest("DELETE", path);
         }
 
     };

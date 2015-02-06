@@ -20,8 +20,8 @@ limitations under the License.
 This service manages notifications: enabling, creating and showing them. This
 also contains 'bing word' logic.
 */
-angular.module('notificationService', [])
-.factory('notificationService', ['$timeout', function($timeout) {
+angular.module('notificationService', ['matrixService'])
+.factory('notificationService', ['$timeout', '$q', 'matrixService', function($timeout, $q, matrixService) {
 
     var getLocalPartFromUserId = function(user_id) {
         if (!user_id) {
@@ -47,8 +47,99 @@ angular.module('notificationService', [])
             return e;
         }
     };
+
+    var rulesCache = null;
+    var ruleFetchPromise = null;
     
     return {
+
+        clearRulesCache : function() {
+            rulesCache = null;
+        },
+
+        getGlobalRulesets : function() {
+            var def = $q.defer();
+
+            if (!rulesCache && !ruleFetchPromise)  {
+                ruleFetchPromise = def.promise;
+                matrixService.getPushRules().then(function(rules) {
+                    rulesCache = rules.data;
+                    def.resolve(rulesCache.global);
+                }, function(err) {
+                    def.reject(err);
+                }).finally(function() {
+                    ruleFetchPromise = null;
+                });
+            } else if (ruleFetchPromise) {
+                ruleFetchPromise.then(function(rules) {
+                    def.resolve(rulesCache.global);
+                });
+            } else {
+                def.resolve(rulesCache.global);
+            }
+            return def.promise;
+        },
+
+        addGlobalContentRule : function(pattern, actions) {
+            var doIt = function() {
+                var body = {
+                    pattern: pattern,
+                    actions: actions
+                }
+                var suff = 0;
+                var rule_id = null; 
+
+                var currentIds = [];
+                for (var i = 0; i < rulesCache.global.content.length; i++) {
+                    currentIds.push(rulesCache.global.content[i].rule_id);
+                }
+
+                var specialchars = ['*', '[', ']', '?', '!'];
+
+                do {
+                    rule_id = pattern;
+                    for (var i = 0; i < specialchars.length; ++i) {
+                        rule_id = rule_id.replace(specialchars[i], '');
+                    }
+                    if (suff > 0) {
+                        rule_id += suff++;
+                    }
+                } while (currentIds.indexOf(rule_id) > -1);
+                return matrixService.addPushRule('global', 'content', rule_id, body);
+            };
+
+            if (!rulesCache) {
+                return this.getGlobalRulesets().then(doIt);
+            } else {
+                return doIt();
+            }
+        },
+
+        addGlobalRoomRule : function(room_id, actions) {
+            var body = {
+                actions: actions
+            }
+            return matrixService.addPushRule('global', 'room', room_id, body);
+        },
+
+        addGlobalSenderRule : function(sender_id, actions) {
+            var body = {
+                actions: actions
+            }
+            return matrixService.addPushRule('global', 'sender', sender_id, body);
+        },
+
+        deleteGlobalContentRule: function(rule_id) {
+            return matrixService.deletePushRule('global', 'content', rule_id);
+        },
+
+        deleteGlobalRoomRule: function(room_id) {
+            return matrixService.deletePushRule('global', 'room', room_id);
+        },
+
+        deleteGlobalSenderRule: function(sender_id) {
+            return matrixService.deletePushRule('global', 'sender', sender_id);
+        },
     
         containsBingWord: function(userId, displayName, bingWords, content) {
             // case-insensitive name check for user_id OR display_name if they exist
