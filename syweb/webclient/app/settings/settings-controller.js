@@ -45,9 +45,11 @@ angular.module('SettingsController', ['matrixService', 'modelService', 'eventHan
         });
     };
 
-    $scope.content_rule_add_action = 'notify';
-    $scope.room_rule_add_action = 'notify';
-    $scope.sender_rule_add_action = 'notify';
+    $scope.rule_add_action = {
+        content: "notify",
+        room: "notify",
+        sender: "notify"
+    };
 
     eventHandlerService.waitForInitialSyncCompletion().then(function() {
         $scope.rooms = modelService.getRooms();

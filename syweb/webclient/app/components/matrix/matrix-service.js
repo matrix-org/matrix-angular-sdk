@@ -878,12 +878,15 @@ angular.module('matrixService', [])
         },
 
         addPushRule: function(scope, kind, rule_id, body) {
-            var path = "/pushrules/"+scope+"/"+kind+"/"+rule_id;
+            // NB. Scope not uri encoded because devices need the '/'
+            var path = "/pushrules/"+scope+"/"+encodeURIComponent(kind)+
+                "/"+encodeURIComponent(rule_id);
             return doRequest("PUT", path, undefined, body);
         },
 
         deletePushRule: function(scope, kind, rule_id) {
-            var path = "/pushrules/"+scope+"/"+kind+"/"+rule_id;
+            var path = "/pushrules/"+scope+"/"+encodeURIComponent(kind)+
+                "/"+encodeURIComponent(rule_id);
             return doRequest("DELETE", path);
         }
 

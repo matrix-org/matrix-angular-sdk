@@ -58,9 +58,9 @@
                         '{{rule.pattern}}': <span ng-repeat="a in rule.actions"><i>{{stringForAction(a)}}</i> </span>
                     </li>
                     <li>
-                        <form ng-submit="addContentRule(content_rule_add_input, [ content_rule_add_action ])">
+                        <form ng-submit="addContentRule(content_rule_add_input, [ rule_add_action.content ])">
                             <input type="text" ng-model="content_rule_add_input" />
-                            <select ng-model="content_rule_add_action">
+                            <select ng-model="rule_add_action.content">
                                 <option value="notify">Always Notify</option>
                                 <option value="dont_notify">Never Notify</option>
                             </select>
@@ -77,11 +77,11 @@
                         '{{rooms[rule.rule_id].name}}': <span ng-repeat="a in rule.actions"><i>{{stringForAction(a)}}</i> </span>
                     </li>
                     <li>
-                        <form ng-submit="addRoomRule(room_rule_add_input, [ room_rule_add_action ])">
+                        <form ng-submit="addRoomRule(room_rule_add_input, [ rule_add_action.room ])">
                             <select ng-model="room_rule_add_input">
                                 <option ng-repeat="(room_id, room) in rooms" value="{{room_id}}">{{room.name}}</option>
                             </select>
-                            <select ng-model="room_rule_add_action">
+                            <select ng-model="rule_add_action.room">
                                 <option value="notify">Always Notify</option>
                                 <option value="dont_notify">Never Notify</option>
                             </select>
@@ -98,9 +98,9 @@
                         '{{rule.rule_id}}': <span ng-repeat="a in rule.actions"><i>{{stringForAction(a)}}</i> </span>
                     </li>
                     <li>
-                        <form ng-submit="addSenderRule(sender_rule_add_input, [ sender_rule_add_action ])">
+                        <form ng-submit="addSenderRule(sender_rule_add_input, [ rule_add_action.sender ])">
                             <input type="text" ng-model="sender_rule_add_input" />
-                            <select ng-model="sender_rule_add_action">
+                            <select ng-model="rule_add_action.sender">
                                 <option value="notify">Always Notify</option>
                                 <option value="dont_notify">Never Notify</option>
                             </select>
