@@ -1,5 +1,19 @@
 <div ng-controller="PaymentController" class="user" data-ng-init="onInit()">
 	<div id="wrapper">
-		Not implemented yet
+		<input type="button" ng-click="payNow()" value="Pay Now"/>
+		<form method=post action=https://api-3t.sandbox.paypal.com/nvp>
+			<input type=hidden name=USER value=API_username>
+			<input type=hidden name=PWD value=API_password>
+			<input type=hidden name=SIGNATURE value=API_signature>
+			<input type=hidden name=VERSION value=XX.0>
+			<input type=hidden name=PAYMENTREQUEST_0_PAYMENTACTION
+				value=Sale>
+			<input name=PAYMENTREQUEST_0_AMT value={{purchase.amount}}>
+			<input type=hidden name=RETURNURL
+				value={{payPal.returnUrl}}>
+			<input type=hidden name=CANCELURL
+				value={{payPal.cancelUrl}}>
+			<input type=submit name=METHOD value=SetExpressCheckout>
+		</form>
 	</div>
 </div>

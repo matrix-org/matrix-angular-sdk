@@ -17,8 +17,37 @@
 'use strict';
 
 angular.module('PaymentController', [])
-.controller('PaymentController', ['$scope', function($scope) {
+.controller('PaymentController', ['$scope', 'paymentService', 'dialogService',
+function($scope, paymentService, dialogService) {
+	$scope.payPal = {
+		returnUrl: "http://localhost:8000",
+		cancelUrl: "http://localhost:8001"
+	};
+	$scope.purchase = {
+		amount: 19.95
+	};
+
 	$scope.onInit = function() {
-		console.log("Loaded payment controller");
+		console.log("Loaded payment controller ");
+	};
+
+	$scope.payNow = function() {
+		paymentService.setExpressCheckout($scope.purchase.amount).then(function(r) {
+			console.log(r);
+		},
+		function(err) {
+			dialogService.showError(err);
+		});
+	}
+
+	// converts NVP to JSON
+	var nvpToJson = function(nvp) {
+		var pairs = nvp.split("&");
+		var output = {};
+		for (var i=0; i<pairs.length; i++) {
+			var nv = pairs[i].split("=");
+			output[nv[0]] = nv[1];
+		}
+		return output;
 	};
 }]);
