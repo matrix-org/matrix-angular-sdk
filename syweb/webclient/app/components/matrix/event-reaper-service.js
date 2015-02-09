@@ -45,8 +45,31 @@ function($rootScope, modelService, recentsService, matrixService, eventHandlerSe
 
     var enabled = false;
     var viewingRoom = undefined;
+
+    var currentlyReaping = [];
+    var isBeingReaped = function(roomId) {
+        for (var i=0; i<currentlyReaping.length; i++) {
+            if (currentlyReaping[i] === roomId) {
+                return true;
+            }
+        }
+        return false;
+    };
+    var removeFromReapingList = function(roomId) {
+        for (var i=0; i<currentlyReaping.length; i++) {
+            if (currentlyReaping[i] === roomId) {
+                currentlyReaping.splice(i, 1);
+                return;
+            }
+        }
+    };
     
     var reapRoom = function(roomIdToReap) {
+        if (isBeingReaped(roomIdToReap)) {
+            return;
+        }
+        currentlyReaping.push(roomIdToReap);
+
         matrixService.roomInitialSync(roomIdToReap, 30).then(
         function(response) {
             console.log(" ( '-')_/` (O_O)' Reaping "+roomIdToReap);
@@ -58,9 +81,11 @@ function($rootScope, modelService, recentsService, matrixService, eventHandlerSe
             eventHandlerService.wipeDuplicateDetection(roomIdToReap);
             eventHandlerService.handleRoomInitialSync(room, response.data);
             console.log(" `\\_('-' ) (x_x) Reaped "+roomIdToReap);
+            removeFromReapingList(roomIdToReap);
         },
         function(error) {
             console.error("Failed to reap "+roomIdToReap+" : "+JSON.stringify(error));
+            removeFromReapingList(roomIdToReap);
         });
     };
 
