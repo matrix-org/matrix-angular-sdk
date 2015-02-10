@@ -372,7 +372,7 @@ describe('ModelService', function() {
         
         var roomMember = modelService.getMember(roomId, "@beth:matrix.org");
         expect(roomMember.power_level).toEqual(500);
-        expect(roomMember.power_level_norm).toEqual(50);
+        expect(roomMember.power_level_norm).toEqual(12);
 
         
     }));
@@ -435,7 +435,7 @@ describe('ModelService', function() {
         
         var roomMember = modelService.getMember(roomId, "@adam:matrix.org");
         expect(roomMember.power_level).toEqual(70);
-        expect(roomMember.power_level_norm).toEqual(100);
+        expect(roomMember.power_level_norm).toEqual(25);
     }));
     
     it('should update new room members with their latest power level. (m.room.power_levels THEN m.room.member)', inject(
@@ -461,7 +461,7 @@ describe('ModelService', function() {
         });
         var roomMember = modelService.getMember(roomId, "@adam:matrix.org");
         expect(roomMember.power_level).toEqual(70);
-        expect(roomMember.power_level_norm).toEqual(100);
+        expect(roomMember.power_level_norm).toEqual(25);
     }));
     
     it('should set event.sender when a live message is added.', inject(

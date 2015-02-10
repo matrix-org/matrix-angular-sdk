@@ -310,7 +310,7 @@ function(matrixService, $rootScope, $q) {
             var defaultPowerLevel = powerLevelEvent.content.users_default === undefined ? 0 : powerLevelEvent.content.users_default;
             
             roomMember.power_level = powerLevelEvent.content.users[user_id] === undefined ? defaultPowerLevel : powerLevelEvent.content.users[user_id];
-            roomMember.power_level_norm = (roomMember.power_level * 100) / maxPowerLevel;
+            roomMember.power_level_norm = ((roomMember.power_level * 25) / maxPowerLevel) | 0;
         },
         
         storeStateEvents: function storeState(events) {

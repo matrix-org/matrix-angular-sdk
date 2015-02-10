@@ -155,7 +155,7 @@
                 <!-- <div class="userPowerLevel" ng-style="{'width': member.powerLevelNorm +'%'}"></div> -->
             </div>
             <div class="userName">
-<!--                <pie-chart ng-show="member.power_level_norm" data="[ (member.power_level_norm + 0), (100 - member.power_level_norm) ]"></pie-chart> -->
+                <img style="position: relative; top: 2px;" ng-show="member.power_level_norm" width="12" height="12" alt="power: {{member.power_level_norm}}" src="img/p/p{{ member.power_level_norm }}.png"/>
                 {{ member.id | mUserDisplayName:room_id:true }}
                 <span ng-show="member.user.event.content.last_active_ago" style="color: #aaa">({{ member.user.event.content.last_active_ago + (now - member.user.last_updated) | duration }})</span>
             </div>
