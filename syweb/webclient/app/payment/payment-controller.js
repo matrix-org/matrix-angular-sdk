@@ -17,37 +17,18 @@
 'use strict';
 
 angular.module('PaymentController', [])
-.controller('PaymentController', ['$scope', 'paymentService', 'dialogService',
-function($scope, paymentService, dialogService) {
-	$scope.payPal = {
-		returnUrl: "http://localhost:8000",
-		cancelUrl: "http://localhost:8001"
-	};
+.controller('PaymentController', ['$scope', '$sce', '$location', 'dialogService',
+function($scope, $sce, $location, dialogService) {
 	$scope.purchase = {
-		amount: 19.95
+		number: "",
+		amount: 5.00,
+		url: $sce.trustAsResourceUrl(webClientConfig.paymentUrl)
 	};
 
 	$scope.onInit = function() {
-		console.log("Loaded payment controller ");
-	};
-
-	$scope.payNow = function() {
-		paymentService.setExpressCheckout($scope.purchase.amount).then(function(r) {
-			console.log(r);
-		},
-		function(err) {
-			dialogService.showError(err);
-		});
-	}
-
-	// converts NVP to JSON
-	var nvpToJson = function(nvp) {
-		var pairs = nvp.split("&");
-		var output = {};
-		for (var i=0; i<pairs.length; i++) {
-			var nv = pairs[i].split("=");
-			output[nv[0]] = nv[1];
+		if (!$scope.purchase.url) {
+			console.error("No configured payment URL!");
+			$location.url("/");
 		}
-		return output;
 	};
 }]);
