@@ -17,10 +17,10 @@
 'use strict';
 
 angular.module('PaymentController', [])
-.controller('PaymentController', ['$scope', '$sce', '$location', 'dialogService',
-function($scope, $sce, $location, dialogService) {
+.controller('PaymentController', ['$scope', '$sce', '$location', 'matrixService',
+function($scope, $sce, $location, matrixService) {
 	$scope.purchase = {
-		number: "",
+		user: matrixService.config().user_id,
 		amount: 5.00,
 		url: $sce.trustAsResourceUrl(webClientConfig.paymentUrl)
 	};
