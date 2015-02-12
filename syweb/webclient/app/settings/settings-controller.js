@@ -311,4 +311,6 @@ angular.module('SettingsController', ['matrixService', 'modelService', 'eventHan
         }
         return "other action";
     };
+
+    $scope.paymentUrl = webClientConfig.paymentUrl;
 }]);

@@ -171,6 +171,14 @@
         </div>
         <br/>
 
+        <div class="section" ng-show="paymentUrl">
+            <h3>Account Credit</h3>
+            To send SMS via Matrix, you need to have credit on your account.
+            <br/>
+            <button ng-click='goToPage("payment")'>Get Credit</button>
+        </div>
+        
+
         <div class="feedback">{{ feedback }}</div>
         
 
