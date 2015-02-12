@@ -17,8 +17,9 @@ limitations under the License.
 'use strict';
 
 angular.module('SettingsController', ['matrixService', 'modelService', 'eventHandlerService', 'mFileUpload', 'mFileInput'])
-.controller('SettingsController', ['$scope', 'matrixService', 'modelService', 'eventHandlerService', 'notificationService', 'mFileUpload', 'dialogService',
-                              function($scope, matrixService, modelService, eventHandlerService, notificationService, mFileUpload, dialogService) {
+.controller('SettingsController', 
+['$scope', 'matrixService', 'modelService', 'eventHandlerService', 'notificationService', 'mFileUpload', 'dialogService', 'paymentService',
+function($scope, matrixService, modelService, eventHandlerService, notificationService, mFileUpload, dialogService, paymentService) {
     // XXX: duplicated from register
     var generateClientSecret = function() {
         var ret = "";
@@ -312,5 +313,8 @@ angular.module('SettingsController', ['matrixService', 'modelService', 'eventHan
         return "other action";
     };
 
-    $scope.paymentUrl = webClientConfig.paymentUrl;
+    $scope.payment = {
+        url: webClientConfig.paymentUrl,
+        credit: paymentService.getCredit()
+    };
 }]);
