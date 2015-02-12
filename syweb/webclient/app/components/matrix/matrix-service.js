@@ -762,8 +762,14 @@ angular.module('matrixService', [])
                 // these are thumbnailing params so they probably want the thumbnailing API...
                 prefix = "/_matrix/media/v1/thumbnail/";
             }
-            
-            return config.homeserver + prefix + serverAndMediaId + (Object.keys(params).length === 0 ? "" : ("?" + jQuery.param(params)));
+
+			var fragmentOffset = serverAndMediaId.indexOf("#"),
+				fragment = "";
+			if (fragmentOffset >= 0) {
+				fragment = serverAndMediaId.substr(fragmentOffset);
+				serverAndMediaId = serverAndMediaId.substr(0, fragmentOffset);
+			}
+            return config.homeserver + prefix + serverAndMediaId + (Object.keys(params).length === 0 ? "" : ("?" + jQuery.param(params))) + fragment;
         },
         
 

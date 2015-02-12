@@ -177,4 +177,17 @@ describe('EventReaperService', function() {
         
         expect(matrixService.roomInitialSync).toHaveBeenCalled();
     }));
+
+    it('should not reap a room whilst a reap of that room is ongoing.', inject(
+    function(eventReaperService) {
+        var roomId = "!foo:bar";
+        spyOn(matrixService, "roomInitialSync").and.callFake(function() {
+            return q.defer().promise;
+        });
+
+        eventReaperService.reap(roomId);
+        expect(matrixService.roomInitialSync).toHaveBeenCalled();
+        eventReaperService.reap(roomId);
+        expect(matrixService.roomInitialSync.calls.count()).toEqual(1);
+    }));
 });
