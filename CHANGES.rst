@@ -1,3 +1,23 @@
+Changes in Matrix Angular SDK 0.6.2 (2015-02-12)
+================================================
+Bug fixes:
+ - Fixed a bug which caused OpenWebRTC to occasionally fail.
+ - Fixed a bug which caused multiple room initial syncs to occur in rapid
+   succession.
+
+Features:
+ - Display a "Joining Room" dialog when joining rooms.
+ - Display identicons for users with no avatar.
+ - Display m.notice events with full formatting.
+ - Add push notification rules to settings.
+
+Improvements:
+ - Modified the red/blue notification colours to be more noticeable on a wider
+   range of displays.
+ - Highlight room invitations in blue.
+ - Calculate room names for rooms of 3+ members.
+ - Improved page load performance.
+
 Changes in Matrix Angular SDK 0.6.1 (2015-01-08)
 ================================================
 Bug fixes:
