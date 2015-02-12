@@ -17,13 +17,35 @@
 'use strict';
 
 angular.module('PaymentController', [])
-.controller('PaymentController', ['$scope', '$sce', '$location', 'matrixService',
-function($scope, $sce, $location, matrixService) {
+.controller('PaymentController',
+['$scope', '$sce', '$location', '$routeParams', 'matrixService',
+function($scope, $sce, $location, $routeParams, matrixService) {
 	$scope.purchase = {
 		user: matrixService.config().user_id,
 		amount: 5.00,
 		url: $sce.trustAsResourceUrl(webClientConfig.paymentUrl)
 	};
+
+	if ($routeParams.payment_state) {
+		$scope.status = {};
+		// the user has been redirected back here after payment
+		if ($routeParams.payment_state === "success") {
+			$scope.status.title = "Success";
+			$scope.status.description = "Your payment was processed successfully.";
+		}
+		else if ($routeParams.payment_state === "fail") {
+			$scope.status.title = "Failed";
+			$scope.status.description = "Your payment not processed correctly.";
+		}
+		else if ($routeParams.payment_state === "cancel") {
+			$scope.status.title = "Cancelled";
+			$scope.status.description = "Your payment was cancelled.";
+		}
+		else {
+			console.error("Unknown payment state");
+			$location.url("/");
+		}
+	}
 
 	$scope.onInit = function() {
 		if (!$scope.purchase.url) {
