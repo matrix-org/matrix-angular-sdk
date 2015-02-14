@@ -2,7 +2,8 @@
 
 /** iPads **/
 @media all and (max-device-width: 768px) {
-    #roomRecentsTableWrapper {
+    #roomRecentsTableWrapper,
+    #sidebar-resizer {
         display: none;
     }
 }
