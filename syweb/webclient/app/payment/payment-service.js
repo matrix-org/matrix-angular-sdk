@@ -29,7 +29,7 @@ function (matrixService, modelService) {
             if (!createEvent || createEvent.user_id !== "@sms:openmarket.com") {
                 continue;
             }
-            var creditEvent = room.now.state("com.openmarket.sms.credit", me);
+            var creditEvent = room.now.state("com.openmarket.credit", me);
             if (creditEvent && creditEvent.content) {
                 if (creditEvent.content.credit) {
                     return creditEvent.content.credit;
