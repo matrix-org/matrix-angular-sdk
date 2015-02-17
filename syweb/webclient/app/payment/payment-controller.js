@@ -18,12 +18,13 @@
 
 angular.module('PaymentController', [])
 .controller('PaymentController',
-['$scope', '$sce', '$location', '$routeParams', 'matrixService',
-function($scope, $sce, $location, $routeParams, matrixService) {
+['$scope', '$sce', '$location', '$routeParams', 'matrixService', 'dialogService',
+function($scope, $sce, $location, $routeParams, matrixService, dialogService) {
 	$scope.purchase = {
 		user: matrixService.config().user_id,
 		amount: 5.00,
-		url: $sce.trustAsResourceUrl(webClientConfig.paymentUrl)
+		url: $sce.trustAsResourceUrl(webClientConfig.paymentUrl),
+		submitted: false
 	};
 
 	if ($routeParams.payment_state) {
@@ -46,6 +47,20 @@ function($scope, $sce, $location, $routeParams, matrixService) {
 			$location.url("/");
 		}
 	}
+
+	$scope.onSubmit = function($event) {
+		if($scope.purchase.amount <= 0) {
+			dialogService.showError("Must have a positive amount.");
+			$event.preventDefault();
+			return;
+		}
+		// prevent multiple clicks
+		if ($scope.purchase.submitted) {
+			$event.preventDefault();
+			return;
+		}
+		$scope.purchase.submitted = true;
+	};
 
 	$scope.onInit = function() {
 		if (!$scope.purchase.url) {

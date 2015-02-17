@@ -1,14 +1,12 @@
 <div ng-controller="PaymentController" class="user" data-ng-init="onInit()">
 	<div id="wrapper">
         This will top up the account: {{purchase.user}}
-		<form method="post" action={{purchase.url}}>
+		<form method="post" ng-submit="onSubmit($event)" action={{purchase.url}}>
             <input type="hidden" name="mxid" value="{{purchase.user}}"/>
 			<label>Amount: $</label>
 			<input type="number" name="amount" min="0.01" step="0.01" ng-model=purchase.amount />
 			<br/>
-			<input type="image" src="https://www.paypal.com/en_US/i/btn/btn_xpressCheckout.gif"
-			ng-disabled="purchase.amount == 0"
-			/>
+			<input type="image" src="https://www.paypal.com/en_US/i/btn/btn_xpressCheckout.gif"/>
 		</form>
 	</div>
 </div>
