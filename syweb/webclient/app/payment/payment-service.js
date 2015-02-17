@@ -27,7 +27,7 @@ function ($http, $window, matrixService, modelService) {
             if (!rooms.hasOwnProperty(roomId)) continue;
             var room = rooms[roomId];
             var createEvent = room.now.state("m.room.create");
-            if (createEvent && createEvent.user_id === "@sms:openmarket.com") {
+            if (createEvent && createEvent.user_id === "@sms:matrix.openmarket.com") {
                 return room;
             }
         }
