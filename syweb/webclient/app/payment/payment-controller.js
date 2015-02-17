@@ -35,7 +35,7 @@ function($scope, $sce, $location, $routeParams, matrixService) {
 		}
 		else if ($routeParams.payment_state === "fail") {
 			$scope.status.title = "Failed";
-			$scope.status.description = "Your payment not processed correctly.";
+			$scope.status.description = "Your payment was not processed correctly.";
 		}
 		else if ($routeParams.payment_state === "cancel") {
 			$scope.status.title = "Cancelled";
