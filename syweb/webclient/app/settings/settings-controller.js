@@ -315,14 +315,18 @@ function($scope, matrixService, modelService, eventHandlerService, notificationS
 
     $scope.payment = {
         url: webClientConfig.paymentUrl,
-        signedEula: webClientConfig.paymentEulaUrl ? paymentService.signedEula() : true,
         credit: paymentService.getCredit()
     };
 
-    $scope.showEula = function() {
+    $scope.getCredit = function() {
+        if (paymentService.hasAcceptedEula()) {
+            $scope.goToPage("payment");
+            return;
+        }
         paymentService.getEula().then(function(response) {
             dialogService.showConfirm("EULA", response.data).then(function(btn) {
                 paymentService.acceptEula();
+                $scope.goToPage("payment");
             },
             function(btn) {
                 console.log("EULA rejected.");

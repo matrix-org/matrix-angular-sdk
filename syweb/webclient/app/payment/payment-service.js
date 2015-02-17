@@ -17,11 +17,12 @@
 'use strict';
 
 angular.module('paymentService', [])
-.service('paymentService', ['$http', 'matrixService', 'modelService', 
-function ($http, matrixService, modelService) {
+.service('paymentService', ['$http', '$window', 'matrixService', 'modelService', 
+function ($http, $window, matrixService, modelService) {
+    var LS_EULA = "com.openmarket.eula";
+
     var getAccountRoom = function() {
         var rooms = modelService.getRooms();
-        var me = matrixService.config().user_id;
         for (var roomId in rooms) {
             if (!rooms.hasOwnProperty(roomId)) continue;
             var room = rooms[roomId];
@@ -33,28 +34,22 @@ function ($http, matrixService, modelService) {
     };
 
     this.getCredit = function() {
+        var me = matrixService.config().user_id;
         var room = getAccountRoom();
         if (room) {
             var creditEvent = room.now.state("com.openmarket.credit", me);
             if (creditEvent && creditEvent.content) {
                 if (creditEvent.content.credit) {
-                    return creditEvent.content.credit;
+                    if (creditEvent.content.currency == "USD") {
+                        return "$" + creditEvent.content.credit;
+                    }
+                    else {
+                        return creditEvent.content.credit + " " + creditEvent.content.currency;
+                    }
                 }
             }
         }
-        return 0.0;
-    };
-
-    this.signedEula = function() {
-        var room = getAccountRoom();
-        if (!room) {
-            return false;
-        }
-        var eulaEvent = room.now.state("com.openmarket.eula", me);
-        if (!eulaEvent || !eulaEvent.content) {
-            return false;
-        }
-        return eulaEvent.content.signed; 
+        return "$0";
     };
 
     this.getEula = function() {
@@ -68,5 +63,10 @@ function ($http, matrixService, modelService) {
 
     this.acceptEula = function() {
         console.log("Accepting EULA");
+        $window.localStorage.setItem(LS_EULA, true);
     };
+
+    this.hasAcceptedEula = function() {
+        return $window.localStorage.getItem(LS_EULA);
+    }
 }]);

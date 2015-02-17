@@ -18,8 +18,14 @@
 
 angular.module('PaymentController', [])
 .controller('PaymentController',
-['$scope', '$sce', '$location', '$routeParams', 'matrixService', 'dialogService',
-function($scope, $sce, $location, $routeParams, matrixService, dialogService) {
+['$scope', '$sce', '$location', '$routeParams', 'matrixService', 'dialogService', 'paymentService',
+function($scope, $sce, $location, $routeParams, matrixService, dialogService, paymentService) {
+	if (!paymentService.hasAcceptedEula()) {
+		console.error("Has not accepted EULA");
+		$location.url("/");
+		return;
+	}
+
 	$scope.purchase = {
 		user: matrixService.config().user_id,
 		amount: 5.00,
