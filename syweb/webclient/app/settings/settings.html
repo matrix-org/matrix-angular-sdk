@@ -196,7 +196,8 @@
             To send SMS via Matrix, you need to have credit on your account.
             You currently have ${{payment.credit}}.
             <br/>
-            <button ng-click='goToPage("payment")'>Get Credit</button>
+            <button ng-click="showEula()" ng-hide="payment.signedEula">Enable SMS</button>
+            <button ng-click='goToPage("payment")' ng-show="payment.signedEula">Get Credit</button>
         </div>
         
 

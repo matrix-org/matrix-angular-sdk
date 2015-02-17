@@ -315,6 +315,21 @@ function($scope, matrixService, modelService, eventHandlerService, notificationS
 
     $scope.payment = {
         url: webClientConfig.paymentUrl,
+        signedEula: webClientConfig.paymentEulaUrl ? paymentService.signedEula() : true,
         credit: paymentService.getCredit()
+    };
+
+    $scope.showEula = function() {
+        paymentService.getEula().then(function(response) {
+            dialogService.showConfirm("EULA", response.data).then(function(btn) {
+                paymentService.acceptEula();
+            },
+            function(btn) {
+                console.log("EULA rejected.");
+            });
+        },
+        function(err) {
+            dialogService.showError(err);
+        });
     };
 }]);

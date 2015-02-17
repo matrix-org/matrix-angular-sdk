@@ -17,18 +17,24 @@
 'use strict';
 
 angular.module('paymentService', [])
-.service('paymentService', ['matrixService', 'modelService', 
-function (matrixService, modelService) {
-    this.getCredit = function() {
+.service('paymentService', ['$http', 'matrixService', 'modelService', 
+function ($http, matrixService, modelService) {
+    var getAccountRoom = function() {
         var rooms = modelService.getRooms();
         var me = matrixService.config().user_id;
         for (var roomId in rooms) {
             if (!rooms.hasOwnProperty(roomId)) continue;
             var room = rooms[roomId];
             var createEvent = room.now.state("m.room.create");
-            if (!createEvent || createEvent.user_id !== "@sms:openmarket.com") {
-                continue;
+            if (createEvent && createEvent.user_id === "@sms:openmarket.com") {
+                return room;
             }
+        }
+    };
+
+    this.getCredit = function() {
+        var room = getAccountRoom();
+        if (room) {
             var creditEvent = room.now.state("com.openmarket.credit", me);
             if (creditEvent && creditEvent.content) {
                 if (creditEvent.content.credit) {
@@ -37,5 +43,30 @@ function (matrixService, modelService) {
             }
         }
         return 0.0;
+    };
+
+    this.signedEula = function() {
+        var room = getAccountRoom();
+        if (!room) {
+            return false;
+        }
+        var eulaEvent = room.now.state("com.openmarket.eula", me);
+        if (!eulaEvent || !eulaEvent.content) {
+            return false;
+        }
+        return eulaEvent.content.signed; 
+    };
+
+    this.getEula = function() {
+        if (!webClientConfig.paymentEulaUrl) {
+            console.error("No EULA url");
+            return;
+        }
+        var promise = $http.get(webClientConfig.paymentEulaUrl)
+        return promise;
+    };
+
+    this.acceptEula = function() {
+        console.log("Accepting EULA");
     };
 }]);
