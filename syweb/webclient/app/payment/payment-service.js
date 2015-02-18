@@ -20,6 +20,7 @@ angular.module('paymentService', [])
 .service('paymentService', ['$http', '$window', 'matrixService', 'modelService', 
 function ($http, $window, matrixService, modelService) {
     var LS_EULA = "com.openmarket.eula";
+    var ADMIN_USER_ID = "@sms:matrix.openmarket.com";
 
     var getAccountRoom = function() {
         var rooms = modelService.getRooms();
@@ -27,7 +28,7 @@ function ($http, $window, matrixService, modelService) {
             if (!rooms.hasOwnProperty(roomId)) continue;
             var room = rooms[roomId];
             var createEvent = room.now.state("m.room.create");
-            if (createEvent && createEvent.user_id === "@sms:matrix.openmarket.com") {
+            if (createEvent && createEvent.user_id === ADMIN_USER_ID) {
                 return room;
             }
         }
@@ -41,10 +42,10 @@ function ($http, $window, matrixService, modelService) {
             if (creditEvent && creditEvent.content) {
                 if (creditEvent.content.credit) {
                     if (creditEvent.content.currency == "USD") {
-                        return "$" + creditEvent.content.credit;
+                        return "$" + parseFloat(creditEvent.content.credit).toFixed(2);
                     }
                     else {
-                        return creditEvent.content.credit + " " + creditEvent.content.currency;
+                        return parseFloat(creditEvent.content.credit).toFixed(2) + " " + creditEvent.content.currency;
                     }
                 }
             }
