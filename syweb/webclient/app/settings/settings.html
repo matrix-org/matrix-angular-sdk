@@ -48,6 +48,19 @@
         </div>
         <br/>
 
+        <div class="section" ng-show="payment.url">
+            <h3>OpenMarket Matrix API Account Credit</h3>
+            <p>
+                To send and receive SMS via Matrix using OpenMarket by messaging matrix IDs resembling <code>@+447700900123:matrix.openmarket.com</code>, you require credit on your OpenMarket Matrix API account.
+            </p>
+            <p>
+                You currently have {{payment.credit}} of credit available.
+            </p>
+            <p>
+                <button ng-click='getCredit()'>Add Credit</button>
+            </p>
+        </div>
+
         <h3>Push Notifications</h3>
         <div class="section">
             <p>
@@ -189,16 +202,7 @@
                 <li>/deop &lt;user_id&gt;: reset user power level to the room default value</li>
             </ul>
         </div>
-        <br/>
-
-        <div class="section" ng-show="payment.url">
-            <h3>Account Credit</h3>
-            To send SMS via Matrix, you need to have credit on your account.
-            You currently have {{payment.credit}}.
-            <br/>
-            <button ng-click='getCredit()'>Get Credit</button>
-        </div>
-        
+        <br/>        
 
         <div class="feedback">{{ feedback }}</div>
         

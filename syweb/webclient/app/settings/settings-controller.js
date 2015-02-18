@@ -314,7 +314,7 @@ function($scope, matrixService, modelService, eventHandlerService, notificationS
     };
 
     $scope.payment = {
-        url: webClientConfig.paymentUrl,
+        url: webClientConfig ? webClientConfig.paymentUrl : "",
         credit: paymentService.getCredit()
     };
 
@@ -324,7 +324,7 @@ function($scope, matrixService, modelService, eventHandlerService, notificationS
             return;
         }
         paymentService.getEula().then(function(response) {
-            dialogService.showConfirm("End User License Agreement", response.data).then(
+            dialogService.showConfirm("OpenMarket Matrix API End User License Agreement", response.data).then(
             function(btn) {
                 paymentService.acceptEula();
                 $scope.goToPage("payment");
