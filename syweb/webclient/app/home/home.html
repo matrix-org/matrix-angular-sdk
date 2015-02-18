@@ -36,6 +36,24 @@
             <div>{{ config.user_id }}</div>
         </div>
     </div>
+    <br/>
+    <div class="home_controls">
+        <form>
+            Start chat:
+            <input size="40" ng-model="newChat.user" ng-enter="messageUser()" placeholder="e.g. @user:domain.com"/>
+            <button ng-disabled="!newChat.user" ng-click="messageUser()">Start</button>
+        </form>
+    </div>    
+    <div class="home_controls">
+        <form>
+            Join room: <input size="40" ng-model="joinAlias.room_alias" ng-enter="joinAlias(joinAlias.room_alias)" placeholder="e.g. #foo:example.org"/>
+            <button ng-disabled="!joinAlias.room_alias" ng-click="joinAlias(joinAlias.room_alias)">Join</button>
+        </form>
+    </div>
+    <div class="home_controls">
+        <button ng-click="showCreateRoomDialog()">Create Room</button>
+    </div>
+    <div class="feedback">{{ feedback }}</div>
         
     <h3>Recent conversations</h3>
         <div ng-include="'app/recents/recents.html'"></div>
@@ -68,25 +86,6 @@
         </tbody>
     </table>
     <br/>
-    <div>
-        <button ng-click="showCreateRoomDialog()">Create Room</button>
-    </div>
-    <div>
-        <form>
-            <input size="40" ng-model="joinAlias.room_alias" ng-enter="joinAlias(joinAlias.room_alias)" placeholder="e.g. #foo:example.org"/>
-            <button ng-disabled="!joinAlias.room_alias" ng-click="joinAlias(joinAlias.room_alias)">Join room</button>
-        </form>
-    </div>
-    <div>
-        <form>
-            <input size="40" ng-model="newChat.user" ng-enter="messageUser()" placeholder="e.g. @user:domain.com"/>
-            <button ng-disabled="!newChat.user" ng-click="messageUser()">Message user</button>
-        </form>
-    </div>
-    
-    <br/>
-    
-    <div class="feedback">{{ feedback }}</div>
 
     </div>    
 </div>
