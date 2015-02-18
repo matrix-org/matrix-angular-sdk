@@ -630,6 +630,10 @@ describe('orderRecents filter', function() {
             };
         }
     };
+
+    var paymentService = {
+        isAccountRoom: function(){}
+    };
     
     var modelService = {
         getUserCountInRoom: function(roomId) {
@@ -646,6 +650,7 @@ describe('orderRecents filter', function() {
         module(function ($provide) {
             $provide.value('matrixService', matrixService);
             $provide.value('modelService', modelService);
+            $provide.value('paymentService', paymentService);
         });
         
         module('RecentsFilter');
