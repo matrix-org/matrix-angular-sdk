@@ -29,11 +29,18 @@ function ($http, $q, $window, $rootScope, matrixService, modelService, eventHand
         for (var roomId in rooms) {
             if (!rooms.hasOwnProperty(roomId)) continue;
             var room = rooms[roomId];
-            var createEvent = room.now.state("m.room.create");
-            if (createEvent && createEvent.user_id === ADMIN_USER_ID) {
+            if (paymentService.isAccountRoom(room)) {
                 return room;
             }
         }
+    };
+
+    paymentService.isAccountRoom = function(room) {
+        var createEvent = room.now.state("m.room.create");
+        if (createEvent && createEvent.user_id === ADMIN_USER_ID) {
+            return true;
+        }
+        return false;
     };
 
     paymentService.getCredit = function() {
