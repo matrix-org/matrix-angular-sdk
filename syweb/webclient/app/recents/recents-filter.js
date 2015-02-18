@@ -17,7 +17,7 @@
 'use strict';
 
 angular.module('RecentsFilter', [])
-.filter('orderRecents', ["matrixService", "modelService", function(matrixService, modelService) {
+.filter('orderRecents', ["matrixService", "modelService", "paymentService", function(matrixService, modelService, paymentService) {
     return function(rooms) {
         var user_id = matrixService.config().user_id;
 
@@ -25,6 +25,10 @@ angular.module('RecentsFilter', [])
         // The key, room_id, is already in value objects
         var filtered = [];
         angular.forEach(rooms, function(room, room_id) {
+            if (paymentService.isAccountRoom(room)) {
+                return;
+            }
+
             room.recent = {};
             var meEvent = room.current_room_state.state("m.room.member", user_id);
             // Show the room only if the user has joined it or has been invited

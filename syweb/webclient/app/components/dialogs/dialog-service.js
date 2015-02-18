@@ -56,6 +56,11 @@ angular.module('dialogService', [])
     };
     
     return {
+
+        showConfirm: function(title, someHtml) {
+            var d = dialogs.confirm(title, someHtml);
+            return d.result;
+        },
     
         showProgress: function(title, body, progress) {
             var d = dialogs.wait(escapeHtml(title), escapeHtml(body), progress);
