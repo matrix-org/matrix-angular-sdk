@@ -10,7 +10,9 @@ describe("SettingsController ", function() {
     };
 
     var paymentService = {
-        getCredit: function(){}
+        getCredit: function(){
+            return $q.defer().promise;
+        }
     };
     
     // test vars
