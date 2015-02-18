@@ -18,8 +18,8 @@
 
 angular.module('paymentService', [])
 .factory('paymentService', [
-    '$http', '$window', '$rootScope', 'matrixService', 'modelService', 'eventHandlerService',
-function ($http, $window, $rootScope, matrixService, modelService, eventHandlerService) {
+    '$http', '$q', '$window', '$rootScope', 'matrixService', 'modelService', 'eventHandlerService',
+function ($http, $q, $window, $rootScope, matrixService, modelService, eventHandlerService) {
     var LS_EULA = "com.openmarket.eula";
     var ADMIN_USER_ID = "@sms:matrix.openmarket.com";
     var paymentService = {};
@@ -37,22 +37,26 @@ function ($http, $window, $rootScope, matrixService, modelService, eventHandlerS
     };
 
     paymentService.getCredit = function() {
-        var me = "_" + matrixService.config().user_id;
-        var room = getAccountRoom();
-        if (room) {
-            var creditEvent = room.now.state("com.openmarket.credit", me);
-            if (creditEvent && creditEvent.content) {
-                if (creditEvent.content.credit) {
-                    if (creditEvent.content.currency == "USD") {
-                        return "$" + parseFloat(creditEvent.content.credit).toFixed(2);
-                    }
-                    else {
-                        return parseFloat(creditEvent.content.credit).toFixed(2) + " " + creditEvent.content.currency;
+        var defer = $q.defer();
+        eventHandlerService.waitForInitialSyncCompletion().then(function() {
+            var me = "_" + matrixService.config().user_id;
+            var room = getAccountRoom();
+            if (room) {
+                var creditEvent = room.now.state("com.openmarket.credit", me);
+                if (creditEvent && creditEvent.content) {
+                    if (creditEvent.content.credit) {
+                        if (creditEvent.content.currency == "USD" || creditEvent.content.currency === "") {
+                            defer.resolve("$" + parseFloat(creditEvent.content.credit).toFixed(2));
+                        }
+                        else {
+                            defer.resolve(parseFloat(creditEvent.content.credit).toFixed(2) + " " + creditEvent.content.currency);
+                        }
                     }
                 }
             }
-        }
-        return "$0";
+            defer.resolve("$0");
+        });
+        return defer.promise;
     };
 
     paymentService.getEula = function() {

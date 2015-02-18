@@ -315,8 +315,12 @@ function($scope, matrixService, modelService, eventHandlerService, notificationS
 
     $scope.payment = {
         url: webClientConfig ? webClientConfig.paymentUrl : "",
-        credit: paymentService.getCredit()
+        credit: "-"
     };
+
+    paymentService.getCredit().then(function(credit) {
+        $scope.payment.credit = credit;
+    });
 
     $scope.getCredit = function() {
         if (paymentService.hasAcceptedEula()) {
