@@ -34,7 +34,7 @@ function ($http, $window, matrixService, modelService) {
     };
 
     this.getCredit = function() {
-        var me = matrixService.config().user_id;
+        var me = "_" + matrixService.config().user_id;
         var room = getAccountRoom();
         if (room) {
             var creditEvent = room.now.state("com.openmarket.credit", me);
