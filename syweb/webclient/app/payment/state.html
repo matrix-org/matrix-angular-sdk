@@ -1,6 +1,13 @@
 <div ng-controller="PaymentController" class="user" data-ng-init="onInit()">
 	<div id="wrapper">
-		<h1>{{status.title}}</h1>
+
+	    <div id="genericHeading">
+            <a href ng-click="goToPage('/')"><img src="img/logo-small.png" width="100" height="43" alt="[matrix]"/></a>
+        </div>
+
+        <h1>{{status.title}}</h1>
+        <p>
         {{status.description}}
+        </p>
 	</div>
 </div>
