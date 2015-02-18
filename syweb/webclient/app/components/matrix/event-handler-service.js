@@ -547,6 +547,7 @@ function(matrixService, $rootScope, $window, $q, $timeout, $filter, mPresence, n
                         }
                         room.state.push(fakeEvent);
                         console.log("RECV /initialSync invite >> "+room.room_id);
+                        $rootScope.$broadcast(MEMBER_EVENT, fakeEvent, false);
                     }
                 
                     var newRoom = modelService.getRoom(room.room_id);

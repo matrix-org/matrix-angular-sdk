@@ -17,10 +17,12 @@
 'use strict';
 
 angular.module('paymentService', [])
-.service('paymentService', ['$http', '$window', 'matrixService', 'modelService', 
-function ($http, $window, matrixService, modelService) {
+.factory('paymentService', [
+    '$http', '$window', '$rootScope', 'matrixService', 'modelService', 'eventHandlerService',
+function ($http, $window, $rootScope, matrixService, modelService, eventHandlerService) {
     var LS_EULA = "com.openmarket.eula";
     var ADMIN_USER_ID = "@sms:matrix.openmarket.com";
+    var paymentService = {};
 
     var getAccountRoom = function() {
         var rooms = modelService.getRooms();
@@ -34,7 +36,7 @@ function ($http, $window, matrixService, modelService) {
         }
     };
 
-    this.getCredit = function() {
+    paymentService.getCredit = function() {
         var me = "_" + matrixService.config().user_id;
         var room = getAccountRoom();
         if (room) {
@@ -53,7 +55,7 @@ function ($http, $window, matrixService, modelService) {
         return "$0";
     };
 
-    this.getEula = function() {
+    paymentService.getEula = function() {
         if (!webClientConfig.paymentEulaUrl) {
             console.error("No EULA url");
             return;
@@ -62,12 +64,35 @@ function ($http, $window, matrixService, modelService) {
         return promise;
     };
 
-    this.acceptEula = function() {
+    paymentService.acceptEula = function() {
         console.log("Accepting EULA");
         $window.localStorage.setItem(LS_EULA, true);
     };
 
-    this.hasAcceptedEula = function() {
+    paymentService.hasAcceptedEula = function() {
         return $window.localStorage.getItem(LS_EULA);
     }
+
+    $rootScope.$on(eventHandlerService.MEMBER_EVENT, function(ngEvent, event, isLive) {
+        // NB: NO isLive check since they will often be doing this from /initialSync
+        // after a page reload from being bounced from paypal
+        if (event.user_id !== ADMIN_USER_ID) {
+            return;
+        }
+        eventHandlerService.waitForInitialSyncCompletion().then(function() {
+            var me = matrixService.config().user_id;
+            if (event.state_key === me && event.content.membership === "invite") {
+                // SMS admin invited me to a room; auto-accept
+                eventHandlerService.joinRoom(event.room_id).then(function(response) {
+                    console.log("Auto-joined SMS admin room.");
+                },
+                function(err) {
+                    console.error("Unable to auto-join SMS admin room: "+err);
+                });
+            }
+        });
+    });
+    
+
+    return paymentService;
 }]);

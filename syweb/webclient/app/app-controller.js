@@ -21,9 +21,11 @@ limitations under the License.
 'use strict';
 
 angular.module('MatrixWebClientController', ['matrixService', 'mPresence', 'eventStreamService'])
-.controller('MatrixWebClientController', ['$scope', '$location', '$rootScope', '$timeout', 'matrixService', 'mPresence', 'eventStreamService', 'eventHandlerService', 'matrixPhoneService', 'modelService', 'eventReaperService', 'notificationService', 'mUserDisplayNameFilter', 'MatrixCall', 'dialogService', 'webRtcService',
-                               function($scope, $location, $rootScope, $timeout, matrixService, mPresence, eventStreamService, eventHandlerService, matrixPhoneService, modelService, eventReaperService, notificationService, mUserDisplayNameFilter, MatrixCall, dialogService, webRtcService) {
-         
+.controller('MatrixWebClientController', ['$scope', '$location', '$rootScope', '$timeout', 'matrixService', 'mPresence', 'eventStreamService', 'eventHandlerService', 'matrixPhoneService', 'modelService', 'eventReaperService', 'notificationService', 'mUserDisplayNameFilter', 'MatrixCall', 'dialogService', 'webRtcService', 'paymentService',
+                               function($scope, $location, $rootScope, $timeout, matrixService, mPresence, eventStreamService, eventHandlerService, matrixPhoneService, modelService, eventReaperService, notificationService, mUserDisplayNameFilter, MatrixCall, dialogService, webRtcService, paymentService) {
+    // paymentService dependency is contrived because it just needs the service to be initialised
+    // asap in order to hook the $rootScope.$on(MEMBER_EVENT) listener :/
+    
     // Check current URL to avoid to display the logout button on the login page
     $scope.location = $location.path();
     
