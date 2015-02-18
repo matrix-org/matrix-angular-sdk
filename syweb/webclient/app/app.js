@@ -24,7 +24,9 @@ var matrixWebClient = angular.module('matrixWebClient', [
     'RecentsController',
     'RecentsFilter',
     'SettingsController',
+    'PaymentController',
     'UserController',
+    'paymentService',
     'matrixService',
     'webRtcService',
     'matrixPhoneService',
@@ -67,6 +69,12 @@ matrixWebClient.config(['$routeProvider', '$provide', '$httpProvider',
             }).
             when('/settings', {
                 templateUrl: 'app/settings/settings.html'
+            }).
+            when('/payment', {
+                templateUrl: 'app/payment/payment.html'
+            }).
+            when('/payment/:payment_state', {
+                templateUrl: 'app/payment/state.html'
             }).
             when('/user/:user_matrix_id', {
                 templateUrl: 'app/user/user.html'

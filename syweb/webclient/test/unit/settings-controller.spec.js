@@ -8,6 +8,12 @@ describe("SettingsController ", function() {
         showError: function(err){}, // will be spyed
         showSuccess: function(a,b){} // will be spyed
     };
+
+    var paymentService = {
+        getCredit: function(){
+            return $q.defer().promise;
+        }
+    };
     
     // test vars
     var testDisplayName, testProfilePicture;
@@ -65,7 +71,8 @@ describe("SettingsController ", function() {
                 '$scope': scope,
                 'matrixService': matrixService,
                 'mFileUpload': mFileUpload,
-                'dialogService': dialogService
+                'dialogService': dialogService,
+                'paymentService': paymentService
             });
         })
     );

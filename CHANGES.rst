@@ -1,3 +1,8 @@
+Changes in Matrix Angular SDK 0.6.3 (2015-02-18)
+================================================
+Features:
+ - Add support for sending/receiving SMS via the OpenMarket Matrix Gateway.
+
 Changes in Matrix Angular SDK 0.6.2 (2015-02-12)
 ================================================
 Bug fixes:

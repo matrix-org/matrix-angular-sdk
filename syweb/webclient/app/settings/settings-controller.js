@@ -17,8 +17,9 @@ limitations under the License.
 'use strict';
 
 angular.module('SettingsController', ['matrixService', 'modelService', 'eventHandlerService', 'mFileUpload', 'mFileInput'])
-.controller('SettingsController', ['$scope', 'matrixService', 'modelService', 'eventHandlerService', 'notificationService', 'mFileUpload', 'dialogService',
-                              function($scope, matrixService, modelService, eventHandlerService, notificationService, mFileUpload, dialogService) {
+.controller('SettingsController', 
+['$scope', 'matrixService', 'modelService', 'eventHandlerService', 'notificationService', 'mFileUpload', 'dialogService', 'paymentService',
+function($scope, matrixService, modelService, eventHandlerService, notificationService, mFileUpload, dialogService, paymentService) {
     // XXX: duplicated from register
     var generateClientSecret = function() {
         var ret = "";
@@ -310,5 +311,34 @@ angular.module('SettingsController', ['matrixService', 'modelService', 'eventHan
             return "custom sound";
         }
         return "other action";
+    };
+
+    $scope.payment = {
+        url: webClientConfig ? webClientConfig.paymentUrl : "",
+        credit: "-"
+    };
+
+    paymentService.getCredit().then(function(credit) {
+        $scope.payment.credit = credit;
+    });
+
+    $scope.getCredit = function() {
+        if (paymentService.hasAcceptedEula()) {
+            $scope.goToPage("payment");
+            return;
+        }
+        paymentService.getEula().then(function(response) {
+            dialogService.showConfirm("OpenMarket Matrix API End User License Agreement", response.data).then(
+            function(btn) {
+                paymentService.acceptEula();
+                $scope.goToPage("payment");
+            },
+            function(btn) {
+                console.log("EULA rejected.");
+            });
+        },
+        function(err) {
+            dialogService.showError(err);
+        });
     };
 }]);
