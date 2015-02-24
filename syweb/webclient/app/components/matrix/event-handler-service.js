@@ -575,16 +575,24 @@ function(matrixService, $rootScope, $window, $q, $timeout, $filter, mPresence, n
                               input);
 
             var isEmote = input.indexOf("/me ") === 0;
+            var isMarkdown = input.indexOf("/markdown ") === 0;
             var promise;
-            if (!isEmote) {
+            if (!isEmote && !isMarkdown) {
                 promise = commandsService.processInput(roomId, input);
             }
             
             var echo = false;
+            var bodyPart = input;
             if (!promise) { // not a non-echoable command
                 echo = true;
                 if (isEmote) {
-                    promise = matrixService.sendEmoteMessage(roomId, input.substring(4));
+                    bodyPart = input.substring(4);
+                    promise = matrixService.sendEmoteMessage(roomId, bodyPart);
+                }
+                else if (isMarkdown) {
+                    bodyPart = input.substring("/markdown ".length);
+                    var htmlBody = markdown.toHTML(bodyPart);
+                    promise = matrixService.sendHtmlMessage(roomId, bodyPart, htmlBody);
                 }
                 else {
                     promise = matrixService.sendTextMessage(roomId, input);
@@ -596,7 +604,7 @@ function(matrixService, $rootScope, $window, $q, $timeout, $filter, mPresence, n
                 // To do so, create a minimalist fake text message event and add it to the in-memory list of room messages
                 var echoMessage = {
                     content: {
-                        body: (isEmote ? input.substring(4) : input),
+                        body: bodyPart,
                         msgtype: (isEmote ? "m.emote" : "m.text"),
                     },
                     origin_server_ts: new Date().getTime(), // fake a timestamp
