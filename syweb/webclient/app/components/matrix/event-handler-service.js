@@ -591,7 +591,7 @@ function(matrixService, $rootScope, $window, $q, $timeout, $filter, mPresence, n
                 }
                 else if (isMarkdown) {
                     bodyPart = input.substring("/markdown ".length);
-                    var htmlBody = markdown.toHTML(bodyPart);
+                    var htmlBody = marked(bodyPart);
                     promise = matrixService.sendHtmlMessage(roomId, bodyPart, htmlBody);
                 }
                 else {
