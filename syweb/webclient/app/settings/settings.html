@@ -50,14 +50,23 @@
 
         <div class="section" ng-show="payment.url">
             <h3>OpenMarket Matrix Gateway</h3>
+            <!--
             <p>
                 If you want to send and receive SMS via Matrix using OpenMarket by messaging Matrix IDs resembling <code>@+447700900123:matrix.openmarket.com</code>, you require credit on your OpenMarket Matrix Gateway account.
-            </p>
+            </p> 
             <p>
                 You currently have {{payment.credit}} of credit available.
             </p>
             <p>
                 <button ng-click='getCredit()'>Add Credit</button>
+            </p>
+            -->
+            <p>
+                If you want to send and receive SMS via Matrix using OpenMarket by messaging Matrix IDs resembling <code>@+447700900123:matrix.openmarket.com</code>, you
+                must link your OpenMarket Matrix Gateway account to PayPal.
+            </p> 
+            <p>
+                <button ng-click='getCredit()'>Link account</button>
             </p>
         </div>
 
