@@ -9,7 +9,7 @@
         
         <div class="section">
         <!-- This will add credit to the account: {{purchase.user}} -->
-        Link your PayPal account with {{purchase.user}} in order to send SMS.
+        Link your PayPal account with {{purchase.user}} in order to send SMS.  During beta testing, messages incur no cost (with a per-user fair usage limit), but you must link your account to PayPal as a security measure.  Your account will never be charged without your consent.
 		<form method="post" ng-submit="onSubmit($event)" action={{purchase.url}}>
             <input type="hidden" name="mxid" value="{{purchase.user}}"/>
             <input type="hidden" name="amount" value="0"/>
@@ -19,7 +19,9 @@
 			<input type="number" name="amount" min="0.01" step="0.01" ng-model=purchase.amount />
 		    </p> 
 			-->
+            <p>
 			<input type="image" src="https://www.paypalobjects.com/webstatic/en_US/developer/docs/lipp/loginwithpaypalbutton.png"/>
+	        </p>
 		</form>
 	    </div>
 	</div>
