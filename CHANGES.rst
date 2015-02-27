@@ -1,3 +1,20 @@
+Changes in Matrix Angular SDK 0.6.4 (2015-02-27)
+================================================
+Features:
+ - Add support for sending messages in Markdown by typing "/markdown some text"
+
+Bug fixes:
+ - Fixed a bug which caused the settings page to fail to load correctly if
+   config.js did not exist.
+ - Fixed a bug which failed to redirect the user to the login page if they
+   directly typed a room into the address bar.
+
+Improvements:
+ - Update to Angular 1.3.13
+ - Update to jQuery 2.1.3
+ - Improve page load performance
+ - Slightly randomise reconnection times to address thundering herd problems.
+
 Changes in Matrix Angular SDK 0.6.3 (2015-02-18)
 ================================================
 Features:
