@@ -137,7 +137,9 @@ angular.module('eventStreamService', [])
                 deferred.reject(error);
                 
                 if (settings.shouldPoll) {
-                    $timeout(doEventStream, ERR_TIMEOUT_MS);
+                    // up to 3s jittering
+                    var jitter = Math.floor(Math.random() * 3000);
+                    $timeout(doEventStream, (ERR_TIMEOUT_MS + jitter));
                 }
                 else {
                     console.log("[EventStream] Stopping polling.");

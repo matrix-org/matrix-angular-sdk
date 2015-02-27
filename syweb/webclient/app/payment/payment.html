@@ -5,17 +5,23 @@
             <a href ng-click="goToPage('/')"><img src="img/logo-small.png" width="100" height="43" alt="[matrix]"/></a>
         </div>
 
-        <h1>OpenMarket Matrix Gateway Payment</h1>
+        <h1>OpenMarket Matrix Gateway</h1>
         
         <div class="section">
-        This will add credit to the account: {{purchase.user}}
+        <!-- This will add credit to the account: {{purchase.user}} -->
+        Link your PayPal account with {{purchase.user}} in order to send SMS.  During beta testing, messages incur no cost (with a per-user fair usage limit), but you must link your account to PayPal as a security measure.  Your account will never be charged without your consent.
 		<form method="post" ng-submit="onSubmit($event)" action={{purchase.url}}>
             <input type="hidden" name="mxid" value="{{purchase.user}}"/>
+            <input type="hidden" name="amount" value="0"/>
+            <!--
             <p>
 			<label>Amount: $ (USD)</label>
 			<input type="number" name="amount" min="0.01" step="0.01" ng-model=purchase.amount />
-		    </p>
-			<input type="image" src="https://www.paypal.com/en_US/i/btn/btn_xpressCheckout.gif"/>
+		    </p> 
+			-->
+            <p>
+			<input type="image" src="https://www.paypalobjects.com/webstatic/en_US/developer/docs/lipp/loginwithpaypalbutton.png"/>
+	        </p>
 		</form>
 	    </div>
 	</div>

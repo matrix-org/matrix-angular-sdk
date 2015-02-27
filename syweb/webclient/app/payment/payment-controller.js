@@ -38,11 +38,11 @@ function($scope, $sce, $location, $routeParams, matrixService, dialogService, pa
 		// the user has been redirected back here after payment
 		if ($routeParams.payment_state === "success") {
 			$scope.status.title = "Success";
-			$scope.status.description = "Your payment was processed successfully.";
+			$scope.status.description = "You have successfully been logged in.";
 		}
 		else if ($routeParams.payment_state === "fail") {
 			$scope.status.title = "Failed";
-			$scope.status.description = "Your payment was not processed correctly.";
+			$scope.status.description = "Your have failed to log in.";
 		}
 		else if ($routeParams.payment_state === "cancel") {
 			$scope.status.title = "Cancelled";

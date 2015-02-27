@@ -121,11 +121,11 @@ matrixWebClient.run(['$location', '$rootScope', 'matrixService', function($locat
     }
 
     // If user auth details are not in cache, go to the login page
-    if (!matrixService.isUserLoggedIn() &&
-        $location.path() !== "/login" &&
-        $location.path() !== "/register")
-    {
-        $location.path("login");
-    }
+    $rootScope.$on("$routeChangeStart", function(event, next, current) {
+        if (!matrixService.isUserLoggedIn() && $location.path() !== "/login" &&
+                $location.path() !== "/register") {
+            $location.path("login");
+        }
+    });
 
 }]);

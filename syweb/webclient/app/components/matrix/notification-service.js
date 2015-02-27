@@ -104,7 +104,8 @@ angular.module('notificationService', ['matrixService'])
                     if (suff > 0) {
                         rule_id += suff++;
                     }
-                } while (currentIds.indexOf(rule_id) > -1);
+                    ++suff;
+                } while (currentIds.indexOf(rule_id) > -1 || rule_id == '');
                 return matrixService.addPushRule('global', 'content', rule_id, body);
             };
 

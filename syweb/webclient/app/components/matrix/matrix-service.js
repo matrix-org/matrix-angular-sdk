@@ -558,6 +558,16 @@ angular.module('matrixService', [])
 
             return this.sendMessage(room_id, msg_id, content);
         },
+        
+        sendHtmlMessage: function(room_id, body, htmlBody) {
+            var content = {
+                msgtype: "m.text",
+                format: "org.matrix.custom.html",
+                body: body,
+                formatted_body: htmlBody
+            };
+            return this.sendMessage(room_id, undefined, content);
+        },
 
         redactEvent: function(room_id, event_id) {
             var path = "/rooms/$room_id/redact/$event_id";
@@ -763,12 +773,12 @@ angular.module('matrixService', [])
                 prefix = "/_matrix/media/v1/thumbnail/";
             }
 
-			var fragmentOffset = serverAndMediaId.indexOf("#"),
-				fragment = "";
-			if (fragmentOffset >= 0) {
-				fragment = serverAndMediaId.substr(fragmentOffset);
-				serverAndMediaId = serverAndMediaId.substr(0, fragmentOffset);
-			}
+            var fragmentOffset = serverAndMediaId.indexOf("#"),
+                fragment = "";
+            if (fragmentOffset >= 0) {
+                fragment = serverAndMediaId.substr(fragmentOffset);
+                serverAndMediaId = serverAndMediaId.substr(0, fragmentOffset);
+            }
             return config.homeserver + prefix + serverAndMediaId + (Object.keys(params).length === 0 ? "" : ("?" + jQuery.param(params))) + fragment;
         },
         
