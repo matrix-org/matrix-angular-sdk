@@ -314,7 +314,7 @@ function($scope, matrixService, modelService, eventHandlerService, notificationS
     };
 
     $scope.payment = {
-        url: webClientConfig ? webClientConfig.paymentUrl : "",
+        url: window.webClientConfig ? window.webClientConfig.paymentUrl : "",
         credit: "-"
     };
 
