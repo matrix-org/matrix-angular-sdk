@@ -300,8 +300,11 @@ function($scope, matrixService, modelService, eventHandlerService, notificationS
             $scope.rule_add_inprogress.content = false;
             notificationService.clearRulesCache();
             fetchRules();
+            $scope.content_rule_add_input = '';
+        }, function() {
+            $scope.rule_add_inprogress.content = false;
+            $scope.feedback = "Failed to add rule";
         });
-        $scope.content_rule_add_input = '';
         $scope.rule_add_inprogress.content = true;
     };
 
@@ -314,6 +317,9 @@ function($scope, matrixService, modelService, eventHandlerService, notificationS
             $scope.rule_add_inprogress.room = false;
             notificationService.clearRulesCache();
             fetchRules();
+        }, function() {
+            $scope.rule_add_inprogress.room = false;
+            $scope.feedback = "Failed to add rule";
         });
         $scope.rule_add_inprogress.room = true;
     };
@@ -327,9 +333,12 @@ function($scope, matrixService, modelService, eventHandlerService, notificationS
             $scope.rule_add_inprogress.sender = false;
             notificationService.clearRulesCache();
             fetchRules();
+            $scope.sender_rule_add_input = '';
+        }, function() {
+            $scope.rule_add_inprogress.sender = false;
+            $scope.feedback = "Failed to add rule";
         });
         $scope.rule_add_inprogress.sender = true;
-        $scope.sender_rule_add_input = '';
     };
 
     $scope.deleteContentRule = function(rule) {
