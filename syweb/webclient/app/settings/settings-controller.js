@@ -43,6 +43,27 @@ function($scope, matrixService, modelService, eventHandlerService, notificationS
     function fetchRules() {
         notificationService.getGlobalRulesets().then(function(rulesets) {
             $scope.settings.rules = rulesets;
+
+            var rule_descriptions = {
+                '.m.rule.contains_user_name': "Notify with sound for messages that contain my user name",
+                '.m.rule.contains_display_name': "Notify with sound for messages that contain my display name",
+                '.m.rule.room_two_members': "Notify with sound for message to just me",
+                '.m.rule.fallback': "Notify for messages that don't match any rule"
+            };
+
+            var defaultRules = [];
+            for (var kind in rulesets) {
+                for (var i = 0; i < Object.keys(rulesets[kind]).length; ++i) {
+                    var r = rulesets[kind][i];
+                    if (r.rule_id[0] == '.' && rule_descriptions[r.rule_id]) {
+                        r.description = rule_descriptions[r.rule_id];
+                        r.kind = kind;
+                        defaultRules.push(r);
+                        console.log(JSON.stringify(r));
+                    }
+                }
+            }
+            $scope.settings.default_rules = defaultRules;
         });
     };
 
@@ -297,6 +318,14 @@ function($scope, matrixService, modelService, eventHandlerService, notificationS
 
     $scope.deleteSenderRule = function(rule) {
         notificationService.deleteGlobalSenderRule(rule['rule_id']).then(function() {
+            notificationService.clearRulesCache();
+            fetchRules();
+        });
+    };
+
+    $scope.updateDefaultRule = function(rule) {
+        rule.inprogress = true;
+        matrixService.setPushRuleEnabled('global', rule.kind, rule.rule_id, rule.enabled).then(function() {
             notificationService.clearRulesCache();
             fetchRules();
         });

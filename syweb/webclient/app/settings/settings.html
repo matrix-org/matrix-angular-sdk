@@ -91,7 +91,7 @@
                 </p>
                 <ul>
                     <li ng-repeat="rule in settings.rules.content">
-                        <button  ng-click="deleteContentRule(rule)" ng-disabled="rule.default">Delete</button>
+                        <button  ng-click="deleteContentRule(rule)" ng-disabled="rule.rule_id[0] == '.'">Delete</button>
                         '{{rule.pattern}}': <span ng-repeat="a in rule.actions"><i>{{stringForAction(a)}}</i> </span>
                     </li>
                     <li>
@@ -110,7 +110,7 @@
             <div class="section">
                 <ul>
                     <li ng-repeat="rule in settings.rules.room">
-                        <button  ng-click="deleteRoomRule(rule)" ng-disabled="rule.default">Delete</button>
+                        <button  ng-click="deleteRoomRule(rule)" ng-disabled="rule.rule_id[0] == '.'">Delete</button>
                         Room: '{{rooms[rule.rule_id].name}}': <span ng-repeat="a in rule.actions"><i>{{stringForAction(a)}}</i> </span>
                     </li>
                     <li>
@@ -132,7 +132,7 @@
                 <p>e.g. <b>@user:matrix.org</b></p>
                 <ul>
                     <li ng-repeat="rule in settings.rules.sender">
-                        <button  ng-click="deleteSenderRule(rule)" ng-disabled="rule.default">Delete</button>
+                        <button  ng-click="deleteSenderRule(rule)" ng-disabled="rule.rule_id[0] == '.'">Delete</button>
                         '{{rule.rule_id}}': <span ng-repeat="a in rule.actions"><i>{{stringForAction(a)}}</i> </span>
                     </li>
                     <li>
@@ -144,6 +144,16 @@
                             </select>
                             <input type="submit" value="Add" ng-disabled="!sender_rule_add_input" />
                         </form>
+                    </li>
+                </ul>
+            </div>
+            <h4>Other Rules</h4>
+            <div class="section">
+                <ul>
+                    <li ng-repeat="rule in settings.default_rules">
+                        {{rule.description}}
+                        <input type="checkbox" ng-model="rule.enabled" ng-change="updateDefaultRule(rule)" />
+                        <img src="img/spinner.gif" ng-show="rule.inprogress" />
                     </li>
                 </ul>
             </div>
