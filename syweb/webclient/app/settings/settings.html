@@ -91,17 +91,20 @@
                 </p>
                 <ul>
                     <li ng-repeat="rule in settings.rules.content" ng-if="rule.rule_id[0] != '.'">
-                        <button  ng-click="deleteContentRule(rule)">Delete</button>
+                        <button ng-click="deleteContentRule(rule)" ng-disabled="rule.inprogress">Delete</button>
                         '{{rule.pattern}}': <span ng-repeat="a in rule.actions"><i>{{stringForAction(a)}}</i> </span>
+                        <img src="img/spinner.gif" ng-show="rule.inprogress" />
                     </li>
                     <li>
-                        <form ng-submit="addContentRule(content_rule_add_input, [ rule_add_action.content ]); content_rule_add_input = '';">
+                        <form ng-submit="addContentRule();">
                             <input type="text" ng-model="content_rule_add_input" />
                             <select ng-model="rule_add_action.content">
                                 <option value="notify">Always Notify</option>
                                 <option value="dont_notify">Never Notify</option>
                             </select>
-                            <input type="submit" value="Add" ng-disabled="!content_rule_add_input" />
+                            Sound: <input type="checkbox" ng-model="rule_add_sound.content" />
+                            <input type="submit" value="Add" ng-disabled="!content_rule_add_input || rule_add_inprogress.content" />
+                            <img src="img/spinner.gif" ng-show="rule_add_inprogress.content" />
                         </form>
                     </li>
                 </ul>
@@ -110,11 +113,12 @@
             <div class="section">
                 <ul>
                     <li ng-repeat="rule in settings.rules.room" ng-if="rule.rule_id[0] != '.'">
-                        <button  ng-click="deleteRoomRule(rule)">Delete</button>
+                        <button ng-click="deleteRoomRule(rule)" ng-disabled="rule.inprogress">Delete</button>
                         Room: '{{rooms[rule.rule_id].name}}': <span ng-repeat="a in rule.actions"><i>{{stringForAction(a)}}</i> </span>
+                        <img src="img/spinner.gif" ng-show="rule.inprogress" />
                     </li>
                     <li>
-                        <form ng-submit="addRoomRule(room_rule_add_input, [ rule_add_action.room ])">
+                        <form ng-submit="addRoomRule()">
                             <select ng-model="room_rule_add_input">
                                 <option ng-repeat="(room_id, room) in rooms" value="{{room_id}}">{{room.name}} (Room)</option>
                             </select>
@@ -122,7 +126,9 @@
                                 <option value="notify">Always Notify</option>
                                 <option value="dont_notify">Never Notify</option>
                             </select>
-                            <input type="submit" value="Add" ng-disabled="!room_rule_add_input" />
+                            Sound: <input type="checkbox" ng-model="rule_add_sound.room" />
+                            <input type="submit" value="Add" ng-disabled="!room_rule_add_input || rule_add_inprogress.room" />
+                            <img src="img/spinner.gif" ng-show="rule_add_inprogress.room" />
                         </form>
                     </li>
                 </ul>
@@ -132,17 +138,20 @@
                 <p>e.g. <b>@user:matrix.org</b></p>
                 <ul>
                     <li ng-repeat="rule in settings.rules.sender" ng-if="rule.rule_id[0] != '.'">
-                        <button  ng-click="deleteSenderRule(rule)">Delete</button>
+                        <button ng-click="deleteSenderRule(rule)" ng-disabled="rule.inprogress">Delete</button>
                         '{{rule.rule_id}}': <span ng-repeat="a in rule.actions"><i>{{stringForAction(a)}}</i> </span>
+                        <img src="img/spinner.gif" ng-show="rule.inprogress" />
                     </li>
                     <li>
-                        <form ng-submit="addSenderRule(sender_rule_add_input, [ rule_add_action.sender ]); sender_rule_add_input = '';">
+                        <form ng-submit="addSenderRule();">
                             <input type="text" ng-model="sender_rule_add_input" />
                             <select ng-model="rule_add_action.sender">
                                 <option value="notify">Always Notify</option>
                                 <option value="dont_notify">Never Notify</option>
                             </select>
-                            <input type="submit" value="Add" ng-disabled="!sender_rule_add_input" />
+                            Sound: <input type="checkbox" ng-model="rule_add_sound.sender" />
+                            <input type="submit" value="Add" ng-disabled="!sender_rule_add_input || rule_add_inprogress.sender" />
+                            <img src="img/spinner.gif" ng-show="rule_add_inprogress.sender" />
                         </form>
                     </li>
                 </ul>

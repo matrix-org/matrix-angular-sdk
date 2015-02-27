@@ -72,6 +72,16 @@ function($scope, matrixService, modelService, eventHandlerService, notificationS
         room: "notify",
         sender: "notify"
     };
+    $scope.rule_add_sound = {
+        content: null,
+        room: null,
+        sender: null
+    };
+    $scope.rule_add_inprogress = {
+        content: false,
+        room: false,
+        sender: false
+    };
 
     eventHandlerService.waitForInitialSyncCompletion().then(function() {
         $scope.rooms = modelService.getRooms();
@@ -281,25 +291,45 @@ function($scope, matrixService, modelService, eventHandlerService, notificationS
         setMuteNotifications(!$scope.config.muteNotifications);
     };
 
-    $scope.addContentRule = function(pattern, actions) {
-        notificationService.addGlobalContentRule(pattern, actions).then(function() {
+    $scope.addContentRule = function() {
+        var actions = [ $scope.rule_add_action.content ];
+        if ($scope.rule_add_sound.content) {
+            actions.push({'set_tweak': 'sound', 'value': 'default'});
+        }
+        notificationService.addGlobalContentRule($scope.content_rule_add_input, actions).then(function() {
+            $scope.rule_add_inprogress.content = false;
             notificationService.clearRulesCache();
             fetchRules();
         });
+        $scope.content_rule_add_input = '';
+        $scope.rule_add_inprogress.content = true;
     };
 
-    $scope.addRoomRule = function(room_id, actions) {
-        notificationService.addGlobalRoomRule(room_id, actions).then(function() {
+    $scope.addRoomRule = function() {
+        var actions = [ $scope.rule_add_action.room ];
+        if ($scope.rule_add_sound.room) {
+            actions.push({'set_tweak': 'sound', 'value': 'default'});
+        }
+        notificationService.addGlobalRoomRule($scope.room_rule_add_input, actions).then(function() {
+            $scope.rule_add_inprogress.room = false;
             notificationService.clearRulesCache();
             fetchRules();
         });
+        $scope.rule_add_inprogress.room = true;
     };
 
-    $scope.addSenderRule = function(sender_id, actions) {
-        notificationService.addGlobalSenderRule(sender_id, actions).then(function() {
+    $scope.addSenderRule = function() {
+        var actions = [ $scope.rule_add_action.sender ];
+        if ($scope.rule_add_sound.sender) {
+            actions.push({'set_tweak': 'sound', 'value': 'default'});
+        }
+        notificationService.addGlobalSenderRule($scope.sender_rule_add_input, actions).then(function() {
+            $scope.rule_add_inprogress.sender = false;
             notificationService.clearRulesCache();
             fetchRules();
         });
+        $scope.rule_add_inprogress.sender = true;
+        $scope.sender_rule_add_input = '';
     };
 
     $scope.deleteContentRule = function(rule) {
@@ -307,6 +337,7 @@ function($scope, matrixService, modelService, eventHandlerService, notificationS
             notificationService.clearRulesCache();
             fetchRules();
         });
+        rule.inprogress = true;
     };
 
     $scope.deleteRoomRule = function(rule) {
@@ -314,6 +345,7 @@ function($scope, matrixService, modelService, eventHandlerService, notificationS
             notificationService.clearRulesCache();
             fetchRules();
         });
+        rule.inprogress = true;
     };
 
     $scope.deleteSenderRule = function(rule) {
@@ -321,6 +353,7 @@ function($scope, matrixService, modelService, eventHandlerService, notificationS
             notificationService.clearRulesCache();
             fetchRules();
         });
+        rule.inprogress = true;
     };
 
     $scope.updateDefaultRule = function(rule) {
