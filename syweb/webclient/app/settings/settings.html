@@ -90,8 +90,8 @@
                     such word which includes the 3 letters <i>foo</i>.
                 </p>
                 <ul>
-                    <li ng-repeat="rule in settings.rules.content">
-                        <button  ng-click="deleteContentRule(rule)" ng-disabled="rule.rule_id[0] == '.'">Delete</button>
+                    <li ng-repeat="rule in settings.rules.content" ng-if="rule.rule_id[0] != '.'">
+                        <button  ng-click="deleteContentRule(rule)">Delete</button>
                         '{{rule.pattern}}': <span ng-repeat="a in rule.actions"><i>{{stringForAction(a)}}</i> </span>
                     </li>
                     <li>
@@ -109,8 +109,8 @@
             <h4>Per-Room notifications</h4>
             <div class="section">
                 <ul>
-                    <li ng-repeat="rule in settings.rules.room">
-                        <button  ng-click="deleteRoomRule(rule)" ng-disabled="rule.rule_id[0] == '.'">Delete</button>
+                    <li ng-repeat="rule in settings.rules.room" ng-if="rule.rule_id[0] != '.'">
+                        <button  ng-click="deleteRoomRule(rule)">Delete</button>
                         Room: '{{rooms[rule.rule_id].name}}': <span ng-repeat="a in rule.actions"><i>{{stringForAction(a)}}</i> </span>
                     </li>
                     <li>
@@ -131,8 +131,8 @@
             <div class="section">
                 <p>e.g. <b>@user:matrix.org</b></p>
                 <ul>
-                    <li ng-repeat="rule in settings.rules.sender">
-                        <button  ng-click="deleteSenderRule(rule)" ng-disabled="rule.rule_id[0] == '.'">Delete</button>
+                    <li ng-repeat="rule in settings.rules.sender" ng-if="rule.rule_id[0] != '.'">
+                        <button  ng-click="deleteSenderRule(rule)">Delete</button>
                         '{{rule.rule_id}}': <span ng-repeat="a in rule.actions"><i>{{stringForAction(a)}}</i> </span>
                     </li>
                     <li>
