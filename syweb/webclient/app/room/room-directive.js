@@ -176,6 +176,7 @@ angular.module('RoomController')
         init: function(element, roomId) {
             this.roomId = roomId;
             this.element = element;
+            this.position = -1;
             var data = $window.sessionStorage.getItem("history_" + this.roomId);
             if (data) {
                 this.data = JSON.parse(data);
@@ -250,12 +251,16 @@ angular.module('RoomController')
             var unreg = scope.$on(BROADCAST_NEW_HISTORY_ITEM, function(ngEvent, item) {
                 history.push(item);
             });
-            
             history.init(element, scope.roomId);
+
+            var unregWatcher = scope.$watch("roomId", function() {
+                history.init(element, scope.roomId);
+            });
             
             scope.$on('$destroy', function() {
                 element.off("keydown");
                 unreg();
+                unregWatcher();
                 scope = null;
             });
         },
