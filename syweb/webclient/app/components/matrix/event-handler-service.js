@@ -332,6 +332,12 @@ function(matrixService, $rootScope, $window, $q, $timeout, $filter, mPresence, n
                 break;
             }
         }
+        if (annotatedEvents.length > 0) {
+            room.lastAnnotatedEvent = annotatedEvents[annotatedEvents.length-1];
+        }
+        else {
+            room.lastAnnotatedEvent = undefined;
+        }
     };
     
     var handleTyping = function(event, isLiveEvent) {
