@@ -28,21 +28,10 @@ Typically, this service will store events and broadcast them to any listeners
 angular.module('eventHandlerService', [])
 .factory('eventHandlerService', ['matrixService', '$rootScope', '$window', '$q', '$timeout', '$filter', 'mPresence', 'notificationService', 'modelService', 'commandsService',
 function(matrixService, $rootScope, $window, $q, $timeout, $filter, mPresence, notificationService, modelService, commandsService) {
-    var ROOM_CREATE_EVENT = "ROOM_CREATE_EVENT";
-    var MSG_EVENT = "MSG_EVENT";
-    var MEMBER_EVENT = "MEMBER_EVENT";
-    var PRESENCE_EVENT = "PRESENCE_EVENT";
-    var POWERLEVEL_EVENT = "POWERLEVEL_EVENT";
-    var CALL_EVENT = "CALL_EVENT";
-    var NAME_EVENT = "NAME_EVENT";
-    var TOPIC_EVENT = "TOPIC_EVENT";
-    var RESET_EVENT = "RESET_EVENT";    // eventHandlerService has been resetted
-
     // used for dedupping events 
     var eventReapMap = {
     //  room_id: { event_id: time_seen }
     };
-    var EVENT_ID_LIFETIME_MS = 1000 * 10; // lifetime of an event ID in the map is 10s
     var REAP_POLL_MS = 1000 * 11; // check for eligible event IDs to reap every 11s
 
     var initialSyncDeferred;
@@ -74,7 +63,7 @@ function(matrixService, $rootScope, $window, $q, $timeout, $filter, mPresence, n
             var roomEvents = eventReapMap[roomId];
             for (var eventId in roomEvents) {
                 if (!roomEvents.hasOwnProperty(eventId)) continue;
-                if ( (now - roomEvents[eventId]) > EVENT_ID_LIFETIME_MS) {
+                if ( (now - roomEvents[eventId]) > eventHandlerService.EVENT_ID_LIFETIME_MS) {
                     delete roomEvents[eventId];
                 }
             }
@@ -110,7 +99,7 @@ function(matrixService, $rootScope, $window, $q, $timeout, $filter, mPresence, n
     };
     
     var handleRoomCreate = function(event, isLiveEvent) {
-        $rootScope.$broadcast(ROOM_CREATE_EVENT, event, isLiveEvent);
+        $rootScope.$broadcast(eventHandlerService.ROOM_CREATE_EVENT, event, isLiveEvent);
     };
 
     var handleRoomAliases = function(event, isLiveEvent) {
@@ -258,7 +247,7 @@ function(matrixService, $rootScope, $window, $q, $timeout, $filter, mPresence, n
         
         // TODO send delivery receipt if isLiveEvent
         
-        $rootScope.$broadcast(MSG_EVENT, event, isLiveEvent);
+        $rootScope.$broadcast(eventHandlerService.MSG_EVENT, event, isLiveEvent);
     };
     
     var handleRoomMember = function(event, isLiveEvent) {
@@ -300,33 +289,33 @@ function(matrixService, $rootScope, $window, $q, $timeout, $filter, mPresence, n
             }
         }
         
-        $rootScope.$broadcast(MEMBER_EVENT, event, isLiveEvent);
+        $rootScope.$broadcast(eventHandlerService.MEMBER_EVENT, event, isLiveEvent);
     };
     
     var handlePresence = function(event, isLiveEvent) {
         // presence is always current, so clobber.
         modelService.setUser(event);
-        $rootScope.$broadcast(PRESENCE_EVENT, event, isLiveEvent);
+        $rootScope.$broadcast(eventHandlerService.PRESENCE_EVENT, event, isLiveEvent);
     };
     
     var handlePowerLevels = function(event, isLiveEvent) {
         handleRoomStateEvent(event, isLiveEvent);
-        $rootScope.$broadcast(POWERLEVEL_EVENT, event, isLiveEvent);   
+        $rootScope.$broadcast(eventHandlerService.POWERLEVEL_EVENT, event, isLiveEvent);   
     };
 
     var handleRoomName = function(event, isLiveEvent) {
         handleRoomStateEvent(event, isLiveEvent, true);
         recalculateRoomName(event.room_id);
-        $rootScope.$broadcast(NAME_EVENT, event, isLiveEvent);
+        $rootScope.$broadcast(eventHandlerService.NAME_EVENT, event, isLiveEvent);
     };
 
     var handleRoomTopic = function(event, isLiveEvent) {
         handleRoomStateEvent(event, isLiveEvent, true);
-        $rootScope.$broadcast(TOPIC_EVENT, event, isLiveEvent);
+        $rootScope.$broadcast(eventHandlerService.TOPIC_EVENT, event, isLiveEvent);
     };
 
     var handleCallEvent = function(event, isLiveEvent) {
-        $rootScope.$broadcast(CALL_EVENT, event, isLiveEvent);
+        $rootScope.$broadcast(eventHandlerService.CALL_EVENT, event, isLiveEvent);
         if (event.type === 'm.call.invite') {
             var room = modelService.getRoom(event.room_id);
             room.addMessageEvent(event, !isLiveEvent);
@@ -409,20 +398,20 @@ function(matrixService, $rootScope, $window, $q, $timeout, $filter, mPresence, n
     };
 
     var eventHandlerService = {
-        ROOM_CREATE_EVENT: ROOM_CREATE_EVENT,
-        MSG_EVENT: MSG_EVENT,
-        MEMBER_EVENT: MEMBER_EVENT,
-        PRESENCE_EVENT: PRESENCE_EVENT,
-        POWERLEVEL_EVENT: POWERLEVEL_EVENT,
-        CALL_EVENT: CALL_EVENT,
-        NAME_EVENT: NAME_EVENT,
-        TOPIC_EVENT: TOPIC_EVENT,
-        RESET_EVENT: RESET_EVENT,
-        EVENT_ID_LIFETIME_MS: EVENT_ID_LIFETIME_MS,
+        ROOM_CREATE_EVENT: "ROOM_CREATE_EVENT",
+        MSG_EVENT: "MSG_EVENT",
+        MEMBER_EVENT: "MEMBER_EVENT",
+        PRESENCE_EVENT: "PRESENCE_EVENT",
+        POWERLEVEL_EVENT: "POWERLEVEL_EVENT",
+        CALL_EVENT: "CALL_EVENT",
+        NAME_EVENT: "NAME_EVENT",
+        TOPIC_EVENT: "TOPIC_EVENT",
+        RESET_EVENT: "RESET_EVENT",  // eventHandlerService has been reset
+        EVENT_ID_LIFETIME_MS: 1000 * 10, // lifetime of an event ID in the map is 10s
         
         reset: function() {
             reset();
-            $rootScope.$broadcast(RESET_EVENT);
+            $rootScope.$broadcast(eventHandlerService.RESET_EVENT);
         },
     
         handleEvent: function(event, isLiveEvent) {
@@ -572,7 +561,7 @@ function(matrixService, $rootScope, $window, $q, $timeout, $filter, mPresence, n
                         }
                         room.state.push(fakeEvent);
                         console.log("RECV /initialSync invite >> "+room.room_id);
-                        $rootScope.$broadcast(MEMBER_EVENT, fakeEvent, false);
+                        $rootScope.$broadcast(eventHandlerService.MEMBER_EVENT, fakeEvent, false);
                     }
                 
                     var newRoom = modelService.getRoom(room.room_id);
