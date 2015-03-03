@@ -26,7 +26,7 @@ function ($http, $q) {
         return pendingVersionDefer.promise;
     };
 
-    $http.get("/VERSION").then(function(response) {
+    $http.get("VERSION").then(function(response) {
         console.log("Version %s", response.data);
         versionService.version = response.data;
         pendingVersionDefer.resolve();
