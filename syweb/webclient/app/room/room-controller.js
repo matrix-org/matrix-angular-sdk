@@ -337,12 +337,16 @@ angular.module('RoomController', ['ngSanitize', 'matrixFilter', 'mFileInput'])
         if (!room_id_or_alias) {
             // Get the room alias by hand from the URL
             // ie: extract #public:localhost:8080 from http://127.0.0.1:8000/#/room/#public:localhost:8080
-            if (3 === location.hash.split("#").length) {
-                room_id_or_alias = "#" + decodeURIComponent(location.hash.split("#")[2]);
+            // NB: location.hash is "#/path/here" - We can't split on #s or /s since room aliases could
+            // have those, so we'll have to split based on the prefix only.
+            if (location.hash.indexOf("#/room/") === 0) {
+                room_id_or_alias = decodeURIComponent(
+                    location.hash.substring("#/room/".length, location.hash.length)
+                );
             }
             else {
                 // In case of issue, go to the default page
-                console.log("Error: cannot extract room alias");
+                console.error("Cannot extract room alias");
                 $location.url("/");
                 return;
             }
