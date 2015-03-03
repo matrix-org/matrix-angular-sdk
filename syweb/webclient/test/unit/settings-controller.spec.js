@@ -14,6 +14,12 @@ describe("SettingsController ", function() {
             return $q.defer().promise;
         }
     };
+
+    var versionService = {
+        getVersion: function() {
+            return $q.defer().promise;
+        }
+    };
     
     // test vars
     var testDisplayName, testProfilePicture;
@@ -72,7 +78,8 @@ describe("SettingsController ", function() {
                 'matrixService': matrixService,
                 'mFileUpload': mFileUpload,
                 'dialogService': dialogService,
-                'paymentService': paymentService
+                'paymentService': paymentService,
+                'versionService': versionService
             });
         })
     );
