@@ -37,23 +37,27 @@ angular.module('RoomController', ['ngSanitize', 'matrixFilter', 'mFileInput'])
 
     $scope.imageURLToSend = "";
     
-    // calcs the thumbnail dimension from a large image
-    $scope.thumbDim = function(info, key, requestedSize) {
-        if (!info) {
-            return requestedSize;
+    // calcs the thumbnail height from a large image
+    $scope.thumbHeight = function(fullWidth, fullHeight, boxSize) {
+        // boxSize = The bounding box around the image which it will be scaled to.
+        if (!fullWidth || !fullHeight) {
+            // Cannot calculate thumbnail height for image: missing w/h in metadata. We can't even
+            // log this because it's spammy ($digest cycles)
+            return undefined;
         }
-        if (info[key] < requestedSize) {
-            return info[key];
+        if (fullWidth < boxSize && fullHeight < boxSize) {
+            // no scaling needs to be applied
+            return fullHeight;
         }
-        var widthMulti = requestedSize / info.w;
-        var heightMulti = requestedSize / info.h;
+        var widthMulti = boxSize / fullWidth;
+        var heightMulti = boxSize / fullHeight;
         if (widthMulti < heightMulti) {
             // width is the dominant dimension so scaling will be fixed on that
-            return widthMulti * info[key];
+            return widthMulti * fullHeight;
         }
         else {
             // height is the dominant dimension so scaling will be fixed on that
-            return heightMulti * info[key];
+            return heightMulti * fullHeight;
         }
     };
 
