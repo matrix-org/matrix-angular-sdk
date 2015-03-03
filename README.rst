@@ -68,7 +68,7 @@ Attributions
 File icons are taken from http://medialoot.com/item/free-flat-filetype-icons/ and
 distributed under the terms of the Paid License (invoice #7355)
 
-Keyboard icon from icons8: http://icons8.com/
+Keyboard and GIF icon from icons8: http://icons8.com/
 
 .. _Synapse: https://github.com/matrix-org/synapse/
 .. _Matrix: http://www.matrix.org

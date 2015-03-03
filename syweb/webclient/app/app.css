@@ -750,6 +750,14 @@ textarea, input {
     height: auto;
 }
 
+.messageImageOverlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 32px;
+    width: 32px;
+}
+
 .text {
     vertical-align: top;
 }
