@@ -264,6 +264,25 @@ function(matrixService, $rootScope, $window, $q, $timeout, $filter, mPresence, n
     var handleRoomMember = function(event, isLiveEvent) {
         var room = modelService.getRoom(event.room_id);
         var memberChanges = room.getChangedKeyForMemberEvent(event);
+        var me = matrixService.config().user_id;
+
+        if (event.state_key === me && event.content && event.content.membership === "join") {
+            // incoming join event but we are not joined nor are we syncing this room (meaning
+            // another one of our devices joined the room)
+            if (!room.isJoinedRoom(me) && !room.syncing) {
+                var roomId = event.room_id;
+                console.log("handleRoomMember: Syncing room -> %s", roomId);
+                matrixService.roomInitialSync(roomId, 0).then(function(response) {
+                    eventHandlerService.handleRoomInitialSync(room, response.data);
+                    var presence = response.data.presence;
+                    eventHandlerService.handleEvents(presence, false);
+                    console.log("handleRoomMember: synced room "+roomId);
+                },
+                function(err) {
+                    console.error("handleRoomMember: Unable to sync room: %s", JSON.stringify(err));
+                });
+            }
+        }
         
         // modify state before adding the message so it points to the right thing.
         // The events are copied to avoid referencing the same event when adding
@@ -389,7 +408,7 @@ function(matrixService, $rootScope, $window, $q, $timeout, $filter, mPresence, n
         return defer.promise;
     };
 
-    return {
+    var eventHandlerService = {
         ROOM_CREATE_EVENT: ROOM_CREATE_EVENT,
         MSG_EVENT: MSG_EVENT,
         MEMBER_EVENT: MEMBER_EVENT,
@@ -660,7 +679,6 @@ function(matrixService, $rootScope, $window, $q, $timeout, $filter, mPresence, n
         // joins a room and handles the requests which need to be done e.g. getting room state
         joinRoom: function(roomIdOrAlias) {
             var defer = $q.defer();
-            var eventHandlerService = this;
             
             // TODO standardise error responses rather than returning where they fail, which could
             // return an error object (with errcode) or a string.
@@ -680,6 +698,7 @@ function(matrixService, $rootScope, $window, $q, $timeout, $filter, mPresence, n
                         return;
                     }
                     // join the room and get current room state
+                    thisRoom.syncing = true;
                     matrixService.join(roomIdOrAlias).then(function() {
                         matrixService.roomInitialSync(roomId, 0).then(function(response) {
                             var room = modelService.getRoom(roomId);
@@ -687,6 +706,7 @@ function(matrixService, $rootScope, $window, $q, $timeout, $filter, mPresence, n
                             var presence = response.data.presence;
                             eventHandlerService.handleEvents(presence, false);
                             console.log("joinRoom: Joined room "+roomId);
+                            thisRoom.syncing = false;
                             defer.resolve(roomId);
                         }, errorFunc);
                     }, errorFunc);
@@ -698,7 +718,6 @@ function(matrixService, $rootScope, $window, $q, $timeout, $filter, mPresence, n
         
         createRoom: function(alias, isPublic, inviteList) {
             var defer = $q.defer();
-            var eventHandlerService = this;
             
             var errorFunc = function(error) {
                 console.error("joinRoom: " + JSON.stringify(error));
@@ -723,7 +742,6 @@ function(matrixService, $rootScope, $window, $q, $timeout, $filter, mPresence, n
         
         leaveRoom: function(roomId) {
             var d = $q.defer();
-            var eventHandlerService = this;
             modelService.getRoom(roomId).leave().then(
                 function(response) {
                     eventHandlerService.wipeDuplicateDetection(roomId);
@@ -759,6 +777,6 @@ function(matrixService, $rootScope, $window, $q, $timeout, $filter, mPresence, n
                 console.log("[]? (<_<)=(>_>) ?[] Removed duplicate suppression for " + roomId);
             }
         }
-        
     };
+    return eventHandlerService;
 }]);
