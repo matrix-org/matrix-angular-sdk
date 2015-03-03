@@ -425,6 +425,7 @@ angular.module('RoomController', ['ngSanitize', 'matrixFilter', 'mFileInput'])
             mFileUpload.uploadForEvent($scope.fileToSend).then(
                 function(fileMessage) {
                     $rootScope.$broadcast('dialogs.wait.complete');
+                    $scope.fileToSend = undefined;
                     // fileMessage is complete message structure, send it as is
                     matrixService.sendMessage($scope.room_id, undefined, fileMessage).then(
                         function() {
@@ -438,6 +439,7 @@ angular.module('RoomController', ['ngSanitize', 'matrixFilter', 'mFileInput'])
                     $rootScope.$broadcast('dialogs.wait.complete');
                     console.error("Got : "+JSON.stringify(error));
                     dialogService.showError(error);
+                    $scope.fileToSend = undefined;
                 },
                 function(evt) {
                     progressAmount = 100.0 * (evt.loaded / evt.total);

@@ -40,6 +40,8 @@ angular.module('mFileInput', [])
                     element.find("input").on("change", function(e) {
                         scope.selectedFile = this.files[0];
                         scope.$apply();
+                        // clear the input so on.change fires again if they choose the same file...
+                        element.find("input").val("");
                     });
                 });
                 scope.$on('$destroy', function() {
