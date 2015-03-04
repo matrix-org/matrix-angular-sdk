@@ -238,7 +238,7 @@
                                   ng-class="shouldHighlightEvent(msg.event) && msg.e.user_id != state.user_id ? msg.css_class + ' messageBing' : msg.css_class"
                                   ng-bind-html="(msg.e.content.format === 'org.matrix.custom.html') ? (msg.e.content.formatted_body | unsanitizedLinky:'_blank') : (msg.e.content.body | escapeHTML | unsanitizedLinky:'_blank') "/>
 
-                             <div ng-switch-when="m.image">
+                             <div ng-switch-when="m.image" style="position: relative;">
                                  <div ng-hide='msg.e.content.thumbnail_url || msg.e.content.url.indexOf("mxc://") === 0' ng-style="msg.e.content.body.h && { 'height' : (msg.e.content.body.h < 320) ? msg.e.content.body.h : 320}">
                                      <img class="image" ng-src="{{ msg.httpUri(msg.e.content.url, 320, 320) }}"/>
                                  </div>
@@ -246,10 +246,11 @@
                                      <img class="image mouse-pointer" ng-src="{{ msg.httpUri(msg.e.content.thumbnail_url) }}"
                                           ng-click="$parent.$parent.fullScreenImageURL = msg.httpUri(msg.e.content.url); $event.stopPropagation();"/>
                                  </div>
-                                 <div ng-show='msg.e.content.url.indexOf("mxc://") === 0'>
+                                 <div ng-show='msg.e.content.url.indexOf("mxc://") === 0' ng-style="{ 'height' : thumbHeight(msg.e.content.info.w, msg.e.content.info.h, 320) }">
                                      <img class="messageImage mouse-pointer" ng-src="{{ msg.httpUri(msg.e.content.url, 320, 320) }}"
                                           ng-click="$parent.$parent.fullScreenImageURL = msg.httpUri(msg.e.content.url); $event.stopPropagation();"/>
                                  </div>
+                                 <img class="messageImageOverlay" ng-show="msg.e.content.info.mimetype === 'image/gif'" src="img/icons/filetype-gif.png"></img>
                              </div>
 
                             <span ng-switch-when="m.file" ng-class="msg.css_class">
@@ -309,7 +310,7 @@
     </div>
 
     <div id="room-fullscreen-image" ng-show="fullScreenImageURL" ng-click="fullScreenImageURL = undefined;">
-        <img ng-src="{{ fullScreenImageURL }}"/>
+        <img ng-src="{{ fullScreenImageURL }}" style="background-color:white;"/>
     </div>
 
  </div>

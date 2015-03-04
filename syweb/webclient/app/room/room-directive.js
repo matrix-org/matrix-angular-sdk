@@ -160,7 +160,7 @@ angular.module('RoomController')
     // History is saved in sessionStorage so that it survives when the user
     // navigates through the rooms and when it refreshes the page
     var history = {
-        // The list of typed messages. Index 0 is the more recents
+        // The list of typed messages. Index 0 is more recent
         data: [],
 
         // The position in the history currently displayed
@@ -176,9 +176,13 @@ angular.module('RoomController')
         init: function(element, roomId) {
             this.roomId = roomId;
             this.element = element;
+            this.position = -1;
             var data = $window.sessionStorage.getItem("history_" + this.roomId);
             if (data) {
                 this.data = JSON.parse(data);
+            }
+            if (this.roomId) {
+                this.setLastTextEntry();
             }
         },
 
@@ -222,6 +226,21 @@ angular.module('RoomController')
                 // Go back to the message the user started to type
                 this.element.val(this.typingMessage);
             }
+        },
+
+        saveLastTextEntry: function() {
+            // save the currently entered text in order to restore it later. This is NOT
+            // typingMessage as we want to restore command history text too, hence the
+            // literal snapshot of the input text.
+            var text = this.element.val();
+            $window.sessionStorage.setItem("input_" + this.roomId, text);
+        },
+
+        setLastTextEntry: function() {
+            var text = $window.sessionStorage.getItem("input_" + this.roomId);
+            if (text !== undefined) {
+                this.element.val(text);
+            }
         }
     };
 
@@ -250,12 +269,17 @@ angular.module('RoomController')
             var unreg = scope.$on(BROADCAST_NEW_HISTORY_ITEM, function(ngEvent, item) {
                 history.push(item);
             });
-            
             history.init(element, scope.roomId);
+
+            var unregWatcher = scope.$watch("roomId", function() {
+                history.init(element, scope.roomId);
+            });
             
             scope.$on('$destroy', function() {
+                history.saveLastTextEntry();
                 element.off("keydown");
                 unreg();
+                unregWatcher();
                 scope = null;
             });
         },

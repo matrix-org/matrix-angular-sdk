@@ -752,7 +752,8 @@ describe('EventHandlerService', function() {
             addMessageEvent: function(){},
             addOrReplaceMessageEvent: function(){},
             mutateRoomMemberState: function(){},
-            getChangedKeyForMemberEvent: function(){}
+            getChangedKeyForMemberEvent: function(){},
+            isJoinedRoom: function(){return true;}
         };
         testInitialSync.data.rooms.push(angular.copy(testRoomInitialSync));
         

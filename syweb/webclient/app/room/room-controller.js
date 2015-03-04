@@ -37,23 +37,27 @@ angular.module('RoomController', ['ngSanitize', 'matrixFilter', 'mFileInput'])
 
     $scope.imageURLToSend = "";
     
-    // calcs the thumbnail dimension from a large image
-    $scope.thumbDim = function(info, key, requestedSize) {
-        if (!info) {
-            return requestedSize;
+    // calcs the thumbnail height from a large image
+    $scope.thumbHeight = function(fullWidth, fullHeight, boxSize) {
+        // boxSize = The bounding box around the image which it will be scaled to.
+        if (!fullWidth || !fullHeight) {
+            // Cannot calculate thumbnail height for image: missing w/h in metadata. We can't even
+            // log this because it's spammy ($digest cycles)
+            return undefined;
         }
-        if (info[key] < requestedSize) {
-            return info[key];
+        if (fullWidth < boxSize && fullHeight < boxSize) {
+            // no scaling needs to be applied
+            return fullHeight;
         }
-        var widthMulti = requestedSize / info.w;
-        var heightMulti = requestedSize / info.h;
+        var widthMulti = boxSize / fullWidth;
+        var heightMulti = boxSize / fullHeight;
         if (widthMulti < heightMulti) {
             // width is the dominant dimension so scaling will be fixed on that
-            return widthMulti * info[key];
+            return widthMulti * fullHeight;
         }
         else {
             // height is the dominant dimension so scaling will be fixed on that
-            return heightMulti * info[key];
+            return heightMulti * fullHeight;
         }
     };
 
@@ -337,12 +341,16 @@ angular.module('RoomController', ['ngSanitize', 'matrixFilter', 'mFileInput'])
         if (!room_id_or_alias) {
             // Get the room alias by hand from the URL
             // ie: extract #public:localhost:8080 from http://127.0.0.1:8000/#/room/#public:localhost:8080
-            if (3 === location.hash.split("#").length) {
-                room_id_or_alias = "#" + decodeURIComponent(location.hash.split("#")[2]);
+            // NB: location.hash is "#/path/here" - We can't split on #s or /s since room aliases could
+            // have those, so we'll have to split based on the prefix only.
+            if (location.hash.indexOf("#/room/") === 0) {
+                room_id_or_alias = decodeURIComponent(
+                    location.hash.substring("#/room/".length, location.hash.length)
+                );
             }
             else {
                 // In case of issue, go to the default page
-                console.log("Error: cannot extract room alias");
+                console.error("Cannot extract room alias");
                 $location.url("/");
                 return;
             }
@@ -421,6 +429,7 @@ angular.module('RoomController', ['ngSanitize', 'matrixFilter', 'mFileInput'])
             mFileUpload.uploadForEvent($scope.fileToSend).then(
                 function(fileMessage) {
                     $rootScope.$broadcast('dialogs.wait.complete');
+                    $scope.fileToSend = undefined;
                     // fileMessage is complete message structure, send it as is
                     matrixService.sendMessage($scope.room_id, undefined, fileMessage).then(
                         function() {
@@ -434,6 +443,7 @@ angular.module('RoomController', ['ngSanitize', 'matrixFilter', 'mFileInput'])
                     $rootScope.$broadcast('dialogs.wait.complete');
                     console.error("Got : "+JSON.stringify(error));
                     dialogService.showError(error);
+                    $scope.fileToSend = undefined;
                 },
                 function(evt) {
                     progressAmount = 100.0 * (evt.loaded / evt.total);

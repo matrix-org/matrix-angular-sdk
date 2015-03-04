@@ -18,8 +18,12 @@ limitations under the License.
 
 angular.module('SettingsController', ['matrixService', 'modelService', 'eventHandlerService', 'mFileUpload', 'mFileInput'])
 .controller('SettingsController', 
-['$scope', 'matrixService', 'modelService', 'eventHandlerService', 'notificationService', 'mFileUpload', 'dialogService', 'paymentService',
-function($scope, matrixService, modelService, eventHandlerService, notificationService, mFileUpload, dialogService, paymentService) {
+['$scope', 'matrixService', 'modelService', 'eventHandlerService', 'notificationService', 'mFileUpload', 'dialogService', 'paymentService', 'versionService',
+function($scope, matrixService, modelService, eventHandlerService, notificationService, mFileUpload, dialogService, paymentService, versionService) {
+    versionService.getVersion().then(function() {
+        $scope.appVersion = versionService.version;
+    });
+
     // XXX: duplicated from register
     var generateClientSecret = function() {
         var ret = "";

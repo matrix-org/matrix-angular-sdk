@@ -27,8 +27,26 @@ This can most easily be achieved by::
    
 Navigate to ``http://localhost:8000`` to see the client.
 
-Overview
-========
+Bugs / Feature Requests
+=======================
+Think you've found a bug? Want a new feature on the client? Please open an issue
+on JIRA:
+
+- Create an account and login to https://matrix.org/jira
+- Navigate to the ``SYWEB`` project.
+- Click **Create Issue** - Please be as descriptive as possible, with reproduction
+  steps if possible.
+
+All issues in JIRA are **public**.
+
+Configuration
+=============
+The web client can be configured by adding a ``config.js`` file in the 
+``syweb/webclient`` directory. This includes configuration for setting up ReCaptcha.
+An example file can be found at ``syweb/webclient/config.sample.js``.
+
+Structure
+=========
 The ``app`` directory contains the SDK, which is split up into subfolders depending
 on the logical scope of the code. The ``components`` directory contains reusable
 components which are used in many places. More specific directories such as ``home``
@@ -39,8 +57,6 @@ The `Client-Server API`_ is encapsulated as an AngularJS service called ``matrix
 There are also complementary services such as ``eventStreamService`` which handle more
 complex non-HTTP client logic.
 
-Usage
-=====
 Services can be used independently provided their dependencies are satisfied. 
 
 * ``matrixService`` is provided at the lowest level, as it just wraps the raw HTTP calls.
@@ -68,7 +84,7 @@ Attributions
 File icons are taken from http://medialoot.com/item/free-flat-filetype-icons/ and
 distributed under the terms of the Paid License (invoice #7355)
 
-Keyboard icon from icons8: http://icons8.com/
+Keyboard and GIF icon from icons8: http://icons8.com/
 
 .. _Synapse: https://github.com/matrix-org/synapse/
 .. _Matrix: http://www.matrix.org
