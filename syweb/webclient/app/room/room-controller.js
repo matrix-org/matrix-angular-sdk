@@ -22,7 +22,7 @@ angular.module('RoomController', ['ngSanitize', 'matrixFilter', 'mFileInput'])
     var THUMBNAIL_SIZE = 320;
     
     // .html needs this
-    $scope.containsBingWord = eventHandlerService.eventContainsBingWord;
+    $scope.shouldHighlightEvent = eventHandlerService.shouldHighlightEvent;
 
     // Room ids. Computed and resolved in onInit
     $scope.room_id = undefined;

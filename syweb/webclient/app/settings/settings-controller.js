@@ -41,8 +41,8 @@ function($scope, matrixService, modelService, eventHandlerService, notificationS
     };
 
     function fetchRules() {
-        notificationService.getGlobalRulesets().then(function(rulesets) {
-            $scope.settings.rules = rulesets;
+        notificationService.getRulesets().then(function(rulesets) {
+            $scope.settings.rules = rulesets.global;
 
             var rule_descriptions = {
                 '.m.rule.contains_user_name': "Notify with sound for messages that contain my user name",
@@ -52,14 +52,13 @@ function($scope, matrixService, modelService, eventHandlerService, notificationS
             };
 
             var defaultRules = [];
-            for (var kind in rulesets) {
-                for (var i = 0; i < Object.keys(rulesets[kind]).length; ++i) {
-                    var r = rulesets[kind][i];
+            for (var kind in rulesets.global) {
+                for (var i = 0; i < Object.keys(rulesets.global[kind]).length; ++i) {
+                    var r = rulesets.global[kind][i];
                     if (r.rule_id[0] == '.' && rule_descriptions[r.rule_id]) {
                         r.description = rule_descriptions[r.rule_id];
                         r.kind = kind;
                         defaultRules.push(r);
-                        console.log(JSON.stringify(r));
                     }
                 }
             }

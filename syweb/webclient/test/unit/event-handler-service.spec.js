@@ -448,34 +448,6 @@ describe('EventHandlerService', function() {
         expect(promiseResult).toBeDefined();
     }));
     
-    it('eventContainsBingWord should return true if notificationService says so.', inject(
-    function(eventHandlerService) {
-        // the main test here is to make sure that event handler service is NOT
-        // applying any special logic to the bing word check; it should just be
-        // channeling the boolean we give it via notificationService. If this
-        // test fails, then there is additional logic for bing word checking which
-        // should be in notificationService. 
-        testContainsBingWords = true;
-        expect(eventHandlerService.eventContainsBingWord({
-            event_id: "a",
-            user_id: "@someone:matrix.org",
-            room_id: "!weuidfwe:matrix.org",
-            content: {
-                body: "foobar"
-            }
-        })).toBeTruthy();
-        
-        testContainsBingWords = false;
-        expect(eventHandlerService.eventContainsBingWord({
-            event_id: "a",
-            user_id: "@someone:matrix.org",
-            room_id: "!weuidfwe:matrix.org",
-            content: {
-                body: "foobar"
-            }
-        })).toBeFalsy();
-    }));
-    
     it('should be able to handle multiple events.', inject(
     function(eventHandlerService) {
         spyOn(modelService, "setUser");

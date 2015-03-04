@@ -122,102 +122,6 @@ function(matrixService, $rootScope, $window, $q, $timeout, $filter, mPresence, n
         modelService.getRoom(roomId).name = $filter("mRoomName")(roomId);
     };
     
-    var containsBingWord = function(event) {
-        if (!event.content || !event.content.body) {
-            return false;
-        }
-    
-        return notificationService.containsBingWord(
-            matrixService.config().user_id,
-            matrixService.config().display_name,
-            matrixService.config().bingWords,
-            event.content.body
-        );
-    };
-    
-    var displayNotification = function(event) {
-        if ($window.Notification && event.user_id != matrixService.config().user_id) {
-            var member = modelService.getMember(event.room_id, event.user_id);
-            var displayname = $filter("mUserDisplayName")(event.user_id, event.room_id);
-            var message;
-            var shouldBing = false;
-            
-            if (event.type === "m.room.message") {
-                shouldBing = containsBingWord(event);
-                message = event.content.body;
-                if (event.content.msgtype === "m.emote") {
-                    message = "* " + displayname + " " + message;
-                }
-                else if (event.content.msgtype === "m.image") {
-                    message = displayname + " sent an image.";
-                }
-            }
-            else if (event.type == "m.room.member") {
-                // Notify when another user joins
-                if (event.state_key !== matrixService.config().user_id  && "join" === event.content.membership) {
-                    member = modelService.getMember(event.room_id, event.state_key);
-                    displayname = $filter("mUserDisplayName")(event.state_key, event.room_id);
-                    message = displayname + " joined";
-                    shouldBing = true;
-                }
-                // notify when you are invited
-                else if (event.state_key === matrixService.config().user_id  && "invite" === event.content.membership) {
-                    message = displayname + " invited you to a room";
-                    shouldBing = true;
-                }
-                else {
-                    return;
-                }
-            }
-
-            // Ideally we would notify only when the window is hidden (i.e. document.hidden = true).
-            //
-            // However, Chrome on Linux and OSX currently returns document.hidden = false unless the window is
-            // explicitly showing a different tab.  So we need another metric to determine hiddenness - we
-            // simply use idle time.  If the user has been idle enough that their presence goes to idle, then
-            // we also display notifs when things happen.
-            //
-            // This is far far better than notifying whenever anything happens anyway, otherwise you get spammed
-            // to death with notifications when the window is in the foreground, which is horrible UX (especially
-            // if you have not defined any bingers and so get notified for everything).
-            var isIdle = (document.hidden || matrixService.presence.unavailable === mPresence.getState());
-            
-            // We need a way to let people get notifications for everything, if they so desire.  The way to do this
-            // is to specify zero bingwords.
-            var bingWords = matrixService.config().bingWords;
-            if ("m.room.message" === event.type && (bingWords === undefined || bingWords.length === 0)) {
-                shouldBing = true;
-            }
-            if (matrixService.config().muteNotifications) {
-                shouldBing = false;
-            }
-            
-            if (shouldBing && isIdle) {
-                var roomTitle = $filter("mRoomName")(event.room_id);
-                
-                var audio = undefined;
-                if (matrixService.config().audioNotifications === true) {
-                    audio = "default";
-                }
-                
-                console.log("Displaying notification "+(audio === undefined ? "" : "with audio")+" for "+JSON.stringify(event.content));
-                
-                
-                notificationService.showNotification(
-                    displayname + " (" + roomTitle + ")",
-                    message,
-                    member ? member.event.content.avatar_url : undefined,
-                    function() {
-                        console.log("notification.onclick() room=" + event.room_id);
-                        $rootScope.goToPage('room/' + event.room_id); 
-                    },
-                    undefined,
-                    audio
-                );
-            }
-        }
-    };
-
     var handleMessage = function(event, isLiveEvent) {
         // Check for empty event content
         var hasContent = false;
@@ -247,7 +151,7 @@ function(matrixService, $rootScope, $window, $q, $timeout, $filter, mPresence, n
         if (event.user_id !== matrixService.config().user_id) {
             room.addMessageEvent(event, !isLiveEvent);
             if (isLiveEvent) {
-                displayNotification(event);
+                notificationService.processEvent(event);
             }
         }
         else {
@@ -737,10 +641,6 @@ function(matrixService, $rootScope, $window, $q, $timeout, $filter, mPresence, n
         
         isInitialSyncComplete: function() {
             return initialSyncComplete;
-        },
-        
-        eventContainsBingWord: function(event) {
-            return containsBingWord(event);
         },
         
         // remove the ability to detect duplicates by removing known event IDs for this room.
