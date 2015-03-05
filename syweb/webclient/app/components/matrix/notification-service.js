@@ -20,7 +20,7 @@ limitations under the License.
 This service manages notifications: enabling, creating and showing them. This
 also contains 'bing word' logic.
 */
-angular.module('notificationService', ['matrixService'])
+angular.module('notificationService', [])
 .factory('notificationService', ['$timeout', '$q', '$filter', 'matrixService', 'modelService', 'mPresence', function($timeout, $q, $filter, matrixService, modelService, mPresence) {
 
     var getLocalPartFromUserId = function(user_id) {
@@ -171,7 +171,7 @@ angular.module('notificationService', ['matrixService'])
     };
 
     var eventFulfillsDisplayNameCondition = function(cond, ev) {
-        if (!ev.content || ! ev.content.body) return false;
+        if (!ev.content || ! ev.content.body || typeof ev.content.body != 'string') return false;
 
         var displayname = $filter("mUserDisplayName")(matrixService.config().user_id, ev.room_id);
         var pat = new RegExp("\\b"+escapeRegExp(displayname)+"\\b")

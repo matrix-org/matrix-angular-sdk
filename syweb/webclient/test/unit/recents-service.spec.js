@@ -8,9 +8,6 @@ describe('RecentsService', function() {
     var eventHandlerService = {
         MSG_EVENT: MSG_EVENT,
         MEMBER_EVENT: MEMBER_EVENT,
-        eventContainsBingWord: function(event) {
-            return testEventContainsBingWord;
-        },
         waitForInitialSyncCompletion: function(){
             return testInitialSyncComplete.promise;
         }
@@ -32,10 +29,19 @@ describe('RecentsService', function() {
         processEvent: function(ev) {
         },
         shouldHighlightEvent: function(ev) {
-            return false;
+            return testEventContainsBingWord;
         },
         showNotification: function(title, msg, pic, onclick) {
         
+        },
+        ifShouldHighlightEvent: function(ev) {
+            var def = $q.defer();
+            if (testEventContainsBingWord) {
+                def.resolve();
+            } else {
+                def.reject();
+            }
+            return def.promise;
         }
     };
     
@@ -110,6 +116,7 @@ describe('RecentsService', function() {
         recentsService.setSelectedRoomId("!someotherroomid:localhost");
         testEventContainsBingWord = true;
         scope.$broadcast(MSG_EVENT, testEvent, testIsLive);
+        scope.$apply();
         
         var unread = {};
         unread[testEvent.room_id] = 1;
@@ -125,6 +132,7 @@ describe('RecentsService', function() {
         recentsService.setSelectedRoomId("!someotherroomid:localhost");
         testEventContainsBingWord = true;
         scope.$broadcast(MSG_EVENT, testEvent, testIsLive);
+        scope.$apply();
         
         var unread = {};
         unread[testEvent.room_id] = 1;
@@ -191,6 +199,7 @@ describe('RecentsService', function() {
         nextEvent.content.body = "Goodbye cruel world.";
         nextEvent.event_id = "erfuerhfeaaaa@localhost";
         scope.$broadcast(MSG_EVENT, nextEvent, testIsLive);
+        scope.$apply();
         
         var bing = {};
         bing[testEvent.room_id] = nextEvent;
