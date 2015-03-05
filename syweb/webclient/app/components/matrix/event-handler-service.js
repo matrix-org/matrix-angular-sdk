@@ -189,7 +189,7 @@ function(matrixService, $rootScope, $window, $q, $timeout, $filter, mPresence, n
             
             if (memberChanges === "membership" && isLiveEvent) {
                 recalculateRoomName(event.room_id);
-                displayNotification(event);
+                notificationService.processEvent(event);
             }
         }
         

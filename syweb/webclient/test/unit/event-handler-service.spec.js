@@ -120,7 +120,9 @@ describe('EventHandlerService', function() {
     };
     
     var notificationService = {
-        containsBingWord: function(user_id, display_name, bing_words) {
+        processEvent: function(ev) {
+        },
+        shouldHighlightEvent: function(ev) {
             return testContainsBingWords;
         },
         showNotification: function(title, msg, pic, onclick) {

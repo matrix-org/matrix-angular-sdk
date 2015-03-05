@@ -27,6 +27,17 @@ describe('RecentsService', function() {
     var modelService = {
         getRooms: function(){}
     };
+
+    var notificationService = {
+        processEvent: function(ev) {
+        },
+        shouldHighlightEvent: function(ev) {
+            return false;
+        },
+        showNotification: function(title, msg, pic, onclick) {
+        
+        }
+    };
     
     var doc = [
         { title: testDocumentTitle }
@@ -53,6 +64,7 @@ describe('RecentsService', function() {
         // mocked dependencies
         module(function ($provide) {
           $provide.value('eventHandlerService', eventHandlerService);
+          $provide.value('notificationService', notificationService);
           $provide.value('matrixService', matrixService);
           $provide.value('modelService', modelService);
           $provide.value('$document', doc);

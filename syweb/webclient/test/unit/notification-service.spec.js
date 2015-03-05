@@ -4,7 +4,16 @@ describe('NotificationService', function() {
     var displayName = "Alice M";
     var bingWords = ["coffee","foo(.*)bar"]; // literal and wildcard
 
+    var modelService = {
+        getRooms: function(){}
+    };
+
     beforeEach(function() {
+        // mocked dependencies
+        module(function ($provide) {
+          $provide.value('modelService', modelService);
+        });
+
         module('notificationService');
     });
     
