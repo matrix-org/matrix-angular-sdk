@@ -60,9 +60,9 @@ function($rootScope, $document, eventHandlerService, matrixService, modelService
     // listen for new unread messages
     $rootScope.$on(eventHandlerService.MSG_EVENT, function(ngEvent, event, isLive) {
         if (isLive && event.room_id !== selectedRoomId && matrixService.config().user_id !== event.user_id) {
-            if (notificationService.shouldHighlightEvent(event)) {
+            notificationService.ifShouldHighlightEvent(event).then(function() {
                 addUnreadBing(event);
-            }
+            });
         
             if (!unreadMessages[event.room_id]) {
                 unreadMessages[event.room_id] = 0;

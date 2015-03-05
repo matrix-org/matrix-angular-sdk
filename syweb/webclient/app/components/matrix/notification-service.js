@@ -173,7 +173,7 @@ angular.module('notificationService', ['matrixService'])
     var eventFulfillsDisplayNameCondition = function(cond, ev) {
         if (!ev.content || ! ev.content.body) return false;
 
-        var displayname = $filter("mUserDisplayName")(ev.user_id, ev.room_id);
+        var displayname = $filter("mUserDisplayName")(matrixService.config().user_id, ev.room_id);
         var pat = new RegExp("\\b"+escapeRegExp(displayname)+"\\b")
         return ev.content.body.search(pat) > -1;
     };
@@ -247,6 +247,7 @@ angular.module('notificationService', ['matrixService'])
 
     var matchingRuleForEventWithRulesets = function(ev, rulesets) {
         if (!rulesets) return null;
+        if (ev.user_id == matrixService.config().user_id) return null;
         angular.forEach(rulesets.device, function(devname, devrules) {
             var matchingRule = matchingRuleFromKindSet(devrules, devname);
             if (matchingRule) defer.resolve(matchingRule);
@@ -405,12 +406,30 @@ angular.module('notificationService', ['matrixService'])
             return matchingRuleForEventWithRulesets(ev, rulesCache);
         },
 
+        ifShouldHighlightEvent : function(ev) {
+            var def = $q.defer();
+            var that = this;
+            this.matchingRuleForEvent(ev).then(function(rule) {
+                if (!rule) return false;
+                if (that.shouldHighlightEventWithRule(ev, rule)) {
+                    def.resolve();
+                } else {
+                    def.reject();
+                }
+            });
+            return def.promise;
+        },
+
         shouldHighlightEvent : function(ev) {
             var rule = this.matchingRuleForEventNow(ev);
             if (!rule) return false;
+            return this.shouldHighlightEventWithRule(ev, rule);
+        },
+
+        shouldHighlightEventWithRule : function(ev, rule) {
             var actionObj = actionListToActionsObject(rule.actions);
             if (!actionObj.notify) return false;
-            return actionObj.highlight;
+            return actionObj.tweaks.highlight;
         },
 
         processEvent : function(ev) {
