@@ -355,20 +355,16 @@ function($http, $window, $timeout, $q) {
 
         // Create a room
         create: function(room_alias, visibility, inviteList) {
-            // The REST path spec
-            var path = "/createRoom";
-
-            var req = {
-                "visibility": visibility
+            var opts = {
+                visibility: visibility
             };
             if (room_alias) {
-                req.room_alias_name = room_alias;
+                opts.room_alias_name = room_alias;
             }
             if (inviteList) {
-                req.invite = inviteList;
+                opts.invite = inviteList;
             }
-            
-            return doRequest("POST", path, undefined, req);
+            return client.createRoom(opts);
         },
 
         // Get the user's current state: his presence, the list of his rooms with
@@ -383,7 +379,7 @@ function($http, $window, $timeout, $q) {
         },
         
         // get room initialSync for a specific room
-        roomInitialSync: function(room_id, limit) {
+        roomInitialSync: function(room_id, limit) { // TODO UT
             var path = "/rooms/" + encodeURIComponent(room_id) + "/initialSync";
             if (!limit) {
                 limit = 30;
@@ -392,41 +388,21 @@ function($http, $window, $timeout, $q) {
         },
 
         join: function(room_alias_or_id) {
-            var path = "/join/$room_alias_or_id";
-            room_alias_or_id = encodeURIComponent(room_alias_or_id);
-
-            path = path.replace("$room_alias_or_id", room_alias_or_id);
-
-            // TODO: PUT with txn ID
-            return doRequest("POST", path, undefined, {});
+            return client.joinRoom(room_alias_or_id);
         },
         
         // Invite a user to a room
         invite: function(room_id, user_id) {
-            return this.membershipChange(room_id, user_id, "invite");
+            return client.invite(room_id, user_id);
         },
 
         // Leaves a room
         leave: function(room_id) {
-            return this.membershipChange(room_id, undefined, "leave");
-        },
-
-        membershipChange: function(room_id, user_id, membershipValue) {
-            // The REST path spec
-            var path = "/rooms/$room_id/$membership";
-            path = path.replace("$room_id", encodeURIComponent(room_id));
-            path = path.replace("$membership", encodeURIComponent(membershipValue));
-
-            var data = {};
-            if (user_id !== undefined) {
-                data = { user_id: user_id };
-            }
-
-            // TODO: Use PUT with transaction IDs
-            return doRequest("POST", path, undefined, data);
+            return client.leave(room_id);
         },
 
         // Change the membership of an another user
+        // XXX remove after unban and kick are UTed
         setMembership: function(room_id, user_id, membershipValue, reason) {
             
             // The REST path spec
@@ -458,7 +434,6 @@ function($http, $window, $timeout, $q) {
             return this.setMembership(room_id, user_id, "leave", reason);
         },
         
-        // Retrieves the room ID corresponding to a room alias
         resolveRoomAlias:function(room_alias) {
             return client.resolveRoomAlias(room_alias);
         },
@@ -693,7 +668,7 @@ function($http, $window, $timeout, $q) {
          * @param {Integer} clientTimeout the timeout in ms used at the client HTTP request level
          * @returns a promise
          */
-        getEventStream: function(from, serverTimeout, clientTimeout) {
+        getEventStream: function(from, serverTimeout, clientTimeout) { // TODO UT
             var path = "/events";
             var params = {
                 from: from,
@@ -736,11 +711,7 @@ function($http, $window, $timeout, $q) {
         
         // Set the logged in user presence state
         setUserPresence: function(presence) {
-            var path = "/presence/$user_id/status";
-            path = path.replace("$user_id", encodeURIComponent(config.user_id));
-            return doRequest("PUT", path, undefined, {
-                presence: presence
-            });
+            return client.setPresence(presence);
         },
         
         
@@ -771,7 +742,7 @@ function($http, $window, $timeout, $q) {
          * @param event The existing m.room.power_levels event if one exists.
          * @returns {promise} an $http promise
          */
-        setUserPowerLevel: function(room_id, user_id, powerLevel, event) {
+        setUserPowerLevel: function(room_id, user_id, powerLevel, event) { // TODO UT
             var content = {
                 users: {}
             };

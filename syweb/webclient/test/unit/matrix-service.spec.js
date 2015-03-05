@@ -533,6 +533,66 @@ describe('MatrixService', function() {
     function(matrixService) {
         // TODO sendMessage
     }));
+
+    it("should be able to kick a user without a reason", inject(
+    function(matrixService) {
+        // TODO kick
+    }));
+
+    it("should be able to kick a user with a reason", inject(
+    function(matrixService) {
+        // TODO kick
+    }));
+
+    it("should be able to unban a user", inject(
+    function(matrixService) {
+        // TODO unban
+    }));
+
+    it("should be able to GET the event stream", inject(
+    function(matrixService) {
+        // TODO roomInitialSync
+    }));
+
+    it("should be able to GET room initial sync", inject(
+    function(matrixService) {
+        // TODO getEventStream
+    }));
+
+    it("should be able to PUT new power levels from an existing event", inject(
+    function(matrixService) {
+        // TODO setUserPowerLevel
+    }));
+
+    it("should be able to PUT new power levels", inject(
+    function(matrixService) {
+        // TODO setUserPowerLevel
+    }));
+
+    it("should be able to get identicon URIs", inject(
+    function(matrixService) {
+        // TODO getIdenticonUri
+    }));
+
+    it("should be able to get HTTP URIs for MXC URIs", inject(
+    function(matrixService) {
+        // TODO getHttpUriForMxc
+    }));
+
+    it("should be able to get HTTP URIs for MXC URIs with fragments", inject(
+    function(matrixService) {
+        // TODO getHttpUriForMxc
+    }));
+
+    it("should be able to get HTTP URIs for MXC URIs with query params", inject(
+    function(matrixService) {
+        // TODO getHttpUriForMxc
+    }));
+
+    it("should be able to get HTTP URIs for MXC URIs with query params and fragments", inject(
+    function(matrixService) {
+        // TODO getHttpUriForMxc
+    }));
     
     it('should be able to PUT presence status', inject(
     function(matrixService) {
