@@ -60,6 +60,16 @@ describe("RoomController ", function() {
     var typingService = {
         setTyping: function(){}
     };
+    var notificationService = {
+        processEvent: function(ev) {
+        },
+        shouldHighlightEvent: function(ev) {
+            return testContainsBingWords;
+        },
+        showNotification: function(title, msg, pic, onclick) {
+        
+        }
+    };
     
     beforeEach(function() {
         module('RoomController');
@@ -126,7 +136,8 @@ describe("RoomController ", function() {
                 'dialogService': dialogService,
                 '$routeParams': routeParams,
                 '$modal': modal,
-                'typingService': typingService
+                'typingService': typingService,
+                'notificationService': notificationService,
             });
         })
     );
