@@ -21,7 +21,7 @@ This service manages notifications: enabling, creating and showing them. This
 also contains 'bing word' logic.
 */
 angular.module('notificationService', ['matrixService'])
-.factory('notificationService', ['$timeout', '$q', '$filter', 'matrixService', 'modelService', function($timeout, $q, $filter, matrixService, modelService) {
+.factory('notificationService', ['$timeout', '$q', '$filter', 'matrixService', 'modelService', 'mPresence', function($timeout, $q, $filter, matrixService, modelService, mPresence) {
 
     var getLocalPartFromUserId = function(user_id) {
         if (!user_id) {
@@ -56,7 +56,7 @@ angular.module('notificationService', ['matrixService'])
     var rulesCacheIsCurrent = false;
     var ruleFetchPromise = null;
 
-    var matchingRuleFromKindSet = function(ev, kindset) {
+    var matchingRuleFromKindSet = function(ev, kindset, device) {
         var rulekinds_in_order = ['override', 'content', 'room', 'sender', 'underride'];
         for (var ruleKindIndex = 0; ruleKindIndex < rulekinds_in_order.length; ++ruleKindIndex) {
             var kind = rulekinds_in_order[ruleKindIndex];
@@ -65,13 +65,61 @@ angular.module('notificationService', ['matrixService'])
             for (var ruleIndex = 0; ruleIndex < ruleset.length; ++ruleIndex) {
                 var rule = ruleset[ruleIndex];
 
-                if (ruleMatchesEvent(rule, ev)) {
+                var rawrule = templateRuleToRaw(kind, rule, device);
+                if (!rawrule) return false;
+
+                if (ruleMatchesEvent(rawrule, ev)) {
                     rule.kind = kind;
                     return rule;
                 }
             };
         };
         return null;
+    };
+
+    var templateRuleToRaw = function(kind, tprule, device) {
+        var rawrule = {
+            'rule_id': tprule.rule_id,
+            'actions': tprule.actions,
+            'conditions': []
+        };
+        switch (kind) {
+            case 'underride':
+            case 'override':
+                rawrule.conditions = tprule.conditions;
+                break;
+            case 'room':
+                if (!tprule.rule_id) return null;
+                rawrule.conditions.push({
+                    'kind': 'event_match',
+                    'key': 'room_id',
+                    'pattern': tprule.rule_id
+                });
+                break;
+            case 'sender':
+                if (!tprule.rule_id) return null;
+                rawrule.conditions.push({
+                    'kind': 'event_match',
+                    'key': 'user_id',
+                    'pattern': tprule.rule_id
+                });
+                break;
+            case 'content':
+                if (!tprule.pattern) return null;
+                rawrule.conditions.push({
+                    'kind': 'event_match',
+                    'key': 'content.body',
+                    'pattern': tprule.pattern
+                });
+                break;
+        }
+        if (device) {
+            rawrule.conditions.push({
+                'kind': 'device',
+                'profile_tag': device,
+            });
+        }
+        return rawrule;
     };
 
     var ruleMatchesEvent = function(rule, ev) {
@@ -139,17 +187,17 @@ angular.module('notificationService', ['matrixService'])
         // apparently we only apply word boundaries for content.body matches
         // otherwise the whoe thing must match (this is the synapse impl)
         if (cond.key == 'content.body') {
-            pat = '\\b'+glob_to_regexp(cond.pattern)+'\\b';
+            pat = '\\b'+globToRegexp(cond.pattern)+'\\b';
         } else {
-            pat = '^'+glob_to_regexp(cond.pattern)+'$';
+            pat = '^'+globToRegexp(cond.pattern)+'$';
         }
-        var val = value_for_dotted_key(cond['key'], ev);
+        var val = valueForDottedKey(cond['key'], ev);
         if (!val) return false;
         var regex = new RegExp(pat, 'i');
         return !!val.match(regex);
     };
 
-    var glob_to_regexp = function(glob) {
+    var globToRegexp = function(glob) {
         // From https://github.com/matrix-org/synapse/blob/abbee6b29be80a77e05730707602f3bbfc3f38cb/synapse/push/__init__.py#L132
         var pat = escapeRegExp(glob);
         pat.replace(/\\\*/, '.*?');
@@ -162,13 +210,13 @@ angular.module('notificationService', ['matrixService'])
         return pat;
     };
 
-    var value_for_dotted_key = function(key, ev) {
+    var valueForDottedKey = function(key, ev) {
         var parts = key.split('.');
         var val = ev;
         while (parts.length > 0) {
             var thispart = parts.shift();
-            if (!ev[thispart]) return null;
-            val = ev[thispart];
+            if (!val[thispart]) return null;
+            val = val[thispart];
         }
         return val;
     };
@@ -198,8 +246,9 @@ angular.module('notificationService', ['matrixService'])
     };
 
     var matchingRuleForEventWithRulesets = function(ev, rulesets) {
+        if (!rulesets) return null;
         angular.forEach(rulesets.device, function(devname, devrules) {
-            var matchingRule = matchingRuleFromKindSet(devrules);
+            var matchingRule = matchingRuleFromKindSet(devrules, devname);
             if (matchingRule) defer.resolve(matchingRule);
         });
         return matchingRuleFromKindSet(ev, rulesets.global);
@@ -250,7 +299,7 @@ angular.module('notificationService', ['matrixService'])
     };
     
 
-    return {
+    var nfsvc = {
 
         clearRulesCache : function() {
             rulesCacheIsCurrent = false;
@@ -422,5 +471,7 @@ angular.module('notificationService', ['matrixService'])
         
         showNotification : showNotification,
     };
+    nfsvc.getRulesets();
+    return nfsvc;
 }]);
 
