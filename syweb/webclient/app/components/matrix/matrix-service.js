@@ -442,128 +442,58 @@ function($http, $window, $timeout, $q) {
            
         // Bans a user from a room
         ban: function(room_id, user_id, reason) {
-            var path = "/rooms/$room_id/ban";
-            path = path.replace("$room_id", encodeURIComponent(room_id));
-            
-            return doRequest("POST", path, undefined, {
-                user_id: user_id,
-                reason: reason
-            });
+            return client.ban(room_id, user_id, reason);
         },
         
         // Unbans a user in a room
-        unban: function(room_id, user_id) {
+        unban: function(room_id, user_id) { // TODO UT
             // FIXME: To update when there will be homeserver API for unban 
             // For now, do an unban by resetting the user membership to "leave"
             return this.setMembership(room_id, user_id, "leave");
         },
         
         // Kicks a user from a room
-        kick: function(room_id, user_id, reason) {
+        kick: function(room_id, user_id, reason) { // TODO UT
             // Set the user membership to "leave" to kick him
             return this.setMembership(room_id, user_id, "leave", reason);
         },
         
         // Retrieves the room ID corresponding to a room alias
         resolveRoomAlias:function(room_alias) {
-            var path = "/_matrix/client/api/v1/directory/room/$room_alias";
-            room_alias = encodeURIComponent(room_alias);
-
-            path = path.replace("$room_alias", room_alias);
-
-            return doRequest("GET", path, undefined, {});
+            return client.resolveRoomAlias(room_alias);
         },
         
         setName: function(room_id, name) {
-            var data = {
-                name: name
-            };
-            return this.sendStateEvent(room_id, "m.room.name", data);
+            return client.setRoomName(room_id, name);
         },
         
         setTopic: function(room_id, topic) {
-            var data = {
-                topic: topic
-            };
-            return this.sendStateEvent(room_id, "m.room.topic", data);
+            return client.setRoomTopic(room_id, topic);
         },
         
-        
         sendStateEvent: function(room_id, eventType, content, state_key) {
-            var path = "/rooms/$room_id/state/"+ encodeURIComponent(eventType);
-            if (state_key !== undefined) {
-                path += "/" + encodeURIComponent(state_key);
-            }
-            room_id = encodeURIComponent(room_id);
-            path = path.replace("$room_id", room_id);
-
-            return doRequest("PUT", path, undefined, content);
+            return client.sendStateEvent(room_id, eventType, content, state_key);
         },
 
         sendEvent: function(room_id, eventType, txn_id, content) {
-            // The REST path spec
-            var path = "/rooms/$room_id/send/"+eventType+"/$txn_id";
-
-            if (!txn_id) {
-                txn_id = "m" + new Date().getTime();
-            }
-
-            // Like the cmd client, escape room ids
-            room_id = encodeURIComponent(room_id);            
-
-            // Customize it
-            path = path.replace("$room_id", room_id);
-            path = path.replace("$txn_id", txn_id);
-
-            return doRequest("PUT", path, undefined, content);
+            return client.sendEvent(room_id, eventType, content, txn_id);
         },
         
         setTyping: function(room_id, isTyping, timeoutMs, user_id) {
-            if (!user_id) {
-                user_id = config.user_id;
-            }
-        
-            var path = "/rooms/$room_id/typing/$user_id";
-            path = path.replace("$room_id", encodeURIComponent(room_id));
-            path = path.replace("$user_id", encodeURIComponent(user_id));
-            
-            var content;
-            
-            if (isTyping) {
-                if (!timeoutMs) {
-                    timeoutMs = DEFAULT_TYPING_TIMEOUT_MS;
-                }
-                
-                content = {
-                    typing: true,
-                    timeout: timeoutMs
-                };
-            }
-            else {
-                content = {
-                    typing: false
-                };
-            }
-            
-            return doRequest("PUT", path, undefined, content);
+            return client.sendTyping(room_id, isTyping, timeoutMs);
         },
 
-        sendMessage: function(room_id, txn_id, content) {
+        sendMessage: function(room_id, txn_id, content) { // TODO UT
             return this.sendEvent(room_id, 'm.room.message', txn_id, content);
         },
 
         // Send a text message
         sendTextMessage: function(room_id, body, msg_id) {
-            var content = {
-                 msgtype: "m.text",
-                 body: body
-            };
-
-            return this.sendMessage(room_id, msg_id, content);
+            return client.sendTextMessage(room_id, body, msg_id);
         },
 
         // Send an image message
-        sendImageMessage: function(room_id, image_url, image_body, msg_id) {
+        sendImageMessage: function(room_id, image_url, image_body, msg_id) { // TODO UT
             var content = {
                  msgtype: "m.image",
                  url: image_url,
@@ -576,15 +506,10 @@ function($http, $window, $timeout, $q) {
 
         // Send an emote message
         sendEmoteMessage: function(room_id, body, msg_id) {
-            var content = {
-                 msgtype: "m.emote",
-                 body: body
-            };
-
-            return this.sendMessage(room_id, msg_id, content);
+            return client.sendEmoteMessage(room_id, body, msg_id);
         },
         
-        sendHtmlMessage: function(room_id, body, htmlBody) {
+        sendHtmlMessage: function(room_id, body, htmlBody) { // TODO UT
             var content = {
                 msgtype: "m.text",
                 format: "org.matrix.custom.html",
@@ -595,12 +520,7 @@ function($http, $window, $timeout, $q) {
         },
 
         redactEvent: function(room_id, event_id) {
-            var path = "/rooms/$room_id/redact/$event_id";
-            path = path.replace("$room_id", encodeURIComponent(room_id));
-            // TODO: encodeURIComponent when HS updated.
-            path = path.replace("$event_id", event_id);
-            var content = {};
-            return doRequest("POST", path, undefined, content);
+            return client.redactEvent(room_id, event_id);
         },
         
         paginateBackMessages: function(room_id, from_token, limit) {
@@ -613,7 +533,7 @@ function($http, $window, $timeout, $q) {
         },
         
         // get a user's profile
-        getProfile: function(userId) {
+        getProfile: function(userId) {  // TODO UT
             return client.getProfileInfo(userId);
         },
 
@@ -640,13 +560,7 @@ function($http, $window, $timeout, $q) {
         login: function(userId, password) {
             // TODO We should be checking to make sure the client can support
             // logging in to this HS, else use the fallback.
-            var path = "/login";
-            var data = {
-                "type": "m.login.password",
-                "user": userId,
-                "password": password  
-            };
-            return doRequest("POST", path, undefined, data);
+            return client.loginWithPassword(userId, password);
         },
 
         // hit the Identity Server for a 3PID request.

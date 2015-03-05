@@ -160,8 +160,7 @@ describe('MatrixService', function() {
         });
 
         httpBackend.expectGET(
-            URL + "/directory/room/" + encodeURIComponent(alias) +
-                    "?access_token=foobar")
+            URL + "/directory/room/" + encodeURIComponent(alias))
             .respond({
                 room_id: roomId
             });
@@ -332,26 +331,6 @@ describe('MatrixService', function() {
         httpBackend.flush();
     }));
     
-    it('should be able to GET /directory/room/$alias', inject(
-    function(matrixService) {
-        matrixService.setConfig(CONFIG);
-        var alias = "#test:example.com";
-        var roomId = "!wefuhewfuiw:example.com";
-        matrixService.resolveRoomAlias(alias).then(function(response) {
-            expect(response.data).toEqual({
-                room_id: roomId
-            });
-        });
-
-        httpBackend.expectGET(
-            URL + "/directory/room/" + encodeURIComponent(alias) +
-                    "?access_token=foobar")
-            .respond({
-                room_id: roomId
-            });
-        httpBackend.flush();
-    }));
-    
     it('should be able to paginate a room', inject(
     function(matrixService) {
         matrixService.setConfig(CONFIG);
@@ -495,30 +474,6 @@ describe('MatrixService', function() {
         httpBackend.flush();
     }));
     
-    it('should be able to send typing notifications as a different user', inject(
-    function(matrixService) {
-        var otherUser = "@alice:example.com";
-        var testConfig = angular.copy(CONFIG);
-        testConfig.user_id = "@bob:example.com";
-        matrixService.setConfig(testConfig);
-        var roomId = "!fh38hfwfwef:example.com";
-        matrixService.setTyping(roomId, true, undefined, otherUser).then(
-        function(response) {
-            expect(response.data).toEqual({});
-        });
-
-        httpBackend.expectPUT(
-            URL + "/rooms/" + encodeURIComponent(roomId) + 
-            "/typing/"+encodeURIComponent(otherUser) +
-            "?access_token=foobar",
-            {
-                typing: true,
-                timeout: matrixService.DEFAULT_TYPING_TIMEOUT_MS
-            })
-            .respond({});
-        httpBackend.flush();
-    }));
-    
     it('should be able to stop sending typing notifications', inject(
     function(matrixService) {
         var testConfig = angular.copy(CONFIG);
@@ -562,6 +517,21 @@ describe('MatrixService', function() {
     it("should be able to GET another user's profile info", inject(
     function(matrixService) {
         // TODO getProfile
+    }));
+
+    it("should be able to send HTML messages", inject(
+    function(matrixService) {
+        // TODO sendHtmlMessage
+    }));
+
+    it("should be able to send image messages", inject(
+    function(matrixService) {
+        // TODO sendImageMessage
+    }));
+
+    it("should be able to send generic messages", inject(
+    function(matrixService) {
+        // TODO sendMessage
     }));
     
     it('should be able to PUT presence status', inject(
