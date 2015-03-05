@@ -602,75 +602,39 @@ function($http, $window, $timeout, $q) {
             var content = {};
             return doRequest("POST", path, undefined, content);
         },
-
-        // get a snapshot of the members in a room.
-        getMemberList: function(room_id) {
-            // Like the cmd client, escape room ids
-            room_id = encodeURIComponent(room_id);
-
-            var path = "/rooms/$room_id/members";
-            path = path.replace("$room_id", room_id);
-            return doRequest("GET", path);
-        },
         
         paginateBackMessages: function(room_id, from_token, limit) {
-            var path = "/rooms/$room_id/messages";
-            path = path.replace("$room_id", encodeURIComponent(room_id));
-            var params = {
-                from: from_token,
-                limit: limit,
-                dir: 'b'
-            };
-            return doRequest("GET", path, params);
+            return client.scrollback(room_id, from_token, limit);
         },
 
         // get a list of public rooms on your home server
         publicRooms: function() {
-            var path = "/publicRooms";
-            return doRequest("GET", path);
+            return client.publicRooms();
         },
         
         // get a user's profile
         getProfile: function(userId) {
-            return this.getProfileInfo(userId);
+            return client.getProfileInfo(userId);
         },
 
         // get a display name for this user ID
         getDisplayName: function(userId) {
-            return this.getProfileInfo(userId, "displayname");
+            return client.getProfileInfo(userId, "displayname");
         },
 
         // get the profile picture url for this user ID
         getProfilePictureUrl: function(userId) {
-            return this.getProfileInfo(userId, "avatar_url");
+            return client.getProfileInfo(userId, "avatar_url");
         },
 
         // update your display name
         setDisplayName: function(newName) {
-            var content = {
-                displayname: newName
-            };
-            return this.setProfileInfo(content, "displayname");
+            return client.setDisplayName(newName);
         },
 
         // update your profile picture url
         setProfilePictureUrl: function(newUrl) {
-            var content = {
-                avatar_url: newUrl
-            };
-            return this.setProfileInfo(content, "avatar_url");
-        },
-
-        setProfileInfo: function(data, info_segment) {
-            var path = "/profile/$user/" + info_segment;
-            path = path.replace("$user", encodeURIComponent(config.user_id));
-            return doRequest("PUT", path, undefined, data);
-        },
-
-        getProfileInfo: function(userId, info_segment) {
-            var path = "/profile/"+encodeURIComponent(userId);
-            if (info_segment) path += '/' + info_segment;
-            return doRequest("GET", path);
+            return client.setAvatarUrl(newUrl);
         },
         
         login: function(userId, password) {

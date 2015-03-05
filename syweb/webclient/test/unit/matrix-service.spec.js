@@ -352,21 +352,6 @@ describe('MatrixService', function() {
         httpBackend.flush();
     }));
     
-    it('should be able to GET /rooms/$roomid/members', inject(
-    function(matrixService) {
-        matrixService.setConfig(CONFIG);
-        var roomId = "!wefuhewfuiw:example.com";
-        matrixService.getMemberList(roomId).then(function(response) {
-            expect(response.data).toEqual({});
-        });
-
-        httpBackend.expectGET(
-            URL + "/rooms/" + encodeURIComponent(roomId) +
-                    "/members?access_token=foobar")
-            .respond({});
-        httpBackend.flush();
-    }));
-    
     it('should be able to paginate a room', inject(
     function(matrixService) {
         matrixService.setConfig(CONFIG);
@@ -572,6 +557,11 @@ describe('MatrixService', function() {
             })
             .respond({});
         httpBackend.flush();
+    }));
+
+    it("should be able to GET another user's profile info", inject(
+    function(matrixService) {
+        // TODO getProfile
     }));
     
     it('should be able to PUT presence status', inject(
