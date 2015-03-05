@@ -174,7 +174,7 @@ angular.module('notificationService', [])
         if (!ev.content || ! ev.content.body || typeof ev.content.body != 'string') return false;
 
         var displayname = $filter("mUserDisplayName")(matrixService.config().user_id, ev.room_id);
-        var pat = new RegExp("\\b"+escapeRegExp(displayname)+"\\b")
+        var pat = new RegExp("\\b"+escapeRegExp(displayname)+"\\b", 'i')
         return ev.content.body.search(pat) > -1;
     };
 
@@ -200,9 +200,9 @@ angular.module('notificationService', [])
     var globToRegexp = function(glob) {
         // From https://github.com/matrix-org/synapse/blob/abbee6b29be80a77e05730707602f3bbfc3f38cb/synapse/push/__init__.py#L132
         var pat = escapeRegExp(glob);
-        pat.replace(/\\\*/, '.*?');
-        pat.replace(/\\\?/, '.');
-        pat.replace(/\\\[(\\\!|)(.*)\\\]/, function(match, p1, p2, offset, string) {
+        pat = pat.replace(/\\\*/, '.*');
+        pat = pat.replace(/\?/, '.');
+        pat = pat.replace(/\[(!|)(.*)\]/, function(match, p1, p2, offset, string) {
             var first = p1 && '^' || '';
             var second = p2.replace(/\\\-/, '-');
             return '['+first+second+']';
