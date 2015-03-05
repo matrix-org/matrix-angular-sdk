@@ -192,7 +192,7 @@ angular.module('notificationService', [])
             pat = '^'+globToRegexp(cond.pattern)+'$';
         }
         var val = valueForDottedKey(cond['key'], ev);
-        if (!val) return false;
+        if (!val || typeof val != 'string') return false;
         var regex = new RegExp(pat, 'i');
         return !!val.match(regex);
     };
@@ -264,7 +264,7 @@ angular.module('notificationService', [])
     var shouldHighlightEventWithRule = function(ev, rule) {
         var actionObj = actionListToActionsObject(rule.actions);
         if (!actionObj.notify) return false;
-        return actionObj.tweaks.highlight;
+        return !!actionObj.tweaks.highlight;
     };
 
     var actionListToActionsObject = function(actionlist) {
