@@ -15,14 +15,14 @@ limitations under the License.
 */
 
 angular.module('RoomController', ['ngSanitize', 'matrixFilter', 'mFileInput'])
-.controller('RoomController', ['$modal', '$scope', '$timeout', '$routeParams', '$location', '$rootScope', 'matrixService', 'eventHandlerService', 'mFileUpload', 'MatrixCall', 'modelService', 'recentsService', 'mUserDisplayNameFilter', 'dialogService', 'typingService',
-                               function($modal, $scope, $timeout, $routeParams, $location, $rootScope, matrixService, eventHandlerService, mFileUpload, MatrixCall, modelService, recentsService, mUserDisplayNameFilter, dialogService, typingService) {
+.controller('RoomController', ['$modal', '$scope', '$timeout', '$routeParams', '$location', '$rootScope', 'matrixService', 'eventHandlerService', 'mFileUpload', 'MatrixCall', 'modelService', 'recentsService', 'mUserDisplayNameFilter', 'dialogService', 'typingService', 'notificationService',
+                               function($modal, $scope, $timeout, $routeParams, $location, $rootScope, matrixService, eventHandlerService, mFileUpload, MatrixCall, modelService, recentsService, mUserDisplayNameFilter, dialogService, typingService, notificationService) {
    'use strict';
     var MESSAGES_PER_PAGINATION = 30;
     var THUMBNAIL_SIZE = 320;
     
     // .html needs this
-    $scope.shouldHighlightEvent = eventHandlerService.shouldHighlightEvent;
+    $scope.shouldHighlightEvent = notificationService.shouldHighlightEvent;
 
     // Room ids. Computed and resolved in onInit
     $scope.room_id = undefined;

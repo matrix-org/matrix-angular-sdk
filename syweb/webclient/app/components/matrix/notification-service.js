@@ -255,6 +255,18 @@ angular.module('notificationService', ['matrixService'])
         return matchingRuleFromKindSet(ev, rulesets.global);
     };
 
+    var matchingRuleForEventNow = function(ev) {
+        // Returns a matching rule for this event with whatever rules
+        // we have cached right now (ie. it might be total rubbish)
+        return matchingRuleForEventWithRulesets(ev, rulesCache);
+    };
+
+    var shouldHighlightEventWithRule = function(ev, rule) {
+        var actionObj = actionListToActionsObject(rule.actions);
+        if (!actionObj.notify) return false;
+        return actionObj.tweaks.highlight;
+    };
+
     var actionListToActionsObject = function(actionlist) {
         var actionobj = { 'notify': false, 'tweaks': {} };
         angular.forEach(actionlist, function(action) {
@@ -400,12 +412,6 @@ angular.module('notificationService', ['matrixService'])
             return def.promise;
         },
 
-        matchingRuleForEventNow : function(ev) {
-            // Returns a matching rule for this event with whatever rules
-            // we have cached right now (ie. it might be total rubbish)
-            return matchingRuleForEventWithRulesets(ev, rulesCache);
-        },
-
         ifShouldHighlightEvent : function(ev) {
             var def = $q.defer();
             var that = this;
@@ -421,15 +427,9 @@ angular.module('notificationService', ['matrixService'])
         },
 
         shouldHighlightEvent : function(ev) {
-            var rule = this.matchingRuleForEventNow(ev);
+            var rule = matchingRuleForEventNow(ev);
             if (!rule) return false;
-            return this.shouldHighlightEventWithRule(ev, rule);
-        },
-
-        shouldHighlightEventWithRule : function(ev, rule) {
-            var actionObj = actionListToActionsObject(rule.actions);
-            if (!actionObj.notify) return false;
-            return actionObj.tweaks.highlight;
+            return shouldHighlightEventWithRule(ev, rule);
         },
 
         processEvent : function(ev) {
