@@ -521,12 +521,57 @@ describe('MatrixService', function() {
 
     it("should be able to send HTML messages", inject(
     function(matrixService) {
+        matrixService.setConfig(CONFIG);
+        var roomId = "!fh38hfwfwef:example.com";
+        var body = "ABC 123";
+        var html = "<p><b>ABC</b> 123</p>";
+        matrixService.sendHtmlMessage(roomId, body, html).then(
+        function(response) {
+            expect(response.data).toEqual({});
+        });
+
+        httpBackend.expectPUT(
+            new RegExp(URL + "/rooms/" + encodeURIComponent(roomId) + 
+            "/send/m.room.message/(.*)" +
+            "?access_token=foobar"),
+            {
+                body: body,
+                format: "org.matrix.custom.html",
+                formatted_body: html,
+                msgtype: "m.text"
+            })
+            .respond({});
+        httpBackend.flush();
         // TODO sendHtmlMessage
     }));
 
     it("should be able to send image messages", inject(
     function(matrixService) {
-        // TODO sendImageMessage
+        matrixService.setConfig(CONFIG);
+        var roomId = "!fh38hfwfwef:example.com";
+        var url = "mxc://some/uri";
+        var info = {
+            w: 100,
+            h: 200,
+            mimetype: "image/gif"
+        };
+        matrixService.sendImageMessage(roomId, url, info).then(
+        function(response) {
+            expect(response.data).toEqual({});
+        });
+
+        httpBackend.expectPUT(
+            new RegExp(URL + "/rooms/" + encodeURIComponent(roomId) + 
+            "/send/m.room.message/(.*)" +
+            "?access_token=foobar"),
+            {
+                body: "Image",
+                info: info,
+                url: url,
+                msgtype: "m.image"
+            })
+            .respond({});
+        httpBackend.flush();
     }));
 
     it("should be able to send generic messages", inject(

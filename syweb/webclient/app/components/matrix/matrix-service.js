@@ -462,36 +462,20 @@ function($http, $window, $timeout, $q) {
             return this.sendEvent(room_id, 'm.room.message', txn_id, content);
         },
 
-        // Send a text message
         sendTextMessage: function(room_id, body, msg_id) {
             return client.sendTextMessage(room_id, body, msg_id);
         },
 
-        // Send an image message
-        sendImageMessage: function(room_id, image_url, image_body, msg_id) { // TODO UT
-            var content = {
-                 msgtype: "m.image",
-                 url: image_url,
-                 info: image_body,
-                 body: "Image"
-            };
-
-            return this.sendMessage(room_id, msg_id, content);
+        sendImageMessage: function(room_id, image_url, image_body, msg_id) {
+            return client.sendImageMessage(room_id, image_url, image_body);
         },
 
-        // Send an emote message
         sendEmoteMessage: function(room_id, body, msg_id) {
             return client.sendEmoteMessage(room_id, body, msg_id);
         },
         
-        sendHtmlMessage: function(room_id, body, htmlBody) { // TODO UT
-            var content = {
-                msgtype: "m.text",
-                format: "org.matrix.custom.html",
-                body: body,
-                formatted_body: htmlBody
-            };
-            return this.sendMessage(room_id, undefined, content);
+        sendHtmlMessage: function(room_id, body, htmlBody) {
+            return client.sendHtmlMessage(room_id, body, htmlBody);
         },
 
         redactEvent: function(room_id, event_id) {
