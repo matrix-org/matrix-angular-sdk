@@ -23,7 +23,8 @@ This serves to isolate the caller from changes to the underlying url paths, as
 well as attach common params (e.g. access_token) to requests.
 */
 angular.module('matrixService', [])
-.factory('matrixService', ['$http', '$timeout', '$q', function($http, $timeout, $q) {
+.factory('matrixService', ['$http', '$window', '$timeout', '$q', 
+function($http, $window, $timeout, $q) {
         
    /* 
     * Permanent storage of user information
@@ -35,6 +36,27 @@ angular.module('matrixService', [])
     *    - version: the version of this cache
     */    
     var config;
+
+    var loadConfig = function() {
+        if (!config) {
+            config = localStorage.getItem("config");
+            if (config) {
+                config = JSON.parse(config);
+
+                // Reset the cache if the version loaded is not the expected one
+                if (configVersion !== config.version) {
+                    config = undefined;
+                    saveConfig();
+                }
+            }
+        }
+        return config;
+    };
+    
+    var storeConfig = function() {
+        config.version = configVersion;
+        localStorage.setItem("config", JSON.stringify(config));
+    };
     
     // Current version of permanent storage
     var configVersion = 0;
@@ -43,6 +65,40 @@ angular.module('matrixService', [])
     var rateLimitMaxMs = 1000 * 20; // 20s
     
     var DEFAULT_TYPING_TIMEOUT_MS = 20000;
+
+    var client;
+    if (!$window.matrixcs) {
+        console.error("Missing matrix.js!");
+    }
+
+    var initClient = function(url, token, userId) {
+        // inject an AngularJS compatible request module
+        $window.matrixcs.request(function(opts, callback) {
+            // return a promise rather than use callbacks
+            return doInternalRequest(opts.uri, opts.method, opts.qs, opts.body, undefined, {
+                timeout: 35000
+            });
+        });
+
+        client = $window.matrixcs.createClient({
+            baseUrl: url,
+            accessToken: token,
+            userId: userId
+        });
+    };
+
+    var initFromConfig = function() {
+        if (!config) {
+            loadConfig();
+        }
+        if (config) {
+            initClient(config.homeserver, config.access_token, config.user_id);
+        }
+        else {
+            console.error("No config to init client");
+        }
+    };
+    initFromConfig();
 
     var doRequest = function(method, path, params, data, $httpParams) {
         if (!config) {
@@ -70,11 +126,10 @@ angular.module('matrixService', [])
         return doBaseRequest(config.homeserver, method, path, params, data, undefined, $httpParams);
     };
 
-    var doBaseRequest = function(baseUrl, method, path, params, data, headers, $httpParams) {
-
+    var doInternalRequest = function(uri, method, params, data, headers, $httpParams) {
         var request = {
             method: method,
-            url: baseUrl + path,
+            url: uri,
             params: params,
             data: data,
             headers: headers
@@ -110,6 +165,10 @@ angular.module('matrixService', [])
         else {
             return $http(request);
         }
+    };
+
+    var doBaseRequest = function(baseUrl, method, path, params, data, headers, $httpParams) {
+        return doInternalRequest(baseUrl + path, method, params, data, headers, $httpParams);
     };
     
     // recursively called to handle rate limiting: giving up based on the cumulative
@@ -165,27 +224,6 @@ angular.module('matrixService', [])
         data.type = loginType;
         console.log("doRegisterLogin >>> " + loginType);
         return doRequest("POST", path, undefined, data);
-    };
-    
-    var loadConfig = function() {
-        if (!config) {
-            config = localStorage.getItem("config");
-            if (config) {
-                config = JSON.parse(config);
-
-                // Reset the cache if the version loaded is not the expected one
-                if (configVersion !== config.version) {
-                    config = undefined;
-                    saveConfig();
-                }
-            }
-        }
-        return config;
-    };
-    
-    var storeConfig = function() {
-        config.version = configVersion;
-        localStorage.setItem("config", JSON.stringify(config));
     };
 
     return {
@@ -336,25 +374,12 @@ angular.module('matrixService', [])
         // Get the user's current state: his presence, the list of his rooms with
         // the last {limit} events
         initialSync: function(limit, feedback) {
-            // The REST path spec
-
-            var path = "/initialSync";
-
-            var params = {};
-            if (limit) {
-                params.limit = limit;
-            }
-            if (feedback) {
-                params.feedback = feedback;
-            }
-
-            return doRequest("GET", path, params);
+            return client.initialSync(limit);
         },
         
         // get room state for a specific room
         roomState: function(room_id) {
-            var path = "/rooms/" + encodeURIComponent(room_id) + "/state";
-            return doRequest("GET", path);
+            return client.roomState(room_id);
         },
         
         // get room initialSync for a specific room
@@ -851,6 +876,7 @@ angular.module('matrixService', [])
         // Set a new config (Use saveConfig to actually store it permanently)
         setConfig: function(newConfig) {
             config = newConfig;
+            initFromConfig();
         },
         
         // Commits config into permanent storage
