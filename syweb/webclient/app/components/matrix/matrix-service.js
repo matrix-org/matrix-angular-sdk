@@ -574,37 +574,7 @@ function($http, $window, $timeout, $q) {
         },
         
         getHttpUriForMxc: function(mxc, width, height, resizeMethod) {
-            if (!typeof mxc === "string" || !mxc) {
-                return mxc;
-            }
-            if (mxc.indexOf("mxc://") !== 0) {
-                return mxc;
-            }
-            var serverAndMediaId = mxc.slice(6); // strips mxc://
-            var prefix = "/_matrix/media/v1/download/";
-            var params = {};
-            
-            if (width) {
-                params.width = width;
-            }
-            if (height) {
-                params.height = height;
-            }
-            if (resizeMethod) {
-                params.method = resizeMethod;
-            }
-            if (Object.keys(params).length > 0) {
-                // these are thumbnailing params so they probably want the thumbnailing API...
-                prefix = "/_matrix/media/v1/thumbnail/";
-            }
-
-            var fragmentOffset = serverAndMediaId.indexOf("#"),
-                fragment = "";
-            if (fragmentOffset >= 0) {
-                fragment = serverAndMediaId.substr(fragmentOffset);
-                serverAndMediaId = serverAndMediaId.substr(0, fragmentOffset);
-            }
-            return config.homeserver + prefix + serverAndMediaId + (Object.keys(params).length === 0 ? "" : ("?" + jQuery.param(params))) + fragment;
+            return client.getHttpUriForMxc(mxc, width, height, resizeMethod);
         },
         
 

@@ -764,22 +764,34 @@ describe('MatrixService', function() {
 
     it("should be able to get HTTP URIs for MXC URIs", inject(
     function(matrixService) {
-        // TODO getHttpUriForMxc
+        matrixService.setConfig(CONFIG);
+        var mxc = "mxc://foo/bar";
+        var uri = matrixService.getHttpUriForMxc(mxc);
+        expect(uri).toEqual(CONFIG.homeserver+"/_matrix/media/v1/download/foo/bar");
     }));
 
     it("should be able to get HTTP URIs for MXC URIs with fragments", inject(
     function(matrixService) {
-        // TODO getHttpUriForMxc
+        matrixService.setConfig(CONFIG);
+        var mxc = "mxc://foo/bar#auto";
+        var uri = matrixService.getHttpUriForMxc(mxc);
+        expect(uri).toEqual(CONFIG.homeserver+"/_matrix/media/v1/download/foo/bar#auto");
     }));
 
     it("should be able to get HTTP URIs for MXC URIs with query params", inject(
     function(matrixService) {
-        // TODO getHttpUriForMxc
+        matrixService.setConfig(CONFIG);
+        var mxc = "mxc://foo/bar";
+        var uri = matrixService.getHttpUriForMxc(mxc, 100, 200, "crop");
+        expect(uri).toEqual(CONFIG.homeserver+"/_matrix/media/v1/thumbnail/foo/bar?width=100&height=200&method=crop");
     }));
 
     it("should be able to get HTTP URIs for MXC URIs with query params and fragments", inject(
     function(matrixService) {
-        // TODO getHttpUriForMxc
+        matrixService.setConfig(CONFIG);
+        var mxc = "mxc://foo/bar#auto";
+        var uri = matrixService.getHttpUriForMxc(mxc, 100, 200);
+        expect(uri).toEqual(CONFIG.homeserver+"/_matrix/media/v1/thumbnail/foo/bar?width=100&height=200#auto");
     }));
     
     it('should be able to PUT presence status', inject(
