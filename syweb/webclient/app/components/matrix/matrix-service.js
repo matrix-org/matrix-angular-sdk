@@ -550,22 +550,7 @@ function($http, $window, $timeout, $q) {
         },
 
         getIdenticonUri: function(identiconString, width, height) {
-            if (!identiconString) {
-                return;
-            }
-            if (!width) {
-                width = 96;
-            }
-            if (!height) {
-                height = 96;
-            }
-            var params = {
-                width: width,
-                height: height
-            };
-
-            var prefix = "/_matrix/media/v1/identicon/";
-            return config.homeserver + prefix + encodeURIComponent(identiconString) + (Object.keys(params).length === 0 ? "" : ("?" + jQuery.param(params)));
+            return client.getIdenticonUri(identiconString, width, height);
         },
         
         /**
@@ -630,7 +615,7 @@ function($http, $window, $timeout, $q) {
          * @param {Integer} clientTimeout the timeout in ms used at the client HTTP request level
          * @returns a promise
          */
-        getEventStream: function(from, serverTimeout, clientTimeout) { // TODO UT
+        getEventStream: function(from, serverTimeout, clientTimeout) {
             var path = "/events";
             var params = {
                 from: from,
@@ -704,22 +689,8 @@ function($http, $window, $timeout, $q) {
          * @param event The existing m.room.power_levels event if one exists.
          * @returns {promise} an $http promise
          */
-        setUserPowerLevel: function(room_id, user_id, powerLevel, event) { // TODO UT
-            var content = {
-                users: {}
-            };
-            if (event) {
-                // if there is an existing event, copy the content as it contains
-                // the power level values for other members which we do not want
-                // to modify.
-                content = angular.copy(event.content);
-            }
-            content.users[user_id] = powerLevel;
-                
-            var path = "/rooms/$room_id/state/m.room.power_levels";
-            path = path.replace("$room_id", encodeURIComponent(room_id));
-                
-            return doRequest("PUT", path, undefined, content);
+        setUserPowerLevel: function(room_id, user_id, powerLevel, event) {
+            return client.setPowerLevel(room_id, user_id, powerLevel, event);
         },
 
         getTurnServer: function() {

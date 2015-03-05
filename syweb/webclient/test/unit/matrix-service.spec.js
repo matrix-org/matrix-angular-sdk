@@ -664,7 +664,17 @@ describe('MatrixService', function() {
 
     it("should be able to GET the event stream", inject(
     function(matrixService) {
-        // TODO getEventStream
+        matrixService.setConfig(CONFIG);
+        var from = "s33_44_55_66";
+        var serverTimeout = 124567;
+        matrixService.getEventStream(from, serverTimeout).then(function(response) {
+            expect(response.data).toEqual({});
+        });
+
+        httpBackend.expectGET(
+            URL + "/events?access_token=foobar&from="+from+"&timeout="+serverTimeout)
+            .respond({});
+        httpBackend.flush();
     }));
 
     it("should be able to GET room initial sync", inject(
@@ -685,17 +695,71 @@ describe('MatrixService', function() {
 
     it("should be able to PUT new power levels from an existing event", inject(
     function(matrixService) {
-        // TODO setUserPowerLevel
+        matrixService.setConfig(CONFIG);
+        var userId = "@foo:bar";
+        var roomId = "!flibble:wibble";
+        var level = 42;
+        var event = {
+            type: "m.room.power_levels",
+            content: {
+              "ban": 50,
+              "events": {
+                "m.room.name": 100,
+                "m.room.power_levels": 100
+              },
+              "events_default": 0,
+              "kick": 50,
+              "redact": 50,
+              "state_default": 50,
+              "users": {
+                "@woo:hoo": 100
+              },
+              "users_default": 0
+            }
+        };
+        var newContent = angular.copy(event.content);
+        newContent.users[userId] = level;
+        matrixService.setUserPowerLevel(roomId, userId, level, event).then(function(response) {
+            expect(response.data).toEqual([]);
+        });
+
+        httpBackend.expectPUT(
+            URL + "/rooms/"+encodeURIComponent(roomId)+
+            "/state/m.room.power_levels?access_token=foobar",
+            newContent)
+            .respond([]);
+        httpBackend.flush();
     }));
 
     it("should be able to PUT new power levels", inject(
     function(matrixService) {
-        // TODO setUserPowerLevel
+        matrixService.setConfig(CONFIG);
+        var userId = "@foo:bar";
+        var roomId = "!flibble:wibble";
+        var level = 42;
+        var newContent = {
+            users: {}
+        };
+        newContent.users[userId] = level;
+        matrixService.setUserPowerLevel(roomId, userId, level).then(function(response) {
+            expect(response.data).toEqual([]);
+        });
+
+        httpBackend.expectPUT(
+            URL + "/rooms/"+encodeURIComponent(roomId)+
+            "/state/m.room.power_levels?access_token=foobar",
+            newContent)
+            .respond([]);
+        httpBackend.flush();
     }));
 
     it("should be able to get identicon URIs", inject(
     function(matrixService) {
-        // TODO getIdenticonUri
+        matrixService.setConfig(CONFIG);
+        var id = "@foo:bar";
+        var uri = matrixService.getIdenticonUri(id, 32, 64);
+        expect(uri).toEqual(CONFIG.homeserver+"/_matrix/media/v1/identicon/"+
+            encodeURIComponent(id)+"?width=32&height=64");
     }));
 
     it("should be able to get HTTP URIs for MXC URIs", inject(
