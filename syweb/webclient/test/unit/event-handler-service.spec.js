@@ -123,6 +123,9 @@ describe('EventHandlerService', function() {
         processEvent: function(ev) {
             if (matrixService.config().muteNotifications) return;
             if (testContainsBingWords) this.showNotification(1,1,1,1);
+            if (ev.type == 'm.room.member' && ev.content.membership == 'invite' && ev.state_key == testUserId) {
+                this.showNotification(1,1,1,1);
+            }
         },
         shouldHighlightEvent: function(ev) {
             return testContainsBingWords;
@@ -716,6 +719,7 @@ describe('EventHandlerService', function() {
         spyOn(notificationService, "showNotification");
         _window.Notification = true;
         eventHandlerService.handleEvent(event, true);
+        scope.$apply();
         expect(notificationService.showNotification).toHaveBeenCalled();
     }));
     
