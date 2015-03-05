@@ -8,10 +8,17 @@ describe('NotificationService', function() {
         getRooms: function(){}
     };
 
+    var mPresence = {
+        getState: function() {
+            return testPresenceState;
+        }
+    };
+
     beforeEach(function() {
         // mocked dependencies
         module(function ($provide) {
           $provide.value('modelService', modelService);
+          $provide.value('mPresence', mPresence);
         });
 
         module('notificationService');
