@@ -58,6 +58,51 @@ describe('NotificationService', function() {
                             "enabled": true,
                             "pattern": "foo*bar",
                             "rule_id": "foobar"
+                        },
+                        {
+                            "actions": [
+                                "notify",
+                                {
+                                    "set_tweak": "sound",
+                                    "value": "default"
+                                },
+                                {
+                                    "set_tweak": "highlight"
+                                }
+                            ],
+                            "enabled": true,
+                            "pattern": "p[io]ng",
+                            "rule_id": "pingpong"
+                        },
+                        {
+                            "actions": [
+                                "notify",
+                                {
+                                    "set_tweak": "sound",
+                                    "value": "default"
+                                },
+                                {
+                                    "set_tweak": "highlight"
+                                }
+                            ],
+                            "enabled": true,
+                            "pattern": "I ate [0-9] pies",
+                            "rule_id": "pies"
+                        },
+                        {
+                            "actions": [
+                                "notify",
+                                {
+                                    "set_tweak": "sound",
+                                    "value": "default"
+                                },
+                                {
+                                    "set_tweak": "highlight"
+                                }
+                            ],
+                            "enabled": true,
+                            "pattern": "b[!ai]ke",
+                            "rule_id": "bakebike"
                         }
                     ],
                     "override": [
@@ -257,6 +302,28 @@ describe('NotificationService', function() {
     function(notificationService) {
         testEvent.content.body = "It was foomahbar I think.";
         expect(notificationService.shouldHighlightEvent(testEvent)).toEqual(true);
+    }));
+
+    it('should bing on character group ([abc]) bing words.', inject(
+    function(notificationService) {
+        testEvent.content.body = "Ping!";
+        expect(notificationService.shouldHighlightEvent(testEvent)).toEqual(true);
+        testEvent.content.body = "Pong!";
+        expect(notificationService.shouldHighlightEvent(testEvent)).toEqual(true);
+    }));
+
+    it('should bing on character range ([a-z]) bing words.', inject(
+    function(notificationService) {
+        testEvent.content.body = "I ate 6 pies";
+        expect(notificationService.shouldHighlightEvent(testEvent)).toEqual(true);
+    }));
+
+    it('should bing on character negation ([!a]) bing words.', inject(
+    function(notificationService) {
+        testEvent.content.body = "boke";
+        expect(notificationService.shouldHighlightEvent(testEvent)).toEqual(true);
+        testEvent.content.body = "bake";
+        expect(notificationService.shouldHighlightEvent(testEvent)).toEqual(false);
     }));
     
     // invalid

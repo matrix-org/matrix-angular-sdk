@@ -202,7 +202,7 @@ angular.module('notificationService', [])
         var pat = escapeRegExp(glob);
         pat = pat.replace(/\\\*/, '.*');
         pat = pat.replace(/\?/, '.');
-        pat = pat.replace(/\[(!|)(.*)\]/, function(match, p1, p2, offset, string) {
+        pat = pat.replace(/\\\[(!|)(.*)\\]/, function(match, p1, p2, offset, string) {
             var first = p1 && '^' || '';
             var second = p2.replace(/\\\-/, '-');
             return '['+first+second+']';
