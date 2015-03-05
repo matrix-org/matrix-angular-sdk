@@ -379,12 +379,8 @@ function($http, $window, $timeout, $q) {
         },
         
         // get room initialSync for a specific room
-        roomInitialSync: function(room_id, limit) { // TODO UT
-            var path = "/rooms/" + encodeURIComponent(room_id) + "/initialSync";
-            if (!limit) {
-                limit = 30;
-            }
-            return doRequest("GET", path, { limit: limit });
+        roomInitialSync: function(room_id, limit) {
+            return client.roomInitialSync(room_id, limit);
         },
 
         join: function(room_alias_or_id) {
@@ -400,21 +396,6 @@ function($http, $window, $timeout, $q) {
         leave: function(room_id) {
             return client.leave(room_id);
         },
-
-        // Change the membership of an another user
-        // XXX remove after unban and kick are UTed
-        setMembership: function(room_id, user_id, membershipValue, reason) {
-            
-            // The REST path spec
-            var path = "/rooms/$room_id/state/m.room.member/$user_id";
-            path = path.replace("$room_id", encodeURIComponent(room_id));
-            path = path.replace("$user_id", user_id);
-
-            return doRequest("PUT", path, undefined, {
-                membership : membershipValue,
-                reason: reason
-            });
-        },
            
         // Bans a user from a room
         ban: function(room_id, user_id, reason) {
@@ -422,16 +403,13 @@ function($http, $window, $timeout, $q) {
         },
         
         // Unbans a user in a room
-        unban: function(room_id, user_id) { // TODO UT
-            // FIXME: To update when there will be homeserver API for unban 
-            // For now, do an unban by resetting the user membership to "leave"
-            return this.setMembership(room_id, user_id, "leave");
+        unban: function(room_id, user_id) {
+            return client.unban(room_id, user_id);
         },
         
         // Kicks a user from a room
-        kick: function(room_id, user_id, reason) { // TODO UT
-            // Set the user membership to "leave" to kick him
-            return this.setMembership(room_id, user_id, "leave", reason);
+        kick: function(room_id, user_id, reason) {
+            return client.kick(room_id, user_id, reason);
         },
         
         resolveRoomAlias:function(room_alias) {
@@ -458,8 +436,8 @@ function($http, $window, $timeout, $q) {
             return client.sendTyping(room_id, isTyping, timeoutMs);
         },
 
-        sendMessage: function(room_id, txn_id, content) { // TODO UT
-            return this.sendEvent(room_id, 'm.room.message', txn_id, content);
+        sendMessage: function(room_id, txn_id, content) {
+            return client.sendMessage(room_id, content, txn_id);
         },
 
         sendTextMessage: function(room_id, body, msg_id) {
@@ -492,7 +470,7 @@ function($http, $window, $timeout, $q) {
         },
         
         // get a user's profile
-        getProfile: function(userId) {  // TODO UT
+        getProfile: function(userId) {
             return client.getProfileInfo(userId);
         },
 

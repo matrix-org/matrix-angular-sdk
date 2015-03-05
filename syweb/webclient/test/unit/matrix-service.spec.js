@@ -516,7 +516,16 @@ describe('MatrixService', function() {
 
     it("should be able to GET another user's profile info", inject(
     function(matrixService) {
-        // TODO getProfile
+        matrixService.setConfig(CONFIG);
+        var userId = "@foo:example.com";
+        matrixService.getProfile(userId).then(function(response) {
+            expect(response.data).toEqual({});
+        });
+
+        httpBackend.expectGET(URL + "/profile/" + encodeURIComponent(userId) +
+            "?access_token=foobar")
+            .respond({});
+        httpBackend.flush();
     }));
 
     it("should be able to send HTML messages", inject(
@@ -542,7 +551,6 @@ describe('MatrixService', function() {
             })
             .respond({});
         httpBackend.flush();
-        // TODO sendHtmlMessage
     }));
 
     it("should be able to send image messages", inject(
@@ -576,32 +584,103 @@ describe('MatrixService', function() {
 
     it("should be able to send generic messages", inject(
     function(matrixService) {
-        // TODO sendMessage
+        matrixService.setConfig(CONFIG);
+        var roomId = "!fh38hfwfwef:example.com";
+        var content = {
+            body: "default fall back string",
+            custom: "weeee",
+            stuff: 42,
+            msgtype: "org.custom.type"
+        }
+        matrixService.sendMessage(roomId, undefined, content).then(
+        function(response) {
+            expect(response.data).toEqual({});
+        });
+
+        httpBackend.expectPUT(
+            new RegExp(URL + "/rooms/" + encodeURIComponent(roomId) + 
+            "/send/m.room.message/(.*)" +
+            "?access_token=foobar"),
+            content)
+            .respond({});
+        httpBackend.flush();
     }));
 
     it("should be able to kick a user without a reason", inject(
     function(matrixService) {
-        // TODO kick
+        matrixService.setConfig(CONFIG);
+        var userId = "@example:example.com";
+        matrixService.kick(roomId, userId).then(function(response) {
+            expect(response.data).toEqual({});
+        });
+
+        httpBackend.expectPUT(
+            URL + "/rooms/" + encodeURIComponent(roomId) + 
+            "/state/m.room.member/"+encodeURIComponent(userId)+"?access_token=foobar",
+            {
+                membership: "leave",
+            })
+            .respond({});
+        httpBackend.flush();
     }));
 
     it("should be able to kick a user with a reason", inject(
     function(matrixService) {
-        // TODO kick
+        matrixService.setConfig(CONFIG);
+        var userId = "@example:example.com";
+        var reason = "Because I say so";
+        matrixService.kick(roomId, userId, reason).then(function(response) {
+            expect(response.data).toEqual({});
+        });
+
+        httpBackend.expectPUT(
+            URL + "/rooms/" + encodeURIComponent(roomId) + 
+            "/state/m.room.member/"+encodeURIComponent(userId)+"?access_token=foobar",
+            {
+                membership: "leave",
+                reason: reason
+            })
+            .respond({});
+        httpBackend.flush();
     }));
 
     it("should be able to unban a user", inject(
     function(matrixService) {
-        // TODO unban
+        matrixService.setConfig(CONFIG);
+        var userId = "@example:example.com";
+        matrixService.unban(roomId, userId).then(function(response) {
+            expect(response.data).toEqual({});
+        });
+
+        httpBackend.expectPUT(
+            URL + "/rooms/" + encodeURIComponent(roomId) + 
+            "/state/m.room.member/"+encodeURIComponent(userId)+"?access_token=foobar",
+            {
+                membership: "leave",
+            })
+            .respond({});
+        httpBackend.flush();
     }));
 
     it("should be able to GET the event stream", inject(
     function(matrixService) {
-        // TODO roomInitialSync
+        // TODO getEventStream
     }));
 
     it("should be able to GET room initial sync", inject(
     function(matrixService) {
-        // TODO getEventStream
+        matrixService.setConfig(CONFIG);
+        var limit = 15;
+        var roomId = "!flibble:wibble";
+        matrixService.roomInitialSync(roomId, limit).then(function(response) {
+            expect(response.data).toEqual([]);
+        });
+
+        httpBackend.expectGET(
+            URL + "/rooms/"+encodeURIComponent(roomId)+
+            "/initialSync?access_token=foobar&limit=15")
+            .respond([]);
+        httpBackend.flush();
     }));
 
     it("should be able to PUT new power levels from an existing event", inject(
