@@ -121,6 +121,8 @@ describe('EventHandlerService', function() {
     
     var notificationService = {
         processEvent: function(ev) {
+            if (matrixService.config().muteNotifications) return;
+            if (testContainsBingWords) this.showNotification(1,1,1,1);
         },
         shouldHighlightEvent: function(ev) {
             return testContainsBingWords;
