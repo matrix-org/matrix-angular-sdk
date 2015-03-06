@@ -384,18 +384,4 @@ describe("SettingsController ", function() {
         }));
         expect(matrixService.saveConfig).toHaveBeenCalled();  
     });
-    
-    it('should persist bing word settings.', function() {
-        var bings = "hi, bye";
-        spyOn(matrixService, "saveConfig");
-        spyOn(matrixService, "setConfig");
-    
-        scope.settings.bingWords = bings;
-        scope.saveBingWords();
-        
-        expect(matrixService.setConfig).toHaveBeenCalledWith(jasmine.objectContaining({
-            bingWords: bings
-        }));
-        expect(matrixService.saveConfig).toHaveBeenCalled();  
-    });
 });
