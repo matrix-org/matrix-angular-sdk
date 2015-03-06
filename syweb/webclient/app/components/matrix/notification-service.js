@@ -21,7 +21,8 @@ This service manages notifications: enabling, creating and showing them. This
 also contains 'bing word' logic.
 */
 angular.module('notificationService', [])
-.factory('notificationService', ['$timeout', '$q', '$filter', 'matrixService', 'modelService', 'mPresence', function($timeout, $q, $filter, matrixService, modelService, mPresence) {
+.factory('notificationService', ['$timeout', '$q', '$filter', '$rootScope', 'matrixService', 'modelService', 'mPresence',
+function($timeout, $q, $filter, $rootScope, matrixService, modelService, mPresence) {
 
     var getLocalPartFromUserId = function(user_id) {
         if (!user_id) {
@@ -415,10 +416,9 @@ angular.module('notificationService', [])
 
         ifShouldHighlightEvent : function(ev) {
             var def = $q.defer();
-            var that = this;
             this.matchingRuleForEvent(ev).then(function(rule) {
                 if (!rule) return false;
-                if (that.shouldHighlightEventWithRule(ev, rule)) {
+                if (shouldHighlightEventWithRule(ev, rule)) {
                     def.resolve();
                 } else {
                     def.reject();
