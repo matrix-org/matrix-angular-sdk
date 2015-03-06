@@ -170,9 +170,6 @@
         <br/>
         
         <h3>Desktop notifications</h3>
-        <p>
-            <i><b>Desktop notification settings are currently not synchronised with Push Notification settings, but will be shortly superceded by the Push Notifications settings above.</b></i>
-        </p>
         <div class="section" ng-switch="settings.notifications">
             <div ng-switch-when="granted">
                 <div>
@@ -182,15 +179,6 @@
                 </div>
                 <div ng-hide="config.muteNotifications">
                     <label><input type="checkbox" ng-change="updateAudioNotification()" ng-model="settings.audioNotifications">Enable audio for notifications</label>
-                </div>
-                <div class="section" ng-hide="config.muteNotifications">
-                    <h4>Specific words to alert on:</h4>
-                    <p>If blank, all messages will trigger an alert. Your username & display name always alerts.</p>
-                    <input size=40 name="bingWords" ng-model="settings.bingWords" ng-list placeholder="Enter words separated with , (supports regex)"
-                    ng-blur="saveBingWords()"/>
-                    <ul>
-                        <li ng-repeat="word in settings.bingWords">{{word}}</li>
-                    </ul>
                 </div>
             </div>
             <div ng-switch-when="denied">

@@ -263,7 +263,6 @@ function($scope, matrixService, modelService, eventHandlerService, notificationS
     $scope.settings = {
         notifications: undefined,
         audioNotifications: matrixService.config().audioNotifications,
-        bingWords: matrixService.config().bingWords
     };
     
     $scope.updateAudioNotification = function() {
@@ -274,14 +273,6 @@ function($scope, matrixService, modelService, eventHandlerService, notificationS
         matrixService.saveConfig();
     };
     
-    $scope.saveBingWords = function() {
-        console.log("Saving words: "+JSON.stringify($scope.settings.bingWords));
-        var config = matrixService.config();
-        config.bingWords = $scope.settings.bingWords;
-        matrixService.setConfig(config);
-        matrixService.saveConfig();
-    };
-
     // If the browser supports it, check the desktop notification state
     if ("Notification" in window) {
         $scope.settings.notifications = window.Notification.permission;
