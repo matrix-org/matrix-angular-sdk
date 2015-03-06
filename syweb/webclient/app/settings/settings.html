@@ -92,7 +92,7 @@
                 <ul>
                     <li ng-repeat="rule in settings.rules.content" ng-if="rule.rule_id[0] != '.'">
                         <button ng-click="deleteContentRule(rule)" ng-disabled="rule.inprogress">Delete</button>
-                        '{{rule.pattern}}': <span ng-repeat="a in rule.actions"><i>{{stringForAction(a)}}</i> </span>
+                        '{{rule.pattern}}': <span ng-repeat="a in rule.actions"><i>{{stringForAction(a)}}{{$last ? '' : ', '}}</i> </span>
                         <img src="img/spinner.gif" ng-show="rule.inprogress" />
                     </li>
                     <li>
@@ -103,6 +103,7 @@
                                 <option value="dont_notify">Never Notify</option>
                             </select>
                             Sound: <input type="checkbox" ng-model="rule_add_sound.content" />
+                            Highlight: <input type="checkbox" ng-model="rule_highlight.content" />
                             <input type="submit" value="Add" ng-disabled="!content_rule_add_input || rule_add_inprogress.content" />
                             <img src="img/spinner.gif" ng-show="rule_add_inprogress.content" />
                         </form>
@@ -114,7 +115,7 @@
                 <ul>
                     <li ng-repeat="rule in settings.rules.room" ng-if="rule.rule_id[0] != '.'">
                         <button ng-click="deleteRoomRule(rule)" ng-disabled="rule.inprogress">Delete</button>
-                        Room: '{{rooms[rule.rule_id].name}}': <span ng-repeat="a in rule.actions"><i>{{stringForAction(a)}}</i> </span>
+                        Room: '{{rooms[rule.rule_id].name}}': <span ng-repeat="a in rule.actions"><i>{{stringForAction(a)}}{{$last ? '' : ', '}}</i> </span>
                         <img src="img/spinner.gif" ng-show="rule.inprogress" />
                     </li>
                     <li>
@@ -127,6 +128,7 @@
                                 <option value="dont_notify">Never Notify</option>
                             </select>
                             Sound: <input type="checkbox" ng-model="rule_add_sound.room" />
+                            Highlight: <input type="checkbox" ng-model="rule_highlight.room" />
                             <input type="submit" value="Add" ng-disabled="!room_rule_add_input || rule_add_inprogress.room" />
                             <img src="img/spinner.gif" ng-show="rule_add_inprogress.room" />
                         </form>
@@ -139,7 +141,7 @@
                 <ul>
                     <li ng-repeat="rule in settings.rules.sender" ng-if="rule.rule_id[0] != '.'">
                         <button ng-click="deleteSenderRule(rule)" ng-disabled="rule.inprogress">Delete</button>
-                        '{{rule.rule_id}}': <span ng-repeat="a in rule.actions"><i>{{stringForAction(a)}}</i> </span>
+                        '{{rule.rule_id}}': <span ng-repeat="a in rule.actions"><i>{{stringForAction(a)}}{{$last ? '' : ', '}}</i> </span>
                         <img src="img/spinner.gif" ng-show="rule.inprogress" />
                     </li>
                     <li>
@@ -150,6 +152,7 @@
                                 <option value="dont_notify">Never Notify</option>
                             </select>
                             Sound: <input type="checkbox" ng-model="rule_add_sound.sender" />
+                            Highlight: <input type="checkbox" ng-model="rule_highlight.sender" />
                             <input type="submit" value="Add" ng-disabled="!sender_rule_add_input || rule_add_inprogress.sender" />
                             <img src="img/spinner.gif" ng-show="rule_add_inprogress.sender" />
                         </form>

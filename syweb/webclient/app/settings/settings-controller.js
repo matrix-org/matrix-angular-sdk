@@ -85,6 +85,11 @@ function($scope, matrixService, modelService, eventHandlerService, notificationS
         room: null,
         sender: null
     };
+    $scope.rule_highlight = {
+        content: false,
+        room: false,
+        sender: false
+    };
     $scope.rule_add_inprogress = {
         content: false,
         room: false,
@@ -295,6 +300,7 @@ function($scope, matrixService, modelService, eventHandlerService, notificationS
         if ($scope.rule_add_sound.content) {
             actions.push({'set_tweak': 'sound', 'value': 'default'});
         }
+        actions.push({'set_tweak': 'highlight', 'value': $scope.rule_highlight.content});
         notificationService.addGlobalContentRule($scope.content_rule_add_input, actions).then(function() {
             $scope.rule_add_inprogress.content = false;
             notificationService.clearRulesCache();
@@ -312,6 +318,7 @@ function($scope, matrixService, modelService, eventHandlerService, notificationS
         if ($scope.rule_add_sound.room) {
             actions.push({'set_tweak': 'sound', 'value': 'default'});
         }
+        actions.push({'set_tweak': 'highlight', 'value': $scope.rule_highlight.room});
         notificationService.addGlobalRoomRule($scope.room_rule_add_input, actions).then(function() {
             $scope.rule_add_inprogress.room = false;
             notificationService.clearRulesCache();
@@ -328,6 +335,7 @@ function($scope, matrixService, modelService, eventHandlerService, notificationS
         if ($scope.rule_add_sound.sender) {
             actions.push({'set_tweak': 'sound', 'value': 'default'});
         }
+        actions.push({'set_tweak': 'highlight', 'value': $scope.rule_highlight.sender});
         notificationService.addGlobalSenderRule($scope.sender_rule_add_input, actions).then(function() {
             $scope.rule_add_inprogress.sender = false;
             notificationService.clearRulesCache();
@@ -379,6 +387,9 @@ function($scope, matrixService, modelService, eventHandlerService, notificationS
             return "Never Notify";
         } else if (a.set_tweak == 'sound') {
             return "custom sound";
+        } else if (a.set_tweak == 'highlight') {
+            if (a.value == undefined || a.value) return "highlight";
+            return "";
         }
         return "other action";
     };
