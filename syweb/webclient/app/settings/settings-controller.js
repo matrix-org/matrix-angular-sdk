@@ -56,7 +56,7 @@ function($scope, matrixService, modelService, eventHandlerService, notificationS
                 '.m.rule.invite_for_me': "Notify me when I'm invited to a new room",
                 '.m.rule.member_event': "Notify me when people join or leave rooms",
                 '.m.rule.message': "Notify for messages that don't match any rule",
-                '.m.rule.call': "Notify me when I receive an call",
+                '.m.rule.call': "Notify me when I receive a call",
                 '.m.rule.fallback': "Notify me for anything else"
             };
 
