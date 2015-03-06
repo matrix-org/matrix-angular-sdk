@@ -144,6 +144,7 @@ angular.module('notificationService', [])
 
     var eventFulfillsRoomMemberCountCondition = function(cond, ev) {
         if (!cond.is) return false;
+        if (!room || !room.current_room_state || !current_room_state.members) return false;
 
         var room = modelService.getKnownRoom(ev.room_id);
         var memberCount = Object.keys(room.current_room_state.members).length;
@@ -221,7 +222,7 @@ angular.module('notificationService', [])
         return val;
     };
 
-    var notificationMessageForEvent = function(ev) {
+    var notificationMessageForEvent = function(ev, displayname) {
         var message = null;
 
         if (ev.type === "m.room.message") {
@@ -232,13 +233,13 @@ angular.module('notificationService', [])
                 message = displayname + " sent an image.";
             }
         } else if (ev.type == "m.room.member") {
-            // Notify when another user joins
             if (ev.state_key !== matrixService.config().user_id  && "join" === ev.content.membership) {
+                // Notify when another user joins
                 member = modelService.getMember(ev.room_id, ev.state_key);
                 displayname = $filter("mUserDisplayName")(ev.state_key, ev.room_id);
                 message = displayname + " joined";
             } else if (ev.state_key === matrixService.config().user_id  && "invite" === ev.content.membership) {
-            // notify when you are invited
+                // notify when you are invited
                 message = displayname + " invited you to a room";
             }
         }
@@ -468,7 +469,7 @@ angular.module('notificationService', [])
                     var member = modelService.getMember(ev.room_id, ev.user_id);
                     var displayname = $filter("mUserDisplayName")(ev.user_id, ev.room_id);
                     
-                    var message = notificationMessageForEvent(ev);
+                    var message = notificationMessageForEvent(ev, displayname);
                     if (!message) return;
 
                     console.log("Displaying notification "+(audio === undefined ? "" : "with audio")+" for "+JSON.stringify(ev.content));
