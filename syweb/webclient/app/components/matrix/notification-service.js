@@ -267,6 +267,12 @@ function($timeout, $q, $filter, $rootScope, matrixService, modelService, mPresen
     var shouldHighlightEventWithRule = function(ev, rule) {
         var actionObj = actionListToActionsObject(rule.actions);
         if (!actionObj.notify) return false;
+
+        if (actionObj.tweaks.highlight == undefined) {
+            // if it isn't specified, we highlight
+            return true;
+        }
+
         return !!actionObj.tweaks.highlight;
     };
 
