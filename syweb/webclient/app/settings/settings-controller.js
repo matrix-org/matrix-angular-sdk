@@ -51,8 +51,13 @@ function($scope, matrixService, modelService, eventHandlerService, notificationS
             var rule_descriptions = {
                 '.m.rule.contains_user_name': "Notify with sound for messages that contain my user name",
                 '.m.rule.contains_display_name': "Notify with sound for messages that contain my display name",
-                '.m.rule.room_two_members': "Notify with sound for message to just me",
-                '.m.rule.fallback': "Notify for messages that don't match any rule"
+                '.m.rule.room_one_to_one': "Notify with sound for message to just me",
+                '.m.rule.suppress_notices': "Suppress all notice messages",
+                '.m.rule.invite_for_me': "Notify me when I'm invited to a new room",
+                '.m.rule.member_event': "Notify me when people join or leave rooms",
+                '.m.rule.message': "Notify for messages that don't match any rule",
+                '.m.rule.call': "Notify me when I receive an call",
+                '.m.rule.fallback': "Notify me for anything else"
             };
 
             var defaultRules = [];
