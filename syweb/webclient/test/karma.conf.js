@@ -26,7 +26,8 @@ module.exports = function(config) {
       '../lib/ng-infinite-scroll-matrix.js',
       '../lib/ui-bootstrap*',
       '../lib/elastic.js', 
-      '../lib/angular-dialog-service-5.2.6/dialogs.min.js', 
+      '../lib/angular-dialog-service-5.2.6/dialogs.min.js',
+      '../lib/matrix.js',  // until matrix-js-sdk has its own tests
       '../app/**/!(app*).js',
       '../app/app.js',
       '../app/app*',

@@ -23,7 +23,8 @@ This serves to isolate the caller from changes to the underlying url paths, as
 well as attach common params (e.g. access_token) to requests.
 */
 angular.module('matrixService', [])
-.factory('matrixService', ['$http', '$timeout', '$q', function($http, $timeout, $q) {
+.factory('matrixService', ['$http', '$window', '$timeout', '$q', 
+function($http, $window, $timeout, $q) {
         
    /* 
     * Permanent storage of user information
@@ -35,6 +36,27 @@ angular.module('matrixService', [])
     *    - version: the version of this cache
     */    
     var config;
+
+    var loadConfig = function() {
+        if (!config) {
+            config = localStorage.getItem("config");
+            if (config) {
+                config = JSON.parse(config);
+
+                // Reset the cache if the version loaded is not the expected one
+                if (configVersion !== config.version) {
+                    config = undefined;
+                    saveConfig();
+                }
+            }
+        }
+        return config;
+    };
+    
+    var storeConfig = function() {
+        config.version = configVersion;
+        localStorage.setItem("config", JSON.stringify(config));
+    };
     
     // Current version of permanent storage
     var configVersion = 0;
@@ -43,6 +65,40 @@ angular.module('matrixService', [])
     var rateLimitMaxMs = 1000 * 20; // 20s
     
     var DEFAULT_TYPING_TIMEOUT_MS = 20000;
+
+    var client;
+    if (!$window.matrixcs) {
+        console.error("Missing matrix.js!");
+    }
+
+    var initClient = function(url, token, userId) {
+        // inject an AngularJS compatible request module
+        $window.matrixcs.request(function(opts, callback) {
+            // return a promise rather than use callbacks
+            return doInternalRequest(opts.uri, opts.method, opts.qs, opts.body, undefined, {
+                timeout: 35000
+            });
+        });
+
+        client = $window.matrixcs.createClient({
+            baseUrl: url,
+            accessToken: token,
+            userId: userId
+        });
+    };
+
+    var initFromConfig = function() {
+        if (!config) {
+            loadConfig();
+        }
+        if (config) {
+            initClient(config.homeserver, config.access_token, config.user_id);
+        }
+        else {
+            console.error("No config to init client");
+        }
+    };
+    initFromConfig();
 
     var doRequest = function(method, path, params, data, $httpParams) {
         if (!config) {
@@ -70,11 +126,10 @@ angular.module('matrixService', [])
         return doBaseRequest(config.homeserver, method, path, params, data, undefined, $httpParams);
     };
 
-    var doBaseRequest = function(baseUrl, method, path, params, data, headers, $httpParams) {
-
+    var doInternalRequest = function(uri, method, params, data, headers, $httpParams) {
         var request = {
             method: method,
-            url: baseUrl + path,
+            url: uri,
             params: params,
             data: data,
             headers: headers
@@ -110,6 +165,10 @@ angular.module('matrixService', [])
         else {
             return $http(request);
         }
+    };
+
+    var doBaseRequest = function(baseUrl, method, path, params, data, headers, $httpParams) {
+        return doInternalRequest(baseUrl + path, method, params, data, headers, $httpParams);
     };
     
     // recursively called to handle rate limiting: giving up based on the cumulative
@@ -165,27 +224,6 @@ angular.module('matrixService', [])
         data.type = loginType;
         console.log("doRegisterLogin >>> " + loginType);
         return doRequest("POST", path, undefined, data);
-    };
-    
-    var loadConfig = function() {
-        if (!config) {
-            config = localStorage.getItem("config");
-            if (config) {
-                config = JSON.parse(config);
-
-                // Reset the cache if the version loaded is not the expected one
-                if (configVersion !== config.version) {
-                    config = undefined;
-                    saveConfig();
-                }
-            }
-        }
-        return config;
-    };
-    
-    var storeConfig = function() {
-        config.version = configVersion;
-        localStorage.setItem("config", JSON.stringify(config));
     };
 
     return {
@@ -317,347 +355,149 @@ angular.module('matrixService', [])
 
         // Create a room
         create: function(room_alias, visibility, inviteList) {
-            // The REST path spec
-            var path = "/createRoom";
-
-            var req = {
-                "visibility": visibility
+            var opts = {
+                visibility: visibility
             };
             if (room_alias) {
-                req.room_alias_name = room_alias;
+                opts.room_alias_name = room_alias;
             }
             if (inviteList) {
-                req.invite = inviteList;
+                opts.invite = inviteList;
             }
-            
-            return doRequest("POST", path, undefined, req);
+            return client.createRoom(opts);
         },
 
         // Get the user's current state: his presence, the list of his rooms with
         // the last {limit} events
         initialSync: function(limit, feedback) {
-            // The REST path spec
-
-            var path = "/initialSync";
-
-            var params = {};
-            if (limit) {
-                params.limit = limit;
-            }
-            if (feedback) {
-                params.feedback = feedback;
-            }
-
-            return doRequest("GET", path, params);
+            return client.initialSync(limit);
         },
         
         // get room state for a specific room
         roomState: function(room_id) {
-            var path = "/rooms/" + encodeURIComponent(room_id) + "/state";
-            return doRequest("GET", path);
+            return client.roomState(room_id);
         },
         
         // get room initialSync for a specific room
         roomInitialSync: function(room_id, limit) {
-            var path = "/rooms/" + encodeURIComponent(room_id) + "/initialSync";
-            if (!limit) {
-                limit = 30;
-            }
-            return doRequest("GET", path, { limit: limit });
+            return client.roomInitialSync(room_id, limit);
         },
 
         join: function(room_alias_or_id) {
-            var path = "/join/$room_alias_or_id";
-            room_alias_or_id = encodeURIComponent(room_alias_or_id);
-
-            path = path.replace("$room_alias_or_id", room_alias_or_id);
-
-            // TODO: PUT with txn ID
-            return doRequest("POST", path, undefined, {});
+            return client.joinRoom(room_alias_or_id);
         },
         
         // Invite a user to a room
         invite: function(room_id, user_id) {
-            return this.membershipChange(room_id, user_id, "invite");
+            return client.invite(room_id, user_id);
         },
 
         // Leaves a room
         leave: function(room_id) {
-            return this.membershipChange(room_id, undefined, "leave");
-        },
-
-        membershipChange: function(room_id, user_id, membershipValue) {
-            // The REST path spec
-            var path = "/rooms/$room_id/$membership";
-            path = path.replace("$room_id", encodeURIComponent(room_id));
-            path = path.replace("$membership", encodeURIComponent(membershipValue));
-
-            var data = {};
-            if (user_id !== undefined) {
-                data = { user_id: user_id };
-            }
-
-            // TODO: Use PUT with transaction IDs
-            return doRequest("POST", path, undefined, data);
-        },
-
-        // Change the membership of an another user
-        setMembership: function(room_id, user_id, membershipValue, reason) {
-            
-            // The REST path spec
-            var path = "/rooms/$room_id/state/m.room.member/$user_id";
-            path = path.replace("$room_id", encodeURIComponent(room_id));
-            path = path.replace("$user_id", user_id);
-
-            return doRequest("PUT", path, undefined, {
-                membership : membershipValue,
-                reason: reason
-            });
+            return client.leave(room_id);
         },
            
         // Bans a user from a room
         ban: function(room_id, user_id, reason) {
-            var path = "/rooms/$room_id/ban";
-            path = path.replace("$room_id", encodeURIComponent(room_id));
-            
-            return doRequest("POST", path, undefined, {
-                user_id: user_id,
-                reason: reason
-            });
+            return client.ban(room_id, user_id, reason);
         },
         
         // Unbans a user in a room
         unban: function(room_id, user_id) {
-            // FIXME: To update when there will be homeserver API for unban 
-            // For now, do an unban by resetting the user membership to "leave"
-            return this.setMembership(room_id, user_id, "leave");
+            return client.unban(room_id, user_id);
         },
         
         // Kicks a user from a room
         kick: function(room_id, user_id, reason) {
-            // Set the user membership to "leave" to kick him
-            return this.setMembership(room_id, user_id, "leave", reason);
+            return client.kick(room_id, user_id, reason);
         },
         
-        // Retrieves the room ID corresponding to a room alias
         resolveRoomAlias:function(room_alias) {
-            var path = "/_matrix/client/api/v1/directory/room/$room_alias";
-            room_alias = encodeURIComponent(room_alias);
-
-            path = path.replace("$room_alias", room_alias);
-
-            return doRequest("GET", path, undefined, {});
+            return client.resolveRoomAlias(room_alias);
         },
         
         setName: function(room_id, name) {
-            var data = {
-                name: name
-            };
-            return this.sendStateEvent(room_id, "m.room.name", data);
+            return client.setRoomName(room_id, name);
         },
         
         setTopic: function(room_id, topic) {
-            var data = {
-                topic: topic
-            };
-            return this.sendStateEvent(room_id, "m.room.topic", data);
+            return client.setRoomTopic(room_id, topic);
         },
         
-        
         sendStateEvent: function(room_id, eventType, content, state_key) {
-            var path = "/rooms/$room_id/state/"+ encodeURIComponent(eventType);
-            if (state_key !== undefined) {
-                path += "/" + encodeURIComponent(state_key);
-            }
-            room_id = encodeURIComponent(room_id);
-            path = path.replace("$room_id", room_id);
-
-            return doRequest("PUT", path, undefined, content);
+            return client.sendStateEvent(room_id, eventType, content, state_key);
         },
 
         sendEvent: function(room_id, eventType, txn_id, content) {
-            // The REST path spec
-            var path = "/rooms/$room_id/send/"+eventType+"/$txn_id";
-
-            if (!txn_id) {
-                txn_id = "m" + new Date().getTime();
-            }
-
-            // Like the cmd client, escape room ids
-            room_id = encodeURIComponent(room_id);            
-
-            // Customize it
-            path = path.replace("$room_id", room_id);
-            path = path.replace("$txn_id", txn_id);
-
-            return doRequest("PUT", path, undefined, content);
+            return client.sendEvent(room_id, eventType, content, txn_id);
         },
         
         setTyping: function(room_id, isTyping, timeoutMs, user_id) {
-            if (!user_id) {
-                user_id = config.user_id;
-            }
-        
-            var path = "/rooms/$room_id/typing/$user_id";
-            path = path.replace("$room_id", encodeURIComponent(room_id));
-            path = path.replace("$user_id", encodeURIComponent(user_id));
-            
-            var content;
-            
-            if (isTyping) {
-                if (!timeoutMs) {
-                    timeoutMs = DEFAULT_TYPING_TIMEOUT_MS;
-                }
-                
-                content = {
-                    typing: true,
-                    timeout: timeoutMs
-                };
-            }
-            else {
-                content = {
-                    typing: false
-                };
-            }
-            
-            return doRequest("PUT", path, undefined, content);
+            return client.sendTyping(room_id, isTyping, timeoutMs);
         },
 
         sendMessage: function(room_id, txn_id, content) {
-            return this.sendEvent(room_id, 'm.room.message', txn_id, content);
+            return client.sendMessage(room_id, content, txn_id);
         },
 
-        // Send a text message
         sendTextMessage: function(room_id, body, msg_id) {
-            var content = {
-                 msgtype: "m.text",
-                 body: body
-            };
-
-            return this.sendMessage(room_id, msg_id, content);
+            return client.sendTextMessage(room_id, body, msg_id);
         },
 
-        // Send an image message
         sendImageMessage: function(room_id, image_url, image_body, msg_id) {
-            var content = {
-                 msgtype: "m.image",
-                 url: image_url,
-                 info: image_body,
-                 body: "Image"
-            };
-
-            return this.sendMessage(room_id, msg_id, content);
+            return client.sendImageMessage(room_id, image_url, image_body);
         },
 
-        // Send an emote message
         sendEmoteMessage: function(room_id, body, msg_id) {
-            var content = {
-                 msgtype: "m.emote",
-                 body: body
-            };
-
-            return this.sendMessage(room_id, msg_id, content);
+            return client.sendEmoteMessage(room_id, body, msg_id);
         },
         
         sendHtmlMessage: function(room_id, body, htmlBody) {
-            var content = {
-                msgtype: "m.text",
-                format: "org.matrix.custom.html",
-                body: body,
-                formatted_body: htmlBody
-            };
-            return this.sendMessage(room_id, undefined, content);
+            return client.sendHtmlMessage(room_id, body, htmlBody);
         },
 
         redactEvent: function(room_id, event_id) {
-            var path = "/rooms/$room_id/redact/$event_id";
-            path = path.replace("$room_id", encodeURIComponent(room_id));
-            // TODO: encodeURIComponent when HS updated.
-            path = path.replace("$event_id", event_id);
-            var content = {};
-            return doRequest("POST", path, undefined, content);
-        },
-
-        // get a snapshot of the members in a room.
-        getMemberList: function(room_id) {
-            // Like the cmd client, escape room ids
-            room_id = encodeURIComponent(room_id);
-
-            var path = "/rooms/$room_id/members";
-            path = path.replace("$room_id", room_id);
-            return doRequest("GET", path);
+            return client.redactEvent(room_id, event_id);
         },
         
         paginateBackMessages: function(room_id, from_token, limit) {
-            var path = "/rooms/$room_id/messages";
-            path = path.replace("$room_id", encodeURIComponent(room_id));
-            var params = {
-                from: from_token,
-                limit: limit,
-                dir: 'b'
-            };
-            return doRequest("GET", path, params);
+            return client.scrollback(room_id, from_token, limit);
         },
 
         // get a list of public rooms on your home server
         publicRooms: function() {
-            var path = "/publicRooms";
-            return doRequest("GET", path);
+            return client.publicRooms();
         },
         
         // get a user's profile
         getProfile: function(userId) {
-            return this.getProfileInfo(userId);
+            return client.getProfileInfo(userId);
         },
 
         // get a display name for this user ID
         getDisplayName: function(userId) {
-            return this.getProfileInfo(userId, "displayname");
+            return client.getProfileInfo(userId, "displayname");
         },
 
         // get the profile picture url for this user ID
         getProfilePictureUrl: function(userId) {
-            return this.getProfileInfo(userId, "avatar_url");
+            return client.getProfileInfo(userId, "avatar_url");
         },
 
         // update your display name
         setDisplayName: function(newName) {
-            var content = {
-                displayname: newName
-            };
-            return this.setProfileInfo(content, "displayname");
+            return client.setDisplayName(newName);
         },
 
         // update your profile picture url
         setProfilePictureUrl: function(newUrl) {
-            var content = {
-                avatar_url: newUrl
-            };
-            return this.setProfileInfo(content, "avatar_url");
-        },
-
-        setProfileInfo: function(data, info_segment) {
-            var path = "/profile/$user/" + info_segment;
-            path = path.replace("$user", encodeURIComponent(config.user_id));
-            return doRequest("PUT", path, undefined, data);
-        },
-
-        getProfileInfo: function(userId, info_segment) {
-            var path = "/profile/"+encodeURIComponent(userId);
-            if (info_segment) path += '/' + info_segment;
-            return doRequest("GET", path);
+            return client.setAvatarUrl(newUrl);
         },
         
         login: function(userId, password) {
             // TODO We should be checking to make sure the client can support
             // logging in to this HS, else use the fallback.
-            var path = "/login";
-            var data = {
-                "type": "m.login.password",
-                "user": userId,
-                "password": password  
-            };
-            return doRequest("POST", path, undefined, data);
+            return client.loginWithPassword(userId, password);
         },
 
         // hit the Identity Server for a 3PID request.
@@ -710,22 +550,7 @@ angular.module('matrixService', [])
         },
 
         getIdenticonUri: function(identiconString, width, height) {
-            if (!identiconString) {
-                return;
-            }
-            if (!width) {
-                width = 96;
-            }
-            if (!height) {
-                height = 96;
-            }
-            var params = {
-                width: width,
-                height: height
-            };
-
-            var prefix = "/_matrix/media/v1/identicon/";
-            return config.homeserver + prefix + encodeURIComponent(identiconString) + (Object.keys(params).length === 0 ? "" : ("?" + jQuery.param(params)));
+            return client.getIdenticonUri(identiconString, width, height);
         },
         
         /**
@@ -749,37 +574,7 @@ angular.module('matrixService', [])
         },
         
         getHttpUriForMxc: function(mxc, width, height, resizeMethod) {
-            if (!typeof mxc === "string" || !mxc) {
-                return mxc;
-            }
-            if (mxc.indexOf("mxc://") !== 0) {
-                return mxc;
-            }
-            var serverAndMediaId = mxc.slice(6); // strips mxc://
-            var prefix = "/_matrix/media/v1/download/";
-            var params = {};
-            
-            if (width) {
-                params.width = width;
-            }
-            if (height) {
-                params.height = height;
-            }
-            if (resizeMethod) {
-                params.method = resizeMethod;
-            }
-            if (Object.keys(params).length > 0) {
-                // these are thumbnailing params so they probably want the thumbnailing API...
-                prefix = "/_matrix/media/v1/thumbnail/";
-            }
-
-            var fragmentOffset = serverAndMediaId.indexOf("#"),
-                fragment = "";
-            if (fragmentOffset >= 0) {
-                fragment = serverAndMediaId.substr(fragmentOffset);
-                serverAndMediaId = serverAndMediaId.substr(0, fragmentOffset);
-            }
-            return config.homeserver + prefix + serverAndMediaId + (Object.keys(params).length === 0 ? "" : ("?" + jQuery.param(params))) + fragment;
+            return client.getHttpUriForMxc(mxc, width, height, resizeMethod);
         },
         
 
@@ -833,11 +628,7 @@ angular.module('matrixService', [])
         
         // Set the logged in user presence state
         setUserPresence: function(presence) {
-            var path = "/presence/$user_id/status";
-            path = path.replace("$user_id", encodeURIComponent(config.user_id));
-            return doRequest("PUT", path, undefined, {
-                presence: presence
-            });
+            return client.setPresence(presence);
         },
         
         
@@ -851,6 +642,7 @@ angular.module('matrixService', [])
         // Set a new config (Use saveConfig to actually store it permanently)
         setConfig: function(newConfig) {
             config = newConfig;
+            initFromConfig();
         },
         
         // Commits config into permanent storage
@@ -868,21 +660,7 @@ angular.module('matrixService', [])
          * @returns {promise} an $http promise
          */
         setUserPowerLevel: function(room_id, user_id, powerLevel, event) {
-            var content = {
-                users: {}
-            };
-            if (event) {
-                // if there is an existing event, copy the content as it contains
-                // the power level values for other members which we do not want
-                // to modify.
-                content = angular.copy(event.content);
-            }
-            content.users[user_id] = powerLevel;
-                
-            var path = "/rooms/$room_id/state/m.room.power_levels";
-            path = path.replace("$room_id", encodeURIComponent(room_id));
-                
-            return doRequest("PUT", path, undefined, content);
+            return client.setPowerLevel(room_id, user_id, powerLevel, event);
         },
 
         getTurnServer: function() {
