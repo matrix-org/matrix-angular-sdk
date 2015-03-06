@@ -65,6 +65,7 @@ function($timeout, $q, $filter, $rootScope, matrixService, modelService, mPresen
 
             for (var ruleIndex = 0; ruleIndex < ruleset.length; ++ruleIndex) {
                 var rule = ruleset[ruleIndex];
+                if (!rule.enabled) return false;
 
                 var rawrule = templateRuleToRaw(kind, rule, device);
                 if (!rawrule) return false;
