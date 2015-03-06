@@ -162,7 +162,11 @@ describe('NotificationService', function() {
                         },
                         {
                             "actions": [
-                                "notify"
+                                "notify",
+                                {
+                                    "set_tweak": "highlight",
+                                    "value": false
+                                }
                             ],
                             "conditions": [],
                             "enabled": true,
