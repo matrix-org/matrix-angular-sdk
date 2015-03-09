@@ -115,6 +115,7 @@
             <div class="section">
                 <ul>
                     <li ng-repeat="rule in settings.rules.room" ng-if="rule.rule_id[0] != '.'">
+                        <input type="checkbox" ng-model="rule.enabled" ng-change="updateRuleEnabled(rule)" />
                         <button ng-click="deleteRoomRule(rule)" ng-disabled="rule.inprogress">Delete</button>
                         Room: '{{rooms[rule.rule_id].name}}': <span ng-repeat="a in rule.actions"><i>{{stringForAction(a)}}{{$last ? '' : ', '}}</i> </span>
                         <img src="img/spinner.gif" ng-show="rule.inprogress" />
@@ -141,6 +142,7 @@
                 <p>e.g. <b>@user:matrix.org</b></p>
                 <ul>
                     <li ng-repeat="rule in settings.rules.sender" ng-if="rule.rule_id[0] != '.'">
+                        <input type="checkbox" ng-model="rule.enabled" ng-change="updateRuleEnabled(rule)" />
                         <button ng-click="deleteSenderRule(rule)" ng-disabled="rule.inprogress">Delete</button>
                         '{{rule.rule_id}}': <span ng-repeat="a in rule.actions"><i>{{stringForAction(a)}}{{$last ? '' : ', '}}</i> </span>
                         <img src="img/spinner.gif" ng-show="rule.inprogress" />
