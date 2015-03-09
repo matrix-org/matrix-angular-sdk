@@ -162,10 +162,40 @@
                     </li>
                 </ul>
             </div>
-            <h4>Other Rules</h4>
+            <h4>Additional Alerts</h4>
             <div class="section">
                 <ul>
-                    <li ng-repeat="rule in settings.default_rules" ng-class="{disabledRule : !rule.enabled}">
+                    <li ng-repeat="rule in settings.default_rules.additional" ng-class="{disabledRule : !rule.enabled}">
+                        <input type="checkbox" ng-model="rule.enabled" ng-change="updateRuleEnabled(rule)" />
+                        {{rule.description}}
+                        <img src="img/spinner.gif" ng-show="rule.inprogress" />
+                    </li>
+                </ul>
+            </div>
+            <h4>Calls</h4>
+            <div class="section">
+                <ul>
+                    <li ng-repeat="rule in settings.default_rules.call" ng-class="{disabledRule : !rule.enabled}">
+                        <input type="checkbox" ng-model="rule.enabled" ng-change="updateRuleEnabled(rule)" />
+                        {{rule.description}}
+                        <img src="img/spinner.gif" ng-show="rule.inprogress" />
+                    </li>
+                </ul>
+            </div>
+            <h4>Suppressions</h4>
+            <div class="section">
+                <ul>
+                    <li ng-repeat="rule in settings.default_rules.suppression" ng-class="{disabledRule : !rule.enabled}">
+                        <input type="checkbox" ng-model="rule.enabled" ng-change="updateRuleEnabled(rule)" />
+                        {{rule.description}}
+                        <img src="img/spinner.gif" ng-show="rule.inprogress" />
+                    </li>
+                </ul>
+            </div>
+            <h4>Everything Else</h4>
+            <div class="section">
+                <ul>
+                    <li ng-repeat="rule in settings.default_rules.fallthrough" ng-class="{disabledRule : !rule.enabled}">
                         <input type="checkbox" ng-model="rule.enabled" ng-change="updateRuleEnabled(rule)" />
                         {{rule.description}}
                         <img src="img/spinner.gif" ng-show="rule.inprogress" />
