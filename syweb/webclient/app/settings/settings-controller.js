@@ -166,6 +166,7 @@ function($scope, matrixService, modelService, eventHandlerService, notificationS
     var setDisplayName = function(displayName) {
         matrixService.setDisplayName(displayName).then(
             function(response) {
+                $scope.profileOnServer.displayName = displayName;
                 dialogService.showSuccess("Success", "Updated display name.");
             },
             function(error) {
@@ -178,6 +179,7 @@ function($scope, matrixService, modelService, eventHandlerService, notificationS
         console.log("Updating avatar to " + avatarURL);
         matrixService.setProfilePictureUrl(avatarURL).then(
             function(response) {
+                $scope.profileOnServer.avatarUrl = avatarURL;
                 dialogService.showSuccess("Success", "Updated profile avatar.");
             },
             function(error) {
