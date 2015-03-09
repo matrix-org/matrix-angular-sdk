@@ -237,7 +237,6 @@ function($timeout, $q, $filter, $rootScope, matrixService, modelService, mPresen
         } else if (ev.type == "m.room.member") {
             if (ev.state_key !== matrixService.config().user_id  && "join" === ev.content.membership) {
                 // Notify when another user joins
-                member = modelService.getMember(ev.room_id, ev.state_key);
                 displayname = $filter("mUserDisplayName")(ev.state_key, ev.room_id);
                 message = displayname + " joined";
             } else if (ev.state_key === matrixService.config().user_id  && "invite" === ev.content.membership) {
@@ -474,6 +473,12 @@ function($timeout, $q, $filter, $rootScope, matrixService, modelService, mPresen
                     }
 
                     var member = modelService.getMember(ev.room_id, ev.user_id);
+                    var avatarUrl;
+                    if (member.event.content.avatar_url) {
+                        avatarUrl = matrixService.getHttpUriForMxc(member.event.content.avatar_url);
+                    }
+
+                    member = modelService.getMember(ev.room_id, ev.state_key);
                     var displayname = $filter("mUserDisplayName")(ev.user_id, ev.room_id);
                     
                     var message = notificationMessageForEvent(ev, displayname);
@@ -484,7 +489,7 @@ function($timeout, $q, $filter, $rootScope, matrixService, modelService, mPresen
                     showNotification(
                         displayname + " (" + roomTitle + ")",
                         message,
-                        member ? member.event.content.avatar_url : undefined,
+                        avatarUrl,
                         function() {
                             console.log("notification.onclick() room=" + ev.room_id);
                             $rootScope.goToPage('room/' + ev.room_id); 
