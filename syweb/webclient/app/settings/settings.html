@@ -90,7 +90,7 @@
                     such word which includes the 3 letters <i>foo</i>.
                 </p>
                 <ul>
-                    <li ng-repeat="rule in settings.rules.content" ng-if="rule.rule_id[0] != '.'">
+                    <li ng-repeat="rule in settings.rules.content" ng-if="rule.rule_id[0] != '.'" ng-class="{disabledRule : !rule.enabled}">
                         <input type="checkbox" ng-model="rule.enabled" ng-change="updateRuleEnabled(rule)" />
                         <button ng-click="deleteContentRule(rule)" ng-disabled="rule.inprogress">Delete</button>
                         '{{rule.pattern}}': <span ng-repeat="a in rule.actions"><i>{{stringForAction(a)}}{{$last ? '' : ', '}}</i> </span>
@@ -114,7 +114,7 @@
             <h4>Per-Room notifications</h4>
             <div class="section">
                 <ul>
-                    <li ng-repeat="rule in settings.rules.room" ng-if="rule.rule_id[0] != '.'">
+                    <li ng-repeat="rule in settings.rules.room" ng-if="rule.rule_id[0] != '.'" ng-class="{disabledRule : !rule.enabled}">
                         <input type="checkbox" ng-model="rule.enabled" ng-change="updateRuleEnabled(rule)" />
                         <button ng-click="deleteRoomRule(rule)" ng-disabled="rule.inprogress">Delete</button>
                         Room: '{{rooms[rule.rule_id].name}}': <span ng-repeat="a in rule.actions"><i>{{stringForAction(a)}}{{$last ? '' : ', '}}</i> </span>
@@ -141,7 +141,7 @@
             <div class="section">
                 <p>e.g. <b>@user:matrix.org</b></p>
                 <ul>
-                    <li ng-repeat="rule in settings.rules.sender" ng-if="rule.rule_id[0] != '.'">
+                    <li ng-repeat="rule in settings.rules.sender" ng-if="rule.rule_id[0] != '.'" ng-class="{disabledRule : !rule.enabled}">
                         <input type="checkbox" ng-model="rule.enabled" ng-change="updateRuleEnabled(rule)" />
                         <button ng-click="deleteSenderRule(rule)" ng-disabled="rule.inprogress">Delete</button>
                         '{{rule.rule_id}}': <span ng-repeat="a in rule.actions"><i>{{stringForAction(a)}}{{$last ? '' : ', '}}</i> </span>
@@ -165,9 +165,9 @@
             <h4>Other Rules</h4>
             <div class="section">
                 <ul>
-                    <li ng-repeat="rule in settings.default_rules">
-                        {{rule.description}}
+                    <li ng-repeat="rule in settings.default_rules" ng-class="{disabledRule : !rule.enabled}">
                         <input type="checkbox" ng-model="rule.enabled" ng-change="updateRuleEnabled(rule)" />
+                        {{rule.description}}
                         <img src="img/spinner.gif" ng-show="rule.inprogress" />
                     </li>
                 </ul>

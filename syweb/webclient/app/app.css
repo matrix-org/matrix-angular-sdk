@@ -982,6 +982,12 @@ textarea, input {
     font-size: 14px;
 }
 
+/*** Settings ***/
+
+li.disabledRule {
+    color: #bbb;
+}
+
 /*** Seasonal ***/
 
 
