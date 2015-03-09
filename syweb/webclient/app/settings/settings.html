@@ -72,6 +72,9 @@
         <h3>Notifications</h3>
         <div class="section">
             <p>
+                Notification settings are saved to your user account and are shared between all clients which support them.
+            </p>
+            <p>
                 Rules are applied in order; the first rule which matches defines the outcome for the message.<br/>
                 So: Per-word notifications are more important than per-room notifications which are more important than per-sender notifications.<br/>
                 For multiple rules of the same kind, the first one in the list that matches takes priority.<br/>
@@ -192,7 +195,7 @@
                     </li>
                 </ul>
             </div>
-            <h4>Everything Else</h4>
+            <h4>Defaults</h4>
             <div class="section">
                 <ul>
                     <li ng-repeat="rule in settings.default_rules.fallthrough" ng-class="{disabledRule : !rule.enabled}">
