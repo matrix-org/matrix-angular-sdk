@@ -64,9 +64,9 @@ function($scope, matrixService, modelService, eventHandlerService, notificationS
             for (var kind in rulesets.global) {
                 for (var i = 0; i < Object.keys(rulesets.global[kind]).length; ++i) {
                     var r = rulesets.global[kind][i];
+                    r.kind = kind;
                     if (r.rule_id[0] == '.' && rule_descriptions[r.rule_id]) {
                         r.description = rule_descriptions[r.rule_id];
-                        r.kind = kind;
                         defaultRules.push(r);
                     }
                 }
@@ -374,7 +374,7 @@ function($scope, matrixService, modelService, eventHandlerService, notificationS
         rule.inprogress = true;
     };
 
-    $scope.updateDefaultRule = function(rule) {
+    $scope.updateRuleEnabled = function(rule) {
         rule.inprogress = true;
         matrixService.setPushRuleEnabled('global', rule.kind, rule.rule_id, rule.enabled).then(function() {
             notificationService.clearRulesCache();

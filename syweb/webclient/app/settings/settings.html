@@ -91,6 +91,7 @@
                 </p>
                 <ul>
                     <li ng-repeat="rule in settings.rules.content" ng-if="rule.rule_id[0] != '.'">
+                        <input type="checkbox" ng-model="rule.enabled" ng-change="updateRuleEnabled(rule)" />
                         <button ng-click="deleteContentRule(rule)" ng-disabled="rule.inprogress">Delete</button>
                         '{{rule.pattern}}': <span ng-repeat="a in rule.actions"><i>{{stringForAction(a)}}{{$last ? '' : ', '}}</i> </span>
                         <img src="img/spinner.gif" ng-show="rule.inprogress" />
@@ -164,7 +165,7 @@
                 <ul>
                     <li ng-repeat="rule in settings.default_rules">
                         {{rule.description}}
-                        <input type="checkbox" ng-model="rule.enabled" ng-change="updateDefaultRule(rule)" />
+                        <input type="checkbox" ng-model="rule.enabled" ng-change="updateRuleEnabled(rule)" />
                         <img src="img/spinner.gif" ng-show="rule.inprogress" />
                     </li>
                 </ul>
