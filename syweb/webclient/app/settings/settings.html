@@ -71,6 +71,35 @@
 
         <h3>Notifications</h3>
         <div class="section">
+            <div ng-switch="settings.notifications">
+                <div ng-switch-when="granted">
+                    <div>
+                        <div ng-if="!config.muteNotifications">
+                        Desktop notifications are enabled: notifications will be displayed on your screen when this tab is open and in the background
+                        </div>
+                        <div ng-if="config.muteNotifications">
+                        Desktop notifications are muted: notifications will not be displayed from this web client
+                        </div>
+                        <button ng-click="toggleMute()" style="font-size: 14pt">
+                            {{config.muteNotifications ? "Unmute desktop notifications" : "Mute desktop notifications"}}
+                        </button>
+                    </div>
+                    <div ng-hide="config.muteNotifications">
+                        <label><input type="checkbox" ng-change="updateAudioNotification()" ng-model="settings.audioNotifications">Enable audio for notifications on this computer</label>
+                    </div>
+                </div>
+                <div ng-switch-when="denied">
+                    You have denied permission for notifications.<br/>
+                    To enable it, reset the notification setting for this web site in your browser settings.
+                </div>
+                <div ng-switch-when="default">
+                    <button ng-click="requestNotifications()" style="font-size: 14pt">Enable desktop notifications</button>
+                </div>
+                <div ng-switch-default="">
+                    Sorry, your browser does not support notifications.
+                </div>
+            </div>
+        
             <p>
                 Notification settings are saved to your user account and are shared between all clients which support them.
             </p>
@@ -204,31 +233,6 @@
                         <img src="img/spinner.gif" ng-class="{invisible: !rule.inprogress}" />
                     </li>
                 </ul>
-            </div>
-        </div>
-        <br/>
-        
-        <h3>Desktop notifications</h3>
-        <div class="section" ng-switch="settings.notifications">
-            <div ng-switch-when="granted">
-                <div>
-                    <button ng-click="toggleMute()" style="font-size: 14pt">
-                        {{config.muteNotifications ? "Unmute desktop notifications" : "Mute desktop notifications"}}
-                    </button>
-                </div>
-                <div ng-hide="config.muteNotifications">
-                    <label><input type="checkbox" ng-change="updateAudioNotification()" ng-model="settings.audioNotifications">Enable audio for notifications</label>
-                </div>
-            </div>
-            <div ng-switch-when="denied">
-                You have denied permission for notifications.<br/>
-                To enable it, reset the notification setting for this web site in your browser settings.
-            </div>
-            <div ng-switch-when="default">
-                <button ng-click="requestNotifications()" style="font-size: 14pt">Enable desktop notifications</button>
-            </div>
-            <div ng-switch-default="">
-                Sorry, your browser does not support notifications.
             </div>
         </div>
         <br/>
