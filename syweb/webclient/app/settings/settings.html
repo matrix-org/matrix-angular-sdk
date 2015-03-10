@@ -102,12 +102,12 @@
                     <li>
                         <form ng-submit="addContentRule();">
                             <input type="text" ng-model="content_rule_add_input" />
-                            <select ng-model="rule_add_action.content">
+                            <select ng-model="rule_add_action.content" ng-change="rule_add_sound.content = false; rule_highlight.content = false;">
                                 <option value="notify">Always Notify</option>
                                 <option value="dont_notify">Never Notify</option>
                             </select>
-                            Sound: <input type="checkbox" ng-model="rule_add_sound.content" />
-                            Highlight: <input type="checkbox" ng-model="rule_highlight.content" />
+                            Sound: <input type="checkbox" ng-model="rule_add_sound.content" ng-disabled="rule_add_action.content != 'notify'" />
+                            Highlight: <input type="checkbox" ng-model="rule_highlight.content" ng-disabled="rule_add_action.content != 'notify'" />
                             <input type="submit" value="Add" ng-disabled="!content_rule_add_input || rule_add_inprogress.content" />
                             <img src="img/spinner.gif" ng-show="rule_add_inprogress.content" />
                         </form>
@@ -128,12 +128,12 @@
                             <select ng-model="room_rule_add_input">
                                 <option ng-repeat="(room_id, room) in rooms" value="{{room_id}}">{{room.name}} (Room)</option>
                             </select>
-                            <select ng-model="rule_add_action.room">
+                            <select ng-model="rule_add_action.room" ng-change="rule_add_sound.room = false; rule_highlight.room = false;">
                                 <option value="notify">Always Notify</option>
                                 <option value="dont_notify">Never Notify</option>
                             </select>
-                            Sound: <input type="checkbox" ng-model="rule_add_sound.room" />
-                            Highlight: <input type="checkbox" ng-model="rule_highlight.room" />
+                            Sound: <input type="checkbox" ng-model="rule_add_sound.room" ng-disabled="rule_add_action.room != 'notify'" />
+                            Highlight: <input type="checkbox" ng-model="rule_highlight.room" ng-disabled="rule_add_action.room != 'notify'" />
                             <input type="submit" value="Add" ng-disabled="!room_rule_add_input || rule_add_inprogress.room" />
                             <img src="img/spinner.gif" ng-show="rule_add_inprogress.room" />
                         </form>
@@ -153,12 +153,12 @@
                     <li>
                         <form ng-submit="addSenderRule();">
                             <input type="text" ng-model="sender_rule_add_input" />
-                            <select ng-model="rule_add_action.sender">
+                            <select ng-model="rule_add_action.sender" ng-change="rule_add_sound.sender = false; rule_highlight.sender = false;">
                                 <option value="notify">Always Notify</option>
                                 <option value="dont_notify">Never Notify</option>
                             </select>
-                            Sound: <input type="checkbox" ng-model="rule_add_sound.sender" />
-                            Highlight: <input type="checkbox" ng-model="rule_highlight.sender" />
+                            Sound: <input type="checkbox" ng-model="rule_add_sound.sender" ng-disabled="rule_add_action.sender != 'notify'" />
+                            Highlight: <input type="checkbox" ng-model="rule_highlight.sender" ng-disabled="rule_add_action.sender != 'notify'" />
                             <input type="submit" value="Add" ng-disabled="!sender_rule_add_input || rule_add_inprogress.sender" />
                             <img src="img/spinner.gif" ng-show="rule_add_inprogress.sender" />
                         </form>
