@@ -24,7 +24,7 @@
         <br/>
 
         <h3>Linked emails</h3>
-        <div class="section">
+        <div class="section settingsgroup">
             <form>
                 <input size="40" ng-model="linkedEmails.linkNewEmail" ng-enter="linkEmail(linkedEmails.linkNewEmail)" />
                 <button ng-disabled="!linkedEmails.linkNewEmail" ng-click="linkEmail(linkedEmails.linkNewEmail)">
@@ -48,7 +48,7 @@
         </div>
         <br/>
 
-        <div class="section" ng-show="payment.url">
+        <div class="section settingsgroup" ng-show="payment.url">
             <h3>OpenMarket Matrix Gateway</h3>
             <!--
             <p>
@@ -70,8 +70,17 @@
         </div>
 
         <h3>Notifications</h3>
-        <div class="section">
-            <div ng-switch="settings.notifications">
+        <div class="section pushmaster" ng-class="{pushdisabled: settings.push_master_rule.enabled}">
+            <div ng-if="settings.push_master_rule.enabled">
+                All push notifications are currently disabled for all devices.
+            </div>
+            <button ng-click="settings.push_master_rule.enabled = !settings.push_master_rule.enabled; updateRuleEnabled(settings.push_master_rule)" style="font-size: 14pt">{{settings.push_master_rule.enabled ? 'Enable notifications' : 'Disable all notifications'}}</button>
+            <img src="img/spinner.gif" ng-class="{invisible: !settings.push_master_rule.inprogress}" />
+            <br />
+            <br />
+        </div>
+        <div class="section pushsection" ng-class="{pushdisabled: settings.push_master_rule.enabled}">
+            <div ng-switch="settings.notifications" class="settingsgroup">
                 <div ng-switch-when="granted">
                     <div>
                         <div ng-if="!config.muteNotifications">
@@ -93,6 +102,7 @@
                     To enable it, reset the notification setting for this web site in your browser settings.
                 </div>
                 <div ng-switch-when="default">
+                    This will enabled notifications from this web client to your desktop.
                     <button ng-click="requestNotifications()" style="font-size: 14pt">Enable desktop notifications</button>
                 </div>
                 <div ng-switch-default="">
@@ -100,145 +110,147 @@
                 </div>
             </div>
         
-            <p>
-                Notification settings are saved to your user account and are shared between all clients which support them.
-            </p>
-            <p>
-                Rules are applied in order; the first rule which matches defines the outcome for the message.<br/>
-                So: Per-word notifications are more important than per-room notifications which are more important than per-sender notifications.<br/>
-                For multiple rules of the same kind, the first one in the list that matches takes priority.<br/>
-            </p>
-            <h4>Per-Word notifications</h4>
-            <div class="section">
+            <div class="settingsgroup">
                 <p>
-                    Words match case insensitively, and may include a *
-                    wildcard. So:<br/>
-                    <b>foo</b> matches the string <i>foo</i>
-                    surrounded by word delimiters (e.g. punctuation and
-                    whitespace or start/end of line).<br/>
-                    <b>foo*</b> matches any
-                    such word that begins <i>foo</i>.<br/>
-                    <b>*foo*</b> matches any
-                    such word which includes the 3 letters <i>foo</i>.
+                    Notification settings are saved to your user account and are shared between all clients which support them.
                 </p>
-                <ul>
-                    <li ng-repeat="rule in settings.rules.content" ng-if="rule.rule_id[0] != '.'" ng-class="{disabledRule : !rule.enabled}">
-                        <button ng-click="rule.enabled = !rule.enabled; updateRuleEnabled(rule)">{{rule.enabled ? 'Disable' : 'Enable'}}</button>
-                        <button ng-click="deleteContentRule(rule)" ng-disabled="rule.inprogress">Delete</button>
-                        '{{rule.pattern}}': <span ng-repeat="a in rule.actions"><i>{{stringForAction(a)}}{{$last ? '' : ', '}}</i> </span>
-                        <img src="img/spinner.gif" ng-class="{invisible: !rule.inprogress}" />
-                    </li>
-                    <li>
-                        <form ng-submit="addContentRule();">
-                            <input type="text" ng-model="content_rule_add_input" />
-                            <select ng-model="rule_add_action.content" ng-change="rule_add_sound.content = false; rule_highlight.content = false;">
-                                <option value="notify">Always Notify</option>
-                                <option value="dont_notify">Never Notify</option>
-                            </select>
-                            Sound: <input type="checkbox" ng-model="rule_add_sound.content" ng-disabled="rule_add_action.content != 'notify'" />
-                            Highlight: <input type="checkbox" ng-model="rule_highlight.content" ng-disabled="rule_add_action.content != 'notify'" />
-                            <input type="submit" value="Add" ng-disabled="!content_rule_add_input || rule_add_inprogress.content" />
+                <p>
+                    Rules are applied in order; the first rule which matches defines the outcome for the message.<br/>
+                    So: Per-word notifications are more important than per-room notifications which are more important than per-sender notifications.<br/>
+                    For multiple rules of the same kind, the first one in the list that matches takes priority.<br/>
+                </p>
+                <h4>Per-Word notifications</h4>
+                <div class="section">
+                    <p>
+                        Words match case insensitively, and may include a *
+                        wildcard. So:<br/>
+                        <b>foo</b> matches the string <i>foo</i>
+                        surrounded by word delimiters (e.g. punctuation and
+                        whitespace or start/end of line).<br/>
+                        <b>foo*</b> matches any
+                        such word that begins <i>foo</i>.<br/>
+                        <b>*foo*</b> matches any
+                        such word which includes the 3 letters <i>foo</i>.
+                    </p>
+                    <ul>
+                        <li ng-repeat="rule in settings.rules.content" ng-if="rule.rule_id[0] != '.'" ng-class="{disabledRule : !rule.enabled}">
+                            <button ng-click="rule.enabled = !rule.enabled; updateRuleEnabled(rule)">{{rule.enabled ? 'Disable' : 'Enable'}}</button>
+                            <button ng-click="deleteContentRule(rule)" ng-disabled="rule.inprogress">Delete</button>
+                            '{{rule.pattern}}': <span ng-repeat="a in rule.actions"><i>{{stringForAction(a)}}{{$last ? '' : ', '}}</i> </span>
                             <img src="img/spinner.gif" ng-class="{invisible: !rule.inprogress}" />
-                        </form>
-                    </li>
-                </ul>
-            </div>
-            <h4>Per-Room notifications</h4>
-            <div class="section">
-                <ul>
-                    <li ng-repeat="rule in settings.rules.room" ng-if="rule.rule_id[0] != '.'" ng-class="{disabledRule : !rule.enabled}">
-                        <button ng-click="rule.enabled = !rule.enabled; updateRuleEnabled(rule)">{{rule.enabled ? 'Disable' : 'Enable'}}</button>
-                        <button ng-click="deleteRoomRule(rule)" ng-disabled="rule.inprogress">Delete</button>
-                        Room: '{{rooms[rule.rule_id].name}}': <span ng-repeat="a in rule.actions"><i>{{stringForAction(a)}}{{$last ? '' : ', '}}</i> </span>
-                        <img src="img/spinner.gif" ng-class="{invisible: !rule.inprogress}" />
-                    </li>
-                    <li>
-                        <form ng-submit="addRoomRule()">
-                            <select ng-model="room_rule_add_input">
-                                <option ng-repeat="(room_id, room) in rooms" value="{{room_id}}">{{room.name}} (Room)</option>
-                            </select>
-                            <select ng-model="rule_add_action.room" ng-change="rule_add_sound.room = false; rule_highlight.room = false;">
-                                <option value="notify">Always Notify</option>
-                                <option value="dont_notify">Never Notify</option>
-                            </select>
-                            Sound: <input type="checkbox" ng-model="rule_add_sound.room" ng-disabled="rule_add_action.room != 'notify'" />
-                            Highlight: <input type="checkbox" ng-model="rule_highlight.room" ng-disabled="rule_add_action.room != 'notify'" />
-                            <input type="submit" value="Add" ng-disabled="!room_rule_add_input || rule_add_inprogress.room" />
+                        </li>
+                        <li>
+                            <form ng-submit="addContentRule();">
+                                <input type="text" ng-model="content_rule_add_input" />
+                                <select ng-model="rule_add_action.content" ng-change="rule_add_sound.content = false; rule_highlight.content = false;">
+                                    <option value="notify">Always Notify</option>
+                                    <option value="dont_notify">Never Notify</option>
+                                </select>
+                                Sound: <input type="checkbox" ng-model="rule_add_sound.content" ng-disabled="rule_add_action.content != 'notify'" />
+                                Highlight: <input type="checkbox" ng-model="rule_highlight.content" ng-disabled="rule_add_action.content != 'notify'" />
+                                <input type="submit" value="Add" ng-disabled="!content_rule_add_input || rule_add_inprogress.content" />
+                                <img src="img/spinner.gif" ng-class="{invisible: !rule.inprogress}" />
+                            </form>
+                        </li>
+                    </ul>
+                </div>
+                <h4>Per-Room notifications</h4>
+                <div class="section">
+                    <ul>
+                        <li ng-repeat="rule in settings.rules.room" ng-if="rule.rule_id[0] != '.'" ng-class="{disabledRule : !rule.enabled}">
+                            <button ng-click="rule.enabled = !rule.enabled; updateRuleEnabled(rule)">{{rule.enabled ? 'Disable' : 'Enable'}}</button>
+                            <button ng-click="deleteRoomRule(rule)" ng-disabled="rule.inprogress">Delete</button>
+                            Room: '{{rooms[rule.rule_id].name}}': <span ng-repeat="a in rule.actions"><i>{{stringForAction(a)}}{{$last ? '' : ', '}}</i> </span>
                             <img src="img/spinner.gif" ng-class="{invisible: !rule.inprogress}" />
-                        </form>
-                    </li>
-                </ul>
-            </div>
-            <h4>Per-Sender notifications</h4>
-            <div class="section">
-                <p>e.g. <b>@user:matrix.org</b></p>
-                <ul>
-                    <li ng-repeat="rule in settings.rules.sender" ng-if="rule.rule_id[0] != '.'" ng-class="{disabledRule : !rule.enabled}">
-                        <button ng-click="rule.enabled = !rule.enabled; updateRuleEnabled(rule)">{{rule.enabled ? 'Disable' : 'Enable'}}</button>
-                        <button ng-click="deleteSenderRule(rule)" ng-disabled="rule.inprogress">Delete</button>
-                        '{{rule.rule_id}}': <span ng-repeat="a in rule.actions"><i>{{stringForAction(a)}}{{$last ? '' : ', '}}</i> </span>
-                        <img src="img/spinner.gif" ng-class="{invisible: !rule.inprogress}" />
-                    </li>
-                    <li>
-                        <form ng-submit="addSenderRule();">
-                            <input type="text" ng-model="sender_rule_add_input" />
-                            <select ng-model="rule_add_action.sender" ng-change="rule_add_sound.sender = false; rule_highlight.sender = false;">
-                                <option value="notify">Always Notify</option>
-                                <option value="dont_notify">Never Notify</option>
-                            </select>
-                            Sound: <input type="checkbox" ng-model="rule_add_sound.sender" ng-disabled="rule_add_action.sender != 'notify'" />
-                            Highlight: <input type="checkbox" ng-model="rule_highlight.sender" ng-disabled="rule_add_action.sender != 'notify'" />
-                            <input type="submit" value="Add" ng-disabled="!sender_rule_add_input || rule_add_inprogress.sender" />
+                        </li>
+                        <li>
+                            <form ng-submit="addRoomRule()">
+                                <select ng-model="room_rule_add_input">
+                                    <option ng-repeat="(room_id, room) in rooms" value="{{room_id}}">{{room.name}} (Room)</option>
+                                </select>
+                                <select ng-model="rule_add_action.room" ng-change="rule_add_sound.room = false; rule_highlight.room = false;">
+                                    <option value="notify">Always Notify</option>
+                                    <option value="dont_notify">Never Notify</option>
+                                </select>
+                                Sound: <input type="checkbox" ng-model="rule_add_sound.room" ng-disabled="rule_add_action.room != 'notify'" />
+                                Highlight: <input type="checkbox" ng-model="rule_highlight.room" ng-disabled="rule_add_action.room != 'notify'" />
+                                <input type="submit" value="Add" ng-disabled="!room_rule_add_input || rule_add_inprogress.room" />
+                                <img src="img/spinner.gif" ng-class="{invisible: !rule.inprogress}" />
+                            </form>
+                        </li>
+                    </ul>
+                </div>
+                <h4>Per-Sender notifications</h4>
+                <div class="section">
+                    <p>e.g. <b>@user:matrix.org</b></p>
+                    <ul>
+                        <li ng-repeat="rule in settings.rules.sender" ng-if="rule.rule_id[0] != '.'" ng-class="{disabledRule : !rule.enabled}">
+                            <button ng-click="rule.enabled = !rule.enabled; updateRuleEnabled(rule)">{{rule.enabled ? 'Disable' : 'Enable'}}</button>
+                            <button ng-click="deleteSenderRule(rule)" ng-disabled="rule.inprogress">Delete</button>
+                            '{{rule.rule_id}}': <span ng-repeat="a in rule.actions"><i>{{stringForAction(a)}}{{$last ? '' : ', '}}</i> </span>
                             <img src="img/spinner.gif" ng-class="{invisible: !rule.inprogress}" />
-                        </form>
-                    </li>
-                </ul>
-            </div>
-            <h4>Additional Alerts</h4>
-            <div class="section">
-                <ul>
-                    <li ng-repeat="rule in settings.default_rules.additional" ng-class="{disabledRule : !rule.enabled}">
-                        <button ng-click="rule.enabled = !rule.enabled; updateRuleEnabled(rule)">{{rule.enabled ? 'Disable' : 'Enable'}}</button>
-                        {{rule.description}}
-                        <img src="img/spinner.gif" ng-class="{invisible: !rule.inprogress}" />
-                    </li>
-                </ul>
-            </div>
-            <h4>Calls</h4>
-            <div class="section">
-                <ul>
-                    <li ng-repeat="rule in settings.default_rules.call" ng-class="{disabledRule : !rule.enabled}">
-                        <button ng-click="rule.enabled = !rule.enabled; updateRuleEnabled(rule)">{{rule.enabled ? 'Disable' : 'Enable'}}</button>
-                        {{rule.description}}
-                        <img src="img/spinner.gif" ng-class="{invisible: !rule.inprogress}" />
-                    </li>
-                </ul>
-            </div>
-            <h4>Suppressions</h4>
-            <div class="section">
-                <ul>
-                    <li ng-repeat="rule in settings.default_rules.suppression" ng-class="{disabledRule : !rule.enabled}">
-                        <button ng-click="rule.enabled = !rule.enabled; updateRuleEnabled(rule)">{{rule.enabled ? 'Disable' : 'Enable'}}</button>
-                        {{rule.description}}
-                        <img src="img/spinner.gif" ng-class="{invisible: !rule.inprogress}" />
-                    </li>
-                </ul>
-            </div>
-            <h4>Defaults</h4>
-            <div class="section">
-                <ul>
-                    <li ng-repeat="rule in settings.default_rules.fallthrough" ng-class="{disabledRule : !rule.enabled}">
-                        <button ng-click="rule.enabled = !rule.enabled; updateRuleEnabled(rule)">{{rule.enabled ? 'Disable' : 'Enable'}}</button>
-                        {{rule.description}}
-                        <img src="img/spinner.gif" ng-class="{invisible: !rule.inprogress}" />
-                    </li>
-                </ul>
+                        </li>
+                        <li>
+                            <form ng-submit="addSenderRule();">
+                                <input type="text" ng-model="sender_rule_add_input" />
+                                <select ng-model="rule_add_action.sender" ng-change="rule_add_sound.sender = false; rule_highlight.sender = false;">
+                                    <option value="notify">Always Notify</option>
+                                    <option value="dont_notify">Never Notify</option>
+                                </select>
+                                Sound: <input type="checkbox" ng-model="rule_add_sound.sender" ng-disabled="rule_add_action.sender != 'notify'" />
+                                Highlight: <input type="checkbox" ng-model="rule_highlight.sender" ng-disabled="rule_add_action.sender != 'notify'" />
+                                <input type="submit" value="Add" ng-disabled="!sender_rule_add_input || rule_add_inprogress.sender" />
+                                <img src="img/spinner.gif" ng-class="{invisible: !rule.inprogress}" />
+                            </form>
+                        </li>
+                    </ul>
+                </div>
+                <h4>Additional Alerts</h4>
+                <div class="section">
+                    <ul>
+                        <li ng-repeat="rule in settings.default_rules.additional" ng-class="{disabledRule : !rule.enabled}">
+                            <button ng-click="rule.enabled = !rule.enabled; updateRuleEnabled(rule)">{{rule.enabled ? 'Disable' : 'Enable'}}</button>
+                            {{rule.description}}
+                            <img src="img/spinner.gif" ng-class="{invisible: !rule.inprogress}" />
+                        </li>
+                    </ul>
+                </div>
+                <h4>Calls</h4>
+                <div class="section">
+                    <ul>
+                        <li ng-repeat="rule in settings.default_rules.call" ng-class="{disabledRule : !rule.enabled}">
+                            <button ng-click="rule.enabled = !rule.enabled; updateRuleEnabled(rule)">{{rule.enabled ? 'Disable' : 'Enable'}}</button>
+                            {{rule.description}}
+                            <img src="img/spinner.gif" ng-class="{invisible: !rule.inprogress}" />
+                        </li>
+                    </ul>
+                </div>
+                <h4>Suppressions</h4>
+                <div class="section">
+                    <ul>
+                        <li ng-repeat="rule in settings.default_rules.suppression" ng-class="{disabledRule : !rule.enabled}">
+                            <button ng-click="rule.enabled = !rule.enabled; updateRuleEnabled(rule)">{{rule.enabled ? 'Disable' : 'Enable'}}</button>
+                            {{rule.description}}
+                            <img src="img/spinner.gif" ng-class="{invisible: !rule.inprogress}" />
+                        </li>
+                    </ul>
+                </div>
+                <h4>Defaults</h4>
+                <div class="section">
+                    <ul>
+                        <li ng-repeat="rule in settings.default_rules.fallthrough" ng-class="{disabledRule : !rule.enabled}">
+                            <button ng-click="rule.enabled = !rule.enabled; updateRuleEnabled(rule)">{{rule.enabled ? 'Disable' : 'Enable'}}</button>
+                            {{rule.description}}
+                            <img src="img/spinner.gif" ng-class="{invisible: !rule.inprogress}" />
+                        </li>
+                    </ul>
+                </div>
             </div>
         </div>
         <br/>
         
         <h3>Configuration</h3>
-        <div class="section">
+        <div class="section settingsgroup">
             <div>Web client version: {{ appVersion }} </div>
             <div>Home server: {{ config.homeserver }} </div>
             <div>Identity server: {{ config.identityServer }} </div>
@@ -248,7 +260,7 @@
         <br/>
         
         <h3>Commands</h3>
-        <div class="section">
+        <div class="section settingsgroup">
             The following commands are available in the room chat:
             <ul>
                 <li>/nick &lt;display_name&gt;: change your display name</li>

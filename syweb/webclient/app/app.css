@@ -984,6 +984,34 @@ textarea, input {
 
 /*** Settings ***/
 
+.pushmaster {
+    padding: 5px;
+    height: 50px;
+    margin-botton: 10px;
+}
+
+.pushmaster.pushdisabled {
+    background-color: #e55;
+}
+
+.pushsection {
+    transition: max-height linear 0.5s, opacity linear 0.5s;
+    max-height: 1500px;
+    overflow: hidden;
+}
+
+.pushsection.pushdisabled {
+    max-height: 0px;
+    opacity: 0;
+}
+
+.settingsgroup {
+    background-color: #eee;
+    padding: 5px;
+    margin: 5px;
+    border: 1px solid black;
+}
+
 li.disabledRule {
     color: #bbb;
 }

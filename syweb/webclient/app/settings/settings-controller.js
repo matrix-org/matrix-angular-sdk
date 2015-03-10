@@ -49,6 +49,7 @@ function($scope, matrixService, modelService, eventHandlerService, notificationS
             $scope.settings.rules = rulesets.global;
 
             var rule_descriptions = {
+                '.m.rule.master': '',
                 '.m.rule.contains_user_name': "Notify me with sound about messages that contain my user name",
                 '.m.rule.contains_display_name': "Notify me with sound about messages that contain my display name",
                 '.m.rule.room_one_to_one': "Notify me with sound about messages to just me",
@@ -60,18 +61,19 @@ function($scope, matrixService, modelService, eventHandlerService, notificationS
                 '.m.rule.fallback': "Notify me for anything else"
             };
             var rule_categories = {
+                '.m.rule.master': 'master',
                 '.m.rule.suppress_notices': 'suppression',
                 '.m.rule.message': 'fallthrough',
                 '.m.rule.call': 'call',
             };
 
-            var defaultRules = {additional: [], call: [], fallthrough: [], suppression: []};
+            var defaultRules = {master: [], additional: [], call: [], fallthrough: [], suppression: []};
             for (var kind in rulesets.global) {
                 for (var i = 0; i < Object.keys(rulesets.global[kind]).length; ++i) {
                     var r = rulesets.global[kind][i];
                     var cat = rule_categories[r.rule_id];
                     r.kind = kind;
-                    if (r.rule_id[0] == '.' && rule_descriptions[r.rule_id]) {
+                    if (r.rule_id[0] == '.' && rule_descriptions[r.rule_id] !== undefined) {
                         r.description = rule_descriptions[r.rule_id];
                         if (cat) {
                             defaultRules[cat].push(r);
@@ -82,6 +84,12 @@ function($scope, matrixService, modelService, eventHandlerService, notificationS
                 }
             }
             $scope.settings.default_rules = defaultRules;
+            if (defaultRules.master.length > 0) {
+                $scope.settings.push_master_rule = defaultRules.master[0];
+            } else {
+                // degrade sort of gracefully if the master push rule doesn't exist
+                $scope.settings.push_master_rule = {enabled: false};
+            }
         });
     };
 
