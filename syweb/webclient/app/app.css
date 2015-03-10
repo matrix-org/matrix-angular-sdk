@@ -988,6 +988,10 @@ li.disabledRule {
     color: #bbb;
 }
 
+.invisible {
+    visibility: hidden;
+}
+
 /*** Seasonal ***/
 
 

@@ -94,10 +94,10 @@
                 </p>
                 <ul>
                     <li ng-repeat="rule in settings.rules.content" ng-if="rule.rule_id[0] != '.'" ng-class="{disabledRule : !rule.enabled}">
-                        <input type="checkbox" ng-model="rule.enabled" ng-change="updateRuleEnabled(rule)" />
+                        <button ng-click="rule.enabled = !rule.enabled; updateRuleEnabled(rule)">{{rule.enabled ? 'Disable' : 'Enable'}}</button>
                         <button ng-click="deleteContentRule(rule)" ng-disabled="rule.inprogress">Delete</button>
                         '{{rule.pattern}}': <span ng-repeat="a in rule.actions"><i>{{stringForAction(a)}}{{$last ? '' : ', '}}</i> </span>
-                        <img src="img/spinner.gif" ng-show="rule.inprogress" />
+                        <img src="img/spinner.gif" ng-class="{invisible: !rule.inprogress}" />
                     </li>
                     <li>
                         <form ng-submit="addContentRule();">
@@ -109,7 +109,7 @@
                             Sound: <input type="checkbox" ng-model="rule_add_sound.content" ng-disabled="rule_add_action.content != 'notify'" />
                             Highlight: <input type="checkbox" ng-model="rule_highlight.content" ng-disabled="rule_add_action.content != 'notify'" />
                             <input type="submit" value="Add" ng-disabled="!content_rule_add_input || rule_add_inprogress.content" />
-                            <img src="img/spinner.gif" ng-show="rule_add_inprogress.content" />
+                            <img src="img/spinner.gif" ng-class="{invisible: !rule.inprogress}" />
                         </form>
                     </li>
                 </ul>
@@ -118,10 +118,10 @@
             <div class="section">
                 <ul>
                     <li ng-repeat="rule in settings.rules.room" ng-if="rule.rule_id[0] != '.'" ng-class="{disabledRule : !rule.enabled}">
-                        <input type="checkbox" ng-model="rule.enabled" ng-change="updateRuleEnabled(rule)" />
+                        <button ng-click="rule.enabled = !rule.enabled; updateRuleEnabled(rule)">{{rule.enabled ? 'Disable' : 'Enable'}}</button>
                         <button ng-click="deleteRoomRule(rule)" ng-disabled="rule.inprogress">Delete</button>
                         Room: '{{rooms[rule.rule_id].name}}': <span ng-repeat="a in rule.actions"><i>{{stringForAction(a)}}{{$last ? '' : ', '}}</i> </span>
-                        <img src="img/spinner.gif" ng-show="rule.inprogress" />
+                        <img src="img/spinner.gif" ng-class="{invisible: !rule.inprogress}" />
                     </li>
                     <li>
                         <form ng-submit="addRoomRule()">
@@ -135,7 +135,7 @@
                             Sound: <input type="checkbox" ng-model="rule_add_sound.room" ng-disabled="rule_add_action.room != 'notify'" />
                             Highlight: <input type="checkbox" ng-model="rule_highlight.room" ng-disabled="rule_add_action.room != 'notify'" />
                             <input type="submit" value="Add" ng-disabled="!room_rule_add_input || rule_add_inprogress.room" />
-                            <img src="img/spinner.gif" ng-show="rule_add_inprogress.room" />
+                            <img src="img/spinner.gif" ng-class="{invisible: !rule.inprogress}" />
                         </form>
                     </li>
                 </ul>
@@ -145,10 +145,10 @@
                 <p>e.g. <b>@user:matrix.org</b></p>
                 <ul>
                     <li ng-repeat="rule in settings.rules.sender" ng-if="rule.rule_id[0] != '.'" ng-class="{disabledRule : !rule.enabled}">
-                        <input type="checkbox" ng-model="rule.enabled" ng-change="updateRuleEnabled(rule)" />
+                        <button ng-click="rule.enabled = !rule.enabled; updateRuleEnabled(rule)">{{rule.enabled ? 'Disable' : 'Enable'}}</button>
                         <button ng-click="deleteSenderRule(rule)" ng-disabled="rule.inprogress">Delete</button>
                         '{{rule.rule_id}}': <span ng-repeat="a in rule.actions"><i>{{stringForAction(a)}}{{$last ? '' : ', '}}</i> </span>
-                        <img src="img/spinner.gif" ng-show="rule.inprogress" />
+                        <img src="img/spinner.gif" ng-class="{invisible: !rule.inprogress}" />
                     </li>
                     <li>
                         <form ng-submit="addSenderRule();">
@@ -160,7 +160,7 @@
                             Sound: <input type="checkbox" ng-model="rule_add_sound.sender" ng-disabled="rule_add_action.sender != 'notify'" />
                             Highlight: <input type="checkbox" ng-model="rule_highlight.sender" ng-disabled="rule_add_action.sender != 'notify'" />
                             <input type="submit" value="Add" ng-disabled="!sender_rule_add_input || rule_add_inprogress.sender" />
-                            <img src="img/spinner.gif" ng-show="rule_add_inprogress.sender" />
+                            <img src="img/spinner.gif" ng-class="{invisible: !rule.inprogress}" />
                         </form>
                     </li>
                 </ul>
@@ -169,9 +169,9 @@
             <div class="section">
                 <ul>
                     <li ng-repeat="rule in settings.default_rules.additional" ng-class="{disabledRule : !rule.enabled}">
-                        <input type="checkbox" ng-model="rule.enabled" ng-change="updateRuleEnabled(rule)" />
+                        <button ng-click="rule.enabled = !rule.enabled; updateRuleEnabled(rule)">{{rule.enabled ? 'Disable' : 'Enable'}}</button>
                         {{rule.description}}
-                        <img src="img/spinner.gif" ng-show="rule.inprogress" />
+                        <img src="img/spinner.gif" ng-class="{invisible: !rule.inprogress}" />
                     </li>
                 </ul>
             </div>
@@ -179,9 +179,9 @@
             <div class="section">
                 <ul>
                     <li ng-repeat="rule in settings.default_rules.call" ng-class="{disabledRule : !rule.enabled}">
-                        <input type="checkbox" ng-model="rule.enabled" ng-change="updateRuleEnabled(rule)" />
+                        <button ng-click="rule.enabled = !rule.enabled; updateRuleEnabled(rule)">{{rule.enabled ? 'Disable' : 'Enable'}}</button>
                         {{rule.description}}
-                        <img src="img/spinner.gif" ng-show="rule.inprogress" />
+                        <img src="img/spinner.gif" ng-class="{invisible: !rule.inprogress}" />
                     </li>
                 </ul>
             </div>
@@ -189,9 +189,9 @@
             <div class="section">
                 <ul>
                     <li ng-repeat="rule in settings.default_rules.suppression" ng-class="{disabledRule : !rule.enabled}">
-                        <input type="checkbox" ng-model="rule.enabled" ng-change="updateRuleEnabled(rule)" />
+                        <button ng-click="rule.enabled = !rule.enabled; updateRuleEnabled(rule)">{{rule.enabled ? 'Disable' : 'Enable'}}</button>
                         {{rule.description}}
-                        <img src="img/spinner.gif" ng-show="rule.inprogress" />
+                        <img src="img/spinner.gif" ng-class="{invisible: !rule.inprogress}" />
                     </li>
                 </ul>
             </div>
@@ -199,9 +199,9 @@
             <div class="section">
                 <ul>
                     <li ng-repeat="rule in settings.default_rules.fallthrough" ng-class="{disabledRule : !rule.enabled}">
-                        <input type="checkbox" ng-model="rule.enabled" ng-change="updateRuleEnabled(rule)" />
+                        <button ng-click="rule.enabled = !rule.enabled; updateRuleEnabled(rule)">{{rule.enabled ? 'Disable' : 'Enable'}}</button>
                         {{rule.description}}
-                        <img src="img/spinner.gif" ng-show="rule.inprogress" />
+                        <img src="img/spinner.gif" ng-class="{invisible: !rule.inprogress}" />
                     </li>
                 </ul>
             </div>
