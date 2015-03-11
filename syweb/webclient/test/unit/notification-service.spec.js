@@ -1,9 +1,12 @@
 describe('NotificationService', function() {
+    var _window;
 
     var testUserId = "@ali:matrix.org";
     var testDisplayName = "Alice M";
     var testOtherDisplayName = "Jimmy McSomeoneelse";
     var testRoomId = "!fl1bb13:localhost";
+    var testPresenceState = 'unavailable';
+    var testConfig = {'user_id': testUserId};
 
     var testEvent;
 
@@ -179,7 +182,10 @@ describe('NotificationService', function() {
             return def.promise;
         },
         config : function() {
-            return {'user_id': testUserId};
+            return testConfig;
+        },
+        presence: {
+            unavailable: 'unavailable'
         }
     };
 
@@ -196,13 +202,30 @@ describe('NotificationService', function() {
                 events: []
             };
             return testRoom;
-        }
+        },
+        getMember: function(roomId, userId) {
+            return {
+                event: {
+                    content: {
+                    }
+                }
+            }
+        },
     };
 
     var mPresence = {
         getState: function() {
             return testPresenceState;
         }
+    };
+
+    var mRoomNameFilter = function(){
+        return function() {
+            return "A room";
+        }
+    };
+
+    var _notification = function(){
     };
 
     beforeEach(function() {
@@ -221,6 +244,7 @@ describe('NotificationService', function() {
           $provide.value('matrixService', matrixService);
           $provide.value('modelService', modelService);
           $provide.value('mPresence', mPresence);
+          $provide.value('mRoomNameFilter', mRoomNameFilter);
         });
 
         module(function ($filterProvider) {
@@ -238,9 +262,10 @@ describe('NotificationService', function() {
         module('notificationService');
     });
 
-    beforeEach(inject(function($rootScope, _$q_) {
+    beforeEach(inject(function($rootScope, _$q_, $window) {
         scope = $rootScope;
         $q = _$q_;
+        _window = $window;
     }));
 
     beforeEach(inject(function(notificationService) {
@@ -337,4 +362,68 @@ describe('NotificationService', function() {
         testEvent.content.body = { "foo": "bar" };
         expect(notificationService.shouldHighlightEvent(testEvent)).toEqual(false);
     }));
+
+    it('should display a notification to messages with bing words.', inject(
+    function(notificationService) {
+        testConfig.muteNotifications = false;
+
+        var event = {
+            content: {
+                body: "I ate 6 pies",
+                msgtype: "m.text"
+            },
+            user_id: "@someone:matrix.org",
+            room_id: "!foobar:matrix.org",
+            type: "m.room.message",
+            event_id: "wf3"
+        };
+        _window.Notification = _notification;
+        spyOn(_window, "Notification");
+        notificationService.processEvent(event);
+        scope.$apply();
+        expect(_window.Notification).toHaveBeenCalled();
+    }));
+    
+    it('should NOT display a notification if notifications are muted.', inject(
+    function(notificationService) {
+        testConfig.muteNotifications = true;
+        
+        var event = {
+            content: {
+                body: "I ate 6 pies",
+                msgtype: "m.text"
+            },
+            user_id: "@someone:matrix.org",
+            room_id: "!foobar:matrix.org",
+            type: "m.room.message",
+            event_id: "wf3"
+        };
+        _window.Notification = _notification;
+        spyOn(_window, "Notification");
+        notificationService.processEvent(event);
+        scope.$apply();
+        expect(_window.Notification).not.toHaveBeenCalled();
+    }));
+
+    it('should display a notification for incoming invites.', inject(
+    function(notificationService) {
+        testConfig.muteNotifications = false;
+
+        var event = {
+            content: {
+                membership: "invite"
+            },
+            user_id: "@someone:matrix.org",
+            room_id: "!foobar:matrix.org",
+            state_key: testUserId,
+            type: "m.room.member",
+            event_id: "wf"
+        };
+        _window.Notification = _notification;
+        spyOn(_window, "Notification");
+        notificationService.processEvent(event);
+        scope.$apply();
+        expect(_window.Notification).toHaveBeenCalled();
+    }));
+    
 });

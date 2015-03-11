@@ -121,11 +121,6 @@ describe('EventHandlerService', function() {
     
     var notificationService = {
         processEvent: function(ev) {
-            if (matrixService.config().muteNotifications) return;
-            if (testContainsBingWords) this.showNotification(1,1,1,1);
-            if (ev.type == 'm.room.member' && ev.content.membership == 'invite' && ev.state_key == testUserId) {
-                this.showNotification(1,1,1,1);
-            }
         },
         shouldHighlightEvent: function(ev) {
             return testContainsBingWords;
@@ -701,29 +696,6 @@ describe('EventHandlerService', function() {
         expect(testEvents.length).toEqual(2);
     }));
     
-    it('should display a notification for incoming invites.', inject(
-    function(eventHandlerService) {
-        eventHandlerService.handleInitialSyncDone(testInitialSync);
-        
-        var event = {
-            content: {
-                membership: "invite"
-            },
-            user_id: "@someone:matrix.org",
-            room_id: "!foobar:matrix.org",
-            state_key: testUserId,
-            type: "m.room.member",
-            event_id: "wf"
-        };
-        testChangedKey = "membership";
-        spyOn(notificationService, "showNotification");
-        _window.Notification = true;
-        eventHandlerService.handleEvent(event, true);
-        scope.$apply();
-        expect(notificationService.showNotification).toHaveBeenCalled();
-    }));
-    
-    
     it('should be able to create a room and do an initial sync on the room.', inject(
     function(eventHandlerService) {
         var alias = "bob";
@@ -934,7 +906,7 @@ describe('EventHandlerService', function() {
         expect(testNowState.members["@ccc:matrix.org"]).toBeUndefined();
     }));
     
-    it('should display a notification to messages with bing words.', inject(
+    it('should pass the event through to notificationService.', inject(
     function(eventHandlerService) {
         eventHandlerService.handleInitialSyncDone(testInitialSync);
         testContainsBingWords = true;
@@ -949,32 +921,9 @@ describe('EventHandlerService', function() {
             type: "m.room.message",
             event_id: "wf3"
         };
-        spyOn(notificationService, "showNotification");
-        _window.Notification = true;
+        spyOn(notificationService, "processEvent");
         eventHandlerService.handleEvent(event, true);
-        expect(notificationService.showNotification).toHaveBeenCalled();
-    }));
-    
-    it('should NOT display a notification if notifications are muted.', inject(
-    function(eventHandlerService) {
-        eventHandlerService.handleInitialSyncDone(testInitialSync);
-        testContainsBingWords = true;
-        testConfig.muteNotifications = true;
-        
-        var event = {
-            content: {
-                body: "ping",
-                msgtype: "m.text"
-            },
-            user_id: "@someone:matrix.org",
-            room_id: "!foobar:matrix.org",
-            type: "m.room.message",
-            event_id: "wf3"
-        };
-        spyOn(notificationService, "showNotification");
-        _window.Notification = true;
-        eventHandlerService.handleEvent(event, true);
-        expect(notificationService.showNotification).not.toHaveBeenCalled();
+        expect(notificationService.processEvent).toHaveBeenCalled();
     }));
     
 });
