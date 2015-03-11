@@ -167,7 +167,7 @@
                                             src="{{rule.enabled ? 'img/pause.png' : 'img/play.png'}}" alt="{{rule.enabled ? 'Disable' : 'Enable'}}"/>
                                         <img width="16" height="16" ng-click="deleteRoomRule(rule)" ng-disabled="rule.inprogress"
                                             src="img/delete.png" alt="Delete"/>
-                                    Room: '{{rooms[rule.rule_id].name}}'
+                                    Room: '{{rooms[rule.rule_id].room_id | mRoomName}}'
                                     </td>
                                     <td>
                                         <span ng-repeat="a in rule.actions"><i>{{stringForAction(a)}}{{$last ? '' : ', '}}</i> </span>
@@ -179,7 +179,7 @@
                                 <tr>
                                     <td>
                                         <select ng-model="rule_add.input.room">
-                                            <option ng-repeat="(room_id, room) in rooms" value="{{room_id}}">{{room.name}} (Room)</option>
+                                            <option ng-repeat="(room_id, room) in rooms" value="{{room_id}}">{{room.room_id | mRoomName}} (Room)</option>
                                         </select>
                                     </td>
                                     <td>
