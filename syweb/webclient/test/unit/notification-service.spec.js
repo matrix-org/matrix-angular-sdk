@@ -10,6 +10,7 @@ describe('NotificationService', function() {
 
     var testEvent;
 
+    // These would be better if individual rules were configured in the tests themselves.
     var matrixService = {
         getPushRules : function() {
             var def = $q.defer();
