@@ -21,8 +21,8 @@ This service manages notifications: enabling, creating and showing them. This
 also contains 'bing word' logic.
 */
 angular.module('notificationService', [])
-.factory('notificationService', ['$timeout', '$q', '$filter', '$rootScope', 'matrixService', 'modelService', 'mPresence',
-function($timeout, $q, $filter, $rootScope, matrixService, modelService, mPresence) {
+.factory('notificationService', ['$timeout', '$q', '$rootScope', 'matrixService', 'modelService', 'mPresence', 'mUserDisplayNameFilter', 'mRoomNameFilter',
+function($timeout, $q, $rootScope, matrixService, modelService, mPresence, mUserDisplayNameFilter, mRoomNameFilter) {
 
     var getLocalPartFromUserId = function(user_id) {
         if (!user_id) {
@@ -177,7 +177,7 @@ function($timeout, $q, $filter, $rootScope, matrixService, modelService, mPresen
     var eventFulfillsDisplayNameCondition = function(cond, ev) {
         if (!ev.content || ! ev.content.body || typeof ev.content.body != 'string') return false;
 
-        var displayname = $filter("mUserDisplayName")(matrixService.config().user_id, ev.room_id);
+        var displayname = mUserDisplayNameFilter(matrixService.config().user_id, ev.room_id);
         var pat = new RegExp("\\b"+escapeRegExp(displayname)+"\\b", 'i')
         return ev.content.body.search(pat) > -1;
     };
@@ -238,7 +238,7 @@ function($timeout, $q, $filter, $rootScope, matrixService, modelService, mPresen
         } else if (ev.type == "m.room.member") {
             if (ev.state_key !== matrixService.config().user_id  && "join" === ev.content.membership) {
                 // Notify when another user joins
-                displayname = $filter("mUserDisplayName")(ev.state_key, ev.room_id);
+                displayname = mUserDisplayNameFilter(ev.state_key, ev.room_id);
                 message = displayname + " joined";
             } else if (ev.state_key === matrixService.config().user_id  && "invite" === ev.content.membership) {
                 // notify when you are invited
@@ -470,7 +470,7 @@ function($timeout, $q, $filter, $rootScope, matrixService, modelService, mPresen
                 var actionObj = actionListToActionsObject(rule.actions);
                 
                 if (actionObj.notify) {
-                    var roomTitle = $filter("mRoomName")(ev.room_id);
+                    var roomTitle = mRoomNameFilter(ev.room_id);
                     
                     var audio = undefined;
                     if (matrixService.config().audioNotifications === true && actionObj.tweaks.sound) {
@@ -488,7 +488,7 @@ function($timeout, $q, $filter, $rootScope, matrixService, modelService, mPresen
                         avatarUrl = matrixService.getHttpUriForMxc(member.event.content.avatar_url);
                     }
 
-                    var displayname = $filter("mUserDisplayName")(ev.user_id, ev.room_id);
+                    var displayname = mUserDisplayNameFilter(ev.user_id, ev.room_id);
                     
                     var message = notificationMessageForEvent(ev, displayname);
                     if (!message) return;
