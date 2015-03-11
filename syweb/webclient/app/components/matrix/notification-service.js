@@ -494,9 +494,16 @@ function($timeout, $q, $filter, $rootScope, matrixService, modelService, mPresen
                     if (!message) return;
 
                     console.log("Displaying notification "+(audio === undefined ? "" : "with audio")+" for "+JSON.stringify(ev.content));
+
+                    var notificationTitle;
+                    if (roomTitle == displayname) {
+                        notificationTitle = displayname;
+                    } else {
+                        notificationTitle = displayname + " (" + roomTitle + ")";
+                    }
                     
                     showNotification(
-                        displayname + " (" + roomTitle + ")",
+                        notificationTitle,
                         message,
                         avatarUrl,
                         function() {
