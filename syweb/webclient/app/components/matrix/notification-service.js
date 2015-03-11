@@ -146,9 +146,10 @@ function($timeout, $q, $filter, $rootScope, matrixService, modelService, mPresen
 
     var eventFulfillsRoomMemberCountCondition = function(cond, ev) {
         if (!cond.is) return false;
-        if (!room || !room.current_room_state || !current_room_state.members) return false;
 
         var room = modelService.getKnownRoom(ev.room_id);
+        if (!room || !room.current_room_state || !room.current_room_state.members) return false;
+
         var memberCount = Object.keys(room.current_room_state.members).length;
 
         var m = cond.is.match(/^([=<>]*)([0-9]*)$/);
