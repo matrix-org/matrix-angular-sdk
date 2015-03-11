@@ -321,7 +321,7 @@ function($timeout, $q, $rootScope, matrixService, modelService, mPresence, mUser
     };
     
 
-    var nfsvc = {
+    var self = {
 
         clearRulesCache : function() {
             rulesCacheIsCurrent = false;
@@ -519,7 +519,7 @@ function($timeout, $q, $rootScope, matrixService, modelService, mPresence, mUser
         
         showNotification : showNotification,
     };
-    nfsvc.getRulesets();
-    return nfsvc;
+    self.getRulesets();
+    return self;
 }]);
 
