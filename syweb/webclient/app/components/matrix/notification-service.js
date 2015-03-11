@@ -488,7 +488,6 @@ function($timeout, $q, $filter, $rootScope, matrixService, modelService, mPresen
                         avatarUrl = matrixService.getHttpUriForMxc(member.event.content.avatar_url);
                     }
 
-                    member = modelService.getMember(ev.room_id, ev.state_key);
                     var displayname = $filter("mUserDisplayName")(ev.user_id, ev.room_id);
                     
                     var message = notificationMessageForEvent(ev, displayname);
