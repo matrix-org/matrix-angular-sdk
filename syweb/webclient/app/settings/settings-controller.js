@@ -86,9 +86,6 @@ function($scope, matrixService, modelService, eventHandlerService, notificationS
             $scope.settings.default_rules = defaultRules;
             if (defaultRules.master.length > 0) {
                 $scope.settings.push_master_rule = defaultRules.master[0];
-            } else {
-                // degrade sort of gracefully if the master push rule doesn't exist
-                $scope.settings.push_master_rule = {enabled: false};
             }
         });
     };

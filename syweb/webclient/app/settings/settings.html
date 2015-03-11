@@ -59,7 +59,7 @@
             </tab>
             <tab heading="Notifications">
                 <h2>Notification Settings</h2>
-                <div class="section pushmaster" ng-class="{pushdisabled: settings.push_master_rule.enabled}">
+                <div class="section pushmaster" ng-class="{pushdisabled: settings.push_master_rule.enabled}" ng-show="settings.push_master_rule != undefined">
                     <button ng-click="settings.push_master_rule.enabled = !settings.push_master_rule.enabled; updateRuleEnabled(settings.push_master_rule)" style="font-size: 12pt">{{settings.push_master_rule.enabled ? 'Enable notifications' : 'Disable all notifications'}}</button>                    
                     <img src="img/spinner.gif" ng-class="{invisible: !settings.push_master_rule.inprogress}" />
                     <div ng-if="settings.push_master_rule.enabled">
