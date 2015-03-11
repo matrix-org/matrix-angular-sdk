@@ -65,10 +65,10 @@ function($timeout, $q, $filter, $rootScope, matrixService, modelService, mPresen
 
             for (var ruleIndex = 0; ruleIndex < ruleset.length; ++ruleIndex) {
                 var rule = ruleset[ruleIndex];
-                if (!rule.enabled) return false;
+                if (!rule.enabled) continue;
 
                 var rawrule = templateRuleToRaw(kind, rule, device);
-                if (!rawrule) return false;
+                if (!rawrule) continue;
 
                 if (ruleMatchesEvent(rawrule, ev)) {
                     rule.kind = kind;
@@ -440,7 +440,10 @@ function($timeout, $q, $filter, $rootScope, matrixService, modelService, mPresen
         },
 
         processEvent : function(ev) {
-            if (matrixService.config().muteNotifications) return;
+            if (matrixService.config().muteNotifications) {
+                //console.log("Notifications muted");
+                return;
+            }
             // Ideally we would notify only when the window is hidden (i.e. document.hidden = true).
             //
             // However, Chrome on Linux and OSX currently returns document.hidden = false unless the window is
@@ -452,10 +455,16 @@ function($timeout, $q, $filter, $rootScope, matrixService, modelService, mPresen
             // to death with notifications when the window is in the foreground, which is horrible UX (especially
             // if you have not defined any bingers and so get notified for everything).
             var isIdle = (document.hidden || matrixService.presence.unavailable === mPresence.getState());
-            if (!isIdle) return;
+            if (!isIdle) {
+                //console.log("Document visible: not showing notification");
+                return;
+            }
 
             this.matchingRuleForEvent(ev).then(function(rule) {
-                if (!rule) return; // This is essentially making the default 'dont-notify'
+                if (!rule) {
+                    //console.log("No matching rule: not notifying");
+                    return; // This is essentially making the default 'dont-notify'
+                }
 
                 var actionObj = actionListToActionsObject(rule.actions);
                 
