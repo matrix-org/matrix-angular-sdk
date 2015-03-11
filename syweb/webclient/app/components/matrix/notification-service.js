@@ -54,7 +54,6 @@ function($timeout, $q, $rootScope, matrixService, modelService, mPresence, mUser
     };
 
     var rulesCache = null;
-    var rulesCacheIsCurrent = false;
     var ruleFetchPromise = null;
 
     var matchingRuleFromKindSet = function(ev, kindset, device) {
@@ -324,29 +323,24 @@ function($timeout, $q, $rootScope, matrixService, modelService, mPresence, mUser
     var self = {
 
         clearRulesCache : function() {
-            rulesCacheIsCurrent = false;
+            ruleFetchPromise = null;
         },
 
         getRulesets : function() {
             var def = $q.defer();
 
-            if (!rulesCacheIsCurrent && !ruleFetchPromise)  {
+            if (!ruleFetchPromise)  {
                 ruleFetchPromise = def.promise;
                 matrixService.getPushRules().then(function(rules) {
                     rulesCache = rules.data;
-                    rulesCacheIsCurrent = true;
                     def.resolve(rulesCache);
                 }, function(err) {
                     def.reject(err);
-                }).finally(function() {
-                    ruleFetchPromise = null;
                 });
             } else if (ruleFetchPromise) {
                 ruleFetchPromise.then(function(rules) {
                     def.resolve(rulesCache);
                 });
-            } else {
-                def.resolve(rulesCache);
             }
             return def.promise;
         },
