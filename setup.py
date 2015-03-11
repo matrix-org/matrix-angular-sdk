@@ -27,7 +27,7 @@ def read(fname):
 
 setup(
     name="matrix-angular-sdk",
-    version=read("VERSION").strip(),
+    version=read("syweb/webclient/VERSION").strip(),
     packages=find_packages(exclude=["tests", "tests.*"]),
     description="Matrix Angular Sdk",
     include_package_data=True,
