@@ -52,11 +52,11 @@ function($scope, matrixService, modelService, eventHandlerService, notificationS
                 '.m.rule.master': '',
                 '.m.rule.contains_user_name': "Notify me with sound about messages that contain my user name",
                 '.m.rule.contains_display_name': "Notify me with sound about messages that contain my display name",
-                '.m.rule.room_one_to_one': "Notify me with sound about messages to just me",
-                '.m.rule.suppress_notices': "Suppress notifications for all automated messages",
+                '.m.rule.room_one_to_one': "Notify me with sound about messages sent just to me",
+                '.m.rule.suppress_notices': "Suppress notifications from bots",
                 '.m.rule.invite_for_me': "Notify me when I'm invited to a new room",
                 '.m.rule.member_event': "Notify me when people join or leave rooms",
-                '.m.rule.message': "Notify me about messages that don't match any other rule",
+                '.m.rule.message': "Notify for all other messages/rooms",
                 '.m.rule.call': "Notify me when I receive a call",
                 '.m.rule.fallback': "Notify me for anything else"
             };
@@ -402,16 +402,16 @@ function($scope, matrixService, modelService, eventHandlerService, notificationS
 
     $scope.stringForAction = function(a) {
         if (a == 'notify') {
-            return "Always Notify";
+            return "Always notify";
         } else if (a == 'dont_notify') {
-            return "Never Notify";
+            return "Never notify";
         } else if (a.set_tweak == 'sound') {
-            return "custom sound";
+            return "Custom sound";
         } else if (a.set_tweak == 'highlight') {
-            if (a.value == undefined || a.value) return "highlight";
+            if (a.value == undefined || a.value) return "Highlight";
             return "";
         }
-        return "other action";
+        return "Other action";
     };
 
     $scope.payment = {

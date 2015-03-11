@@ -39,14 +39,19 @@
     <br/>
     <div class="home_controls">
         <form>
-            Start chat:
-            <input size="40" ng-model="newChat.user" ng-enter="messageUser()" placeholder="e.g. @user:domain.com"/>
+            <label for="newChat_user" style="width: 6em">
+                Start chat:
+            </label>
+            <input id="newChat_user" size="40" ng-model="newChat.user" ng-enter="messageUser()" placeholder="e.g. @user:domain.com"/>
             <button ng-disabled="!newChat.user" ng-click="messageUser()">Start</button>
         </form>
     </div>    
     <div class="home_controls">
         <form>
-            Join room: <input size="40" ng-model="joinAlias.room_alias" ng-enter="joinAlias(joinAlias.room_alias)" placeholder="e.g. #foo:example.org"/>
+            <label for="joinAlias_room_alias" style="width: 6em">
+                Join room:
+            </label>
+            <input size="40" id="joinAlias_room_alias" ng-model="joinAlias.room_alias" ng-enter="joinAlias(joinAlias.room_alias)" placeholder="e.g. #foo:example.org"/>
             <button ng-disabled="!joinAlias.room_alias" ng-click="joinAlias(joinAlias.room_alias)">Join</button>
         </form>
     </div>
