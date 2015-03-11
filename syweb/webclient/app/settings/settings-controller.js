@@ -373,6 +373,9 @@ function($scope, matrixService, modelService, eventHandlerService, notificationS
         notificationService.deleteGlobalContentRule(rule['rule_id']).then(function() {
             notificationService.clearRulesCache();
             fetchRules();
+        }, function() {
+            rule.inprogress = false;
+            $scope.feedback = "Failed to delete rule";
         });
         rule.inprogress = true;
     };
@@ -381,6 +384,9 @@ function($scope, matrixService, modelService, eventHandlerService, notificationS
         notificationService.deleteGlobalRoomRule(rule['rule_id']).then(function() {
             notificationService.clearRulesCache();
             fetchRules();
+        }, function() {
+            rule.inprogress = false;
+            $scope.feedback = "Failed to delete rule";
         });
         rule.inprogress = true;
     };
@@ -389,6 +395,9 @@ function($scope, matrixService, modelService, eventHandlerService, notificationS
         notificationService.deleteGlobalSenderRule(rule['rule_id']).then(function() {
             notificationService.clearRulesCache();
             fetchRules();
+        }, function() {
+            rule.inprogress = false;
+            $scope.feedback = "Failed to delete rule";
         });
         rule.inprogress = true;
     };
@@ -398,6 +407,9 @@ function($scope, matrixService, modelService, eventHandlerService, notificationS
         matrixService.setPushRuleEnabled('global', rule.kind, rule.rule_id, rule.enabled).then(function() {
             notificationService.clearRulesCache();
             fetchRules();
+        }, function() {
+            rule.inprogress = false;
+            $scope.feedback = "Failed to update rule";
         });
     };
 
