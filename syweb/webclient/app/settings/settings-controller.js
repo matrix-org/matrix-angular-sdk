@@ -90,6 +90,11 @@ function($scope, matrixService, modelService, eventHandlerService, notificationS
         });
     };
 
+    $scope.rule_add_input = {
+        content: '',
+        room: '',
+        sender: ''
+    };
     $scope.rule_add_action = {
         content: "notify",
         room: "notify",
@@ -318,11 +323,11 @@ function($scope, matrixService, modelService, eventHandlerService, notificationS
             actions.push({'set_tweak': 'sound', 'value': 'default'});
         }
         actions.push({'set_tweak': 'highlight', 'value': $scope.rule_highlight.content});
-        notificationService.addGlobalContentRule($scope.content_rule_add_input, actions).then(function() {
+        notificationService.addGlobalContentRule($scope.rule_add_input.content, actions).then(function() {
             $scope.rule_add_inprogress.content = false;
             notificationService.clearRulesCache();
             fetchRules();
-            $scope.content_rule_add_input = '';
+            $scope.rule_add_input.content = '';
         }, function() {
             $scope.rule_add_inprogress.content = false;
             $scope.feedback = "Failed to add rule";
@@ -336,10 +341,11 @@ function($scope, matrixService, modelService, eventHandlerService, notificationS
             actions.push({'set_tweak': 'sound', 'value': 'default'});
         }
         actions.push({'set_tweak': 'highlight', 'value': $scope.rule_highlight.room});
-        notificationService.addGlobalRoomRule($scope.room_rule_add_input, actions).then(function() {
+        notificationService.addGlobalRoomRule($scope.rule_add_input.room, actions).then(function() {
             $scope.rule_add_inprogress.room = false;
             notificationService.clearRulesCache();
             fetchRules();
+            $scope.rule_add_input.room = '';
         }, function() {
             $scope.rule_add_inprogress.room = false;
             $scope.feedback = "Failed to add rule";
@@ -353,11 +359,11 @@ function($scope, matrixService, modelService, eventHandlerService, notificationS
             actions.push({'set_tweak': 'sound', 'value': 'default'});
         }
         actions.push({'set_tweak': 'highlight', 'value': $scope.rule_highlight.sender});
-        notificationService.addGlobalSenderRule($scope.sender_rule_add_input, actions).then(function() {
+        notificationService.addGlobalSenderRule($scope.rule_add_input.sender, actions).then(function() {
             $scope.rule_add_inprogress.sender = false;
             notificationService.clearRulesCache();
             fetchRules();
-            $scope.sender_rule_add_input = '';
+            $scope.rule_add_input.sender = '';
         }, function() {
             $scope.rule_add_inprogress.sender = false;
             $scope.feedback = "Failed to add rule";

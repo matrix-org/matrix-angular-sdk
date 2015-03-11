@@ -141,7 +141,7 @@
                                 </tr>
                                 <tr>
                                     <td>
-                                        <input type="text" placeholder="word to match" ng-model="content_rule_add_input" />
+                                        <input type="text" placeholder="word to match" ng-model="rule_add_input.content" />
                                     </td>
                                     <td>
                                         <select ng-model="rule_add_action.content" ng-change="rule_add_sound.content = false; rule_highlight.content = false;">
@@ -150,7 +150,7 @@
                                         </select>
                                     Sound: <input type="checkbox" ng-model="rule_add_sound.content" ng-disabled="rule_add_action.content != 'notify'" />
                                     Highlight: <input type="checkbox" ng-model="rule_highlight.content" ng-disabled="rule_add_action.content != 'notify'" />
-                                    <input type="submit" ng-click="addContentRule();" value="Add" ng-disabled="!content_rule_add_input || rule_add_inprogress.content" />
+                                    <input type="submit" ng-click="addContentRule();" value="Add" ng-disabled="!rule_add_input.content || rule_add_inprogress.content" />
                                     </td>
                                     <td>
                                         <img src="img/spinner.gif" ng-class="{invisible: !rule.inprogress}" />
@@ -178,7 +178,7 @@
                                 </tr>
                                 <tr>
                                     <td>
-                                        <select ng-model="room_rule_add_input">
+                                        <select ng-model="rule_add_input.room">
                                             <option ng-repeat="(room_id, room) in rooms" value="{{room_id}}">{{room.name}} (Room)</option>
                                         </select>
                                     </td>
@@ -189,7 +189,7 @@
                                         </select>
                                         Sound: <input type="checkbox" ng-model="rule_add_sound.room" ng-disabled="rule_add_action.room != 'notify'" />
                                         Highlight: <input type="checkbox" ng-model="rule_highlight.room" ng-disabled="rule_add_action.room != 'notify'" />
-                                        <input type="submit" ng-click="addRoomRule()" value="Add" ng-disabled="!room_rule_add_input || rule_add_inprogress.room" />
+                                        <input type="submit" ng-click="addRoomRule()" value="Add" ng-disabled="!rule_add_input.room || rule_add_inprogress.room" />
                                     </td>
                                     <td>
                                         <img src="img/spinner.gif" ng-class="{invisible: !rule.inprogress}" />
@@ -217,7 +217,7 @@
                                 </tr>
                                 <tr>
                                     <td>
-                                        <input type="text" placeholder="@user:domain.com" ng-model="sender_rule_add_input" />
+                                        <input type="text" placeholder="@user:domain.com" ng-model="rule_add_input.sender" />
                                     </td>
                                     <td>
                                         <select ng-model="rule_add_action.sender" ng-change="rule_add_sound.sender = false; rule_highlight.sender = false;">
@@ -226,7 +226,7 @@
                                         </select>
                                         Sound: <input type="checkbox" ng-model="rule_add_sound.sender" ng-disabled="rule_add_action.sender != 'notify'" />
                                         Highlight: <input type="checkbox" ng-model="rule_highlight.sender" ng-disabled="rule_add_action.sender != 'notify'" />
-                                        <input type="submit" ng-click="addSenderRule();" value="Add" ng-disabled="!sender_rule_add_input || rule_add_inprogress.sender" />
+                                        <input type="submit" ng-click="addSenderRule();" value="Add" ng-disabled="!rule_add_input.sender || rule_add_inprogress.sender" />
                                     </td>
                                     <td>
                                         <img src="img/spinner.gif" ng-class="{invisible: !rule.inprogress}" />
