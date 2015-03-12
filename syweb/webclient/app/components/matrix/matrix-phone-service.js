@@ -33,11 +33,11 @@ function MatrixPhoneService($rootScope, $injector, webRtcService, matrixService,
     };
 
     $rootScope.$on(eventHandlerService.CALL_EVENT, function(ngEvent, event, isLive) {
-        if (event.user_id == matrixService.config().user_id) return;
-
         var msg = event.content;
 
         if (event.type == 'm.call.invite') {
+            if (event.user_id == matrixService.config().user_id) return;
+
             if (event.age == undefined || msg.lifetime == undefined) {
                 // if the event doesn't have either an age (the HS is too old) or a lifetime
                 // (the sending client was too old when it sent it) then fall back to old behaviour
@@ -112,6 +112,8 @@ function MatrixPhoneService($rootScope, $injector, webRtcService, matrixService,
                 $rootScope.$broadcast(matrixPhoneService.INCOMING_CALL_EVENT, call);
             }
         } else if (event.type == 'm.call.answer') {
+            if (event.user_id == matrixService.config().user_id) return;
+
             var call = matrixPhoneService.allCalls[msg.call_id];
             if (!call) {
                 console.log("Got answer for unknown call ID "+msg.call_id);
@@ -119,6 +121,8 @@ function MatrixPhoneService($rootScope, $injector, webRtcService, matrixService,
             }
             call.receivedAnswer(msg);
         } else if (event.type == 'm.call.candidates') {
+            if (event.user_id == matrixService.config().user_id) return;
+
             var call = matrixPhoneService.allCalls[msg.call_id];
             if (!call && isLive) {
                 console.log("Got candidates for unknown call ID "+msg.call_id);
@@ -134,6 +138,8 @@ function MatrixPhoneService($rootScope, $injector, webRtcService, matrixService,
                 }
             }
         } else if (event.type == 'm.call.hangup') {
+            // Note that we also observe our own hangups here so we can see
+            // if we've already rejected a call that would otherwise be valid
             var call = matrixPhoneService.allCalls[msg.call_id];
             if (!call && isLive) {
                 console.log("Got hangup for unknown call ID "+msg.call_id);
