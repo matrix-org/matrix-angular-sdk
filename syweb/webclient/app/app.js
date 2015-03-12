@@ -102,6 +102,7 @@ matrixWebClient.config(['$routeProvider', '$provide', '$httpProvider',
     }]);
 
 matrixWebClient.run(['$location', '$rootScope', 'matrixService', function($location, $rootScope, matrixService) {
+    $rootScope.httpUri = matrixService.getHttpUriForMxc;
 
     // Check browser support
     // Support IE from 9.0. AngularJS needs some tricks to run on IE8 and below

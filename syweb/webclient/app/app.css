@@ -111,6 +111,8 @@ textarea, input {
     height: 32px;
     border: none;
     float: left;
+    object-fit: cover;
+    border-radius: 16px;
 }
 
 #callPeerNameAndState {
