@@ -1,3 +1,26 @@
+Changes in Matrix Angular SDK 0.6.5 (2015-03-12)
+================================================
+Features:
+ - Push notifications can now be setup in the Settings page.
+ - Text entered into the input box for a room will be preserved across
+   room swaps.
+
+Bug fixes:
+ - Fixed a bug where auto-scroll for images did not work correctly.
+ - Fixed a bug which resulted in a partially populated room when another
+   device joined a room.
+ - Fixed a bug which prevented files with the same name being uploaded
+   sequentially.
+ - Correctly remove redacted event text from the recent activity list.
+ - Firefox: Can now join rooms which have a double ## alias.
+
+Improvements:
+ - Modified Settings page layout.
+ - Angular SDK now relies on the Javascript SDK for new API features.
+ - Transparent images will now be shown on a white background.
+ - GIFs are now marked as such on the thumbnail for the image.
+ - The web client version is now shown in Settings.
+
 Changes in Matrix Angular SDK 0.6.4 (2015-02-27)
 ================================================
 Features:
