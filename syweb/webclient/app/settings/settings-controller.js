@@ -45,15 +45,73 @@ function($scope, matrixService, modelService, eventHandlerService, notificationS
     };
 
     function fetchRules() {
-        notificationService.getGlobalRulesets().then(function(rulesets) {
-            $scope.settings.rules = rulesets;
+        notificationService.getRulesets().then(function(rulesets) {
+            $scope.settings.rules = rulesets.global;
+
+            var rule_descriptions = {
+                '.m.rule.master': '',
+                '.m.rule.contains_user_name': "Notify me with sound about messages that contain my user name",
+                '.m.rule.contains_display_name': "Notify me with sound about messages that contain my display name",
+                '.m.rule.room_one_to_one': "Notify me with sound about messages sent just to me",
+                '.m.rule.suppress_notices': "Suppress notifications from bots",
+                '.m.rule.invite_for_me': "Notify me when I'm invited to a new room",
+                '.m.rule.member_event': "Notify me when people join or leave rooms",
+                '.m.rule.message': "Notify for all other messages/rooms",
+                '.m.rule.call': "Notify me when I receive a call",
+                '.m.rule.fallback': "Notify me for anything else"
+            };
+            var rule_categories = {
+                '.m.rule.master': 'master',
+                '.m.rule.suppress_notices': 'suppression',
+                '.m.rule.message': 'fallthrough',
+                '.m.rule.call': 'call',
+            };
+
+            var defaultRules = {master: [], additional: [], call: [], fallthrough: [], suppression: []};
+            for (var kind in rulesets.global) {
+                for (var i = 0; i < Object.keys(rulesets.global[kind]).length; ++i) {
+                    var r = rulesets.global[kind][i];
+                    var cat = rule_categories[r.rule_id];
+                    r.kind = kind;
+                    if (r.rule_id[0] == '.' && rule_descriptions[r.rule_id] !== undefined) {
+                        r.description = rule_descriptions[r.rule_id];
+                        if (cat) {
+                            defaultRules[cat].push(r);
+                        } else {
+                            defaultRules.additional.push(r);
+                        }
+                    }
+                }
+            }
+            $scope.settings.default_rules = defaultRules;
+            if (defaultRules.master.length > 0) {
+                $scope.settings.push_master_rule = defaultRules.master[0];
+            }
         });
     };
 
-    $scope.rule_add_action = {
-        content: "notify",
-        room: "notify",
-        sender: "notify"
+    $scope.rule_add = {
+        input:  {
+            content: '',
+            room: '',
+            sender: ''
+        }, action: {
+            content: "notify",
+            room: "notify",
+            sender: "notify"
+        }, sound: {
+            content: null,
+            room: null,
+            sender: null
+        }, highlight: {
+            content: false,
+            room: false,
+            sender: false
+        }, inprogress: {
+            content: false,
+            room: false,
+            sender: false
+        }
     };
 
     eventHandlerService.waitForInitialSyncCompletion().then(function() {
@@ -126,6 +184,7 @@ function($scope, matrixService, modelService, eventHandlerService, notificationS
     var setDisplayName = function(displayName) {
         matrixService.setDisplayName(displayName).then(
             function(response) {
+                $scope.profileOnServer.displayName = displayName;
                 dialogService.showSuccess("Success", "Updated display name.");
             },
             function(error) {
@@ -138,6 +197,7 @@ function($scope, matrixService, modelService, eventHandlerService, notificationS
         console.log("Updating avatar to " + avatarURL);
         matrixService.setProfilePictureUrl(avatarURL).then(
             function(response) {
+                $scope.profileOnServer.avatarUrl = avatarURL;
                 dialogService.showSuccess("Success", "Updated profile avatar.");
             },
             function(error) {
@@ -228,7 +288,6 @@ function($scope, matrixService, modelService, eventHandlerService, notificationS
     $scope.settings = {
         notifications: undefined,
         audioNotifications: matrixService.config().audioNotifications,
-        bingWords: matrixService.config().bingWords
     };
     
     $scope.updateAudioNotification = function() {
@@ -239,14 +298,6 @@ function($scope, matrixService, modelService, eventHandlerService, notificationS
         matrixService.saveConfig();
     };
     
-    $scope.saveBingWords = function() {
-        console.log("Saving words: "+JSON.stringify($scope.settings.bingWords));
-        var config = matrixService.config();
-        config.bingWords = $scope.settings.bingWords;
-        matrixService.setConfig(config);
-        matrixService.saveConfig();
-    };
-
     // If the browser supports it, check the desktop notification state
     if ("Notification" in window) {
         $scope.settings.notifications = window.Notification.permission;
@@ -264,57 +315,116 @@ function($scope, matrixService, modelService, eventHandlerService, notificationS
         setMuteNotifications(!$scope.config.muteNotifications);
     };
 
-    $scope.addContentRule = function(pattern, actions) {
-        notificationService.addGlobalContentRule(pattern, actions).then(function() {
+    $scope.addContentRule = function() {
+        var actions = [ $scope.rule_add.action.content ];
+        if ($scope.rule_add.sound.content) {
+            actions.push({'set_tweak': 'sound', 'value': 'default'});
+        }
+        actions.push({'set_tweak': 'highlight', 'value': $scope.rule_add.highlight.content});
+        notificationService.addGlobalContentRule($scope.rule_add.input.content, actions).then(function() {
+            $scope.rule_add.inprogress.content = false;
             notificationService.clearRulesCache();
             fetchRules();
+            $scope.rule_add.input.content = '';
+        }, function() {
+            $scope.rule_add.inprogress.content = false;
+            $scope.feedback = "Failed to add rule";
         });
+        $scope.rule_add.inprogress.content = true;
     };
 
-    $scope.addRoomRule = function(room_id, actions) {
-        notificationService.addGlobalRoomRule(room_id, actions).then(function() {
+    $scope.addRoomRule = function() {
+        var actions = [ $scope.rule_add.action.room ];
+        if ($scope.rule_add.sound.room) {
+            actions.push({'set_tweak': 'sound', 'value': 'default'});
+        }
+        actions.push({'set_tweak': 'highlight', 'value': $scope.rule_add.highlight.room});
+        notificationService.addGlobalRoomRule($scope.rule_add.input.room, actions).then(function() {
+            $scope.rule_add.inprogress.room = false;
             notificationService.clearRulesCache();
             fetchRules();
+            $scope.rule_add.input.room = '';
+        }, function() {
+            $scope.rule_add.inprogress.room = false;
+            $scope.feedback = "Failed to add rule";
         });
+        $scope.rule_add.inprogress.room = true;
     };
 
-    $scope.addSenderRule = function(sender_id, actions) {
-        notificationService.addGlobalSenderRule(sender_id, actions).then(function() {
+    $scope.addSenderRule = function() {
+        var actions = [ $scope.rule_add.action.sender ];
+        if ($scope.rule_add.sound.sender) {
+            actions.push({'set_tweak': 'sound', 'value': 'default'});
+        }
+        actions.push({'set_tweak': 'highlight', 'value': $scope.rule_add.highlight.sender});
+        notificationService.addGlobalSenderRule($scope.rule_add.input.sender, actions).then(function() {
+            $scope.rule_add.inprogress.sender = false;
             notificationService.clearRulesCache();
             fetchRules();
+            $scope.rule_add.input.sender = '';
+        }, function() {
+            $scope.rule_add.inprogress.sender = false;
+            $scope.feedback = "Failed to add rule";
         });
+        $scope.rule_add.inprogress.sender = true;
     };
 
     $scope.deleteContentRule = function(rule) {
         notificationService.deleteGlobalContentRule(rule['rule_id']).then(function() {
             notificationService.clearRulesCache();
             fetchRules();
+        }, function() {
+            rule.inprogress = false;
+            $scope.feedback = "Failed to delete rule";
         });
+        rule.inprogress = true;
     };
 
     $scope.deleteRoomRule = function(rule) {
         notificationService.deleteGlobalRoomRule(rule['rule_id']).then(function() {
             notificationService.clearRulesCache();
             fetchRules();
+        }, function() {
+            rule.inprogress = false;
+            $scope.feedback = "Failed to delete rule";
         });
+        rule.inprogress = true;
     };
 
     $scope.deleteSenderRule = function(rule) {
         notificationService.deleteGlobalSenderRule(rule['rule_id']).then(function() {
             notificationService.clearRulesCache();
             fetchRules();
+        }, function() {
+            rule.inprogress = false;
+            $scope.feedback = "Failed to delete rule";
+        });
+        rule.inprogress = true;
+    };
+
+    $scope.updateRuleEnabled = function(rule) {
+        rule.inprogress = true;
+        matrixService.setPushRuleEnabled('global', rule.kind, rule.rule_id, rule.enabled).then(function() {
+            notificationService.clearRulesCache();
+            fetchRules();
+        }, function() {
+            rule.inprogress = false;
+            $scope.feedback = "Failed to update rule";
         });
     };
 
     $scope.stringForAction = function(a) {
         if (a == 'notify') {
-            return "Always Notify";
+            return "Always notify";
         } else if (a == 'dont_notify') {
-            return "Never Notify";
+            return "Never notify";
         } else if (a.set_tweak == 'sound') {
-            return "custom sound";
+            return "Custom sound";
+        } else if (a.set_tweak == 'highlight') {
+            if (a.value == undefined || a.value) return "Highlight";
+            return "";
         }
-        return "other action";
+        return "Other action";
     };
 
     $scope.payment = {

@@ -120,7 +120,9 @@ describe('EventHandlerService', function() {
     };
     
     var notificationService = {
-        containsBingWord: function(user_id, display_name, bing_words) {
+        processEvent: function(ev) {
+        },
+        shouldHighlightEvent: function(ev) {
             return testContainsBingWords;
         },
         showNotification: function(title, msg, pic, onclick) {
@@ -448,34 +450,6 @@ describe('EventHandlerService', function() {
         expect(promiseResult).toBeDefined();
     }));
     
-    it('eventContainsBingWord should return true if notificationService says so.', inject(
-    function(eventHandlerService) {
-        // the main test here is to make sure that event handler service is NOT
-        // applying any special logic to the bing word check; it should just be
-        // channeling the boolean we give it via notificationService. If this
-        // test fails, then there is additional logic for bing word checking which
-        // should be in notificationService. 
-        testContainsBingWords = true;
-        expect(eventHandlerService.eventContainsBingWord({
-            event_id: "a",
-            user_id: "@someone:matrix.org",
-            room_id: "!weuidfwe:matrix.org",
-            content: {
-                body: "foobar"
-            }
-        })).toBeTruthy();
-        
-        testContainsBingWords = false;
-        expect(eventHandlerService.eventContainsBingWord({
-            event_id: "a",
-            user_id: "@someone:matrix.org",
-            room_id: "!weuidfwe:matrix.org",
-            content: {
-                body: "foobar"
-            }
-        })).toBeFalsy();
-    }));
-    
     it('should be able to handle multiple events.', inject(
     function(eventHandlerService) {
         spyOn(modelService, "setUser");
@@ -722,28 +696,6 @@ describe('EventHandlerService', function() {
         expect(testEvents.length).toEqual(2);
     }));
     
-    it('should display a notification for incoming invites.', inject(
-    function(eventHandlerService) {
-        eventHandlerService.handleInitialSyncDone(testInitialSync);
-        
-        var event = {
-            content: {
-                membership: "invite"
-            },
-            user_id: "@someone:matrix.org",
-            room_id: "!foobar:matrix.org",
-            state_key: testUserId,
-            type: "m.room.member",
-            event_id: "wf"
-        };
-        testChangedKey = "membership";
-        spyOn(notificationService, "showNotification");
-        _window.Notification = true;
-        eventHandlerService.handleEvent(event, true);
-        expect(notificationService.showNotification).toHaveBeenCalled();
-    }));
-    
-    
     it('should be able to create a room and do an initial sync on the room.', inject(
     function(eventHandlerService) {
         var alias = "bob";
@@ -954,7 +906,7 @@ describe('EventHandlerService', function() {
         expect(testNowState.members["@ccc:matrix.org"]).toBeUndefined();
     }));
     
-    it('should display a notification to messages with bing words.', inject(
+    it('should pass the event through to notificationService.', inject(
     function(eventHandlerService) {
         eventHandlerService.handleInitialSyncDone(testInitialSync);
         testContainsBingWords = true;
@@ -969,32 +921,9 @@ describe('EventHandlerService', function() {
             type: "m.room.message",
             event_id: "wf3"
         };
-        spyOn(notificationService, "showNotification");
-        _window.Notification = true;
+        spyOn(notificationService, "processEvent");
         eventHandlerService.handleEvent(event, true);
-        expect(notificationService.showNotification).toHaveBeenCalled();
-    }));
-    
-    it('should NOT display a notification if notifications are muted.', inject(
-    function(eventHandlerService) {
-        eventHandlerService.handleInitialSyncDone(testInitialSync);
-        testContainsBingWords = true;
-        testConfig.muteNotifications = true;
-        
-        var event = {
-            content: {
-                body: "ping",
-                msgtype: "m.text"
-            },
-            user_id: "@someone:matrix.org",
-            room_id: "!foobar:matrix.org",
-            type: "m.room.message",
-            event_id: "wf3"
-        };
-        spyOn(notificationService, "showNotification");
-        _window.Notification = true;
-        eventHandlerService.handleEvent(event, true);
-        expect(notificationService.showNotification).not.toHaveBeenCalled();
+        expect(notificationService.processEvent).toHaveBeenCalled();
     }));
     
 });

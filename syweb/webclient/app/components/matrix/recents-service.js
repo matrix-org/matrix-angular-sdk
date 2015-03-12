@@ -28,7 +28,8 @@ makes the dependency on this shared state *explicit*.
 */
 angular.module('recentsService', [])
 .factory('recentsService', ['$rootScope', '$document', 'eventHandlerService', 'matrixService', 'modelService',
-function($rootScope, $document, eventHandlerService, matrixService, modelService) {
+         'notificationService',
+function($rootScope, $document, eventHandlerService, matrixService, modelService, notificationService) {
     // notify listeners when variables in the service are updated. We need to do
     // this since we do not tie them to any scope.
     var BROADCAST_SELECTED_ROOM_ID = "recentsService:BROADCAST_SELECTED_ROOM_ID(room_id)";
@@ -59,9 +60,9 @@ function($rootScope, $document, eventHandlerService, matrixService, modelService
     // listen for new unread messages
     $rootScope.$on(eventHandlerService.MSG_EVENT, function(ngEvent, event, isLive) {
         if (isLive && event.room_id !== selectedRoomId && matrixService.config().user_id !== event.user_id) {
-            if (eventHandlerService.eventContainsBingWord(event)) {
+            notificationService.ifShouldHighlightEvent(event).then(function() {
                 addUnreadBing(event);
-            }
+            });
         
             if (!unreadMessages[event.room_id]) {
                 unreadMessages[event.room_id] = 0;

@@ -8,9 +8,6 @@ describe('RecentsService', function() {
     var eventHandlerService = {
         MSG_EVENT: MSG_EVENT,
         MEMBER_EVENT: MEMBER_EVENT,
-        eventContainsBingWord: function(event) {
-            return testEventContainsBingWord;
-        },
         waitForInitialSyncCompletion: function(){
             return testInitialSyncComplete.promise;
         }
@@ -26,6 +23,26 @@ describe('RecentsService', function() {
     
     var modelService = {
         getRooms: function(){}
+    };
+
+    var notificationService = {
+        processEvent: function(ev) {
+        },
+        shouldHighlightEvent: function(ev) {
+            return testEventContainsBingWord;
+        },
+        showNotification: function(title, msg, pic, onclick) {
+        
+        },
+        ifShouldHighlightEvent: function(ev) {
+            var def = $q.defer();
+            if (testEventContainsBingWord) {
+                def.resolve();
+            } else {
+                def.reject();
+            }
+            return def.promise;
+        }
     };
     
     var doc = [
@@ -53,6 +70,7 @@ describe('RecentsService', function() {
         // mocked dependencies
         module(function ($provide) {
           $provide.value('eventHandlerService', eventHandlerService);
+          $provide.value('notificationService', notificationService);
           $provide.value('matrixService', matrixService);
           $provide.value('modelService', modelService);
           $provide.value('$document', doc);
@@ -98,6 +116,7 @@ describe('RecentsService', function() {
         recentsService.setSelectedRoomId("!someotherroomid:localhost");
         testEventContainsBingWord = true;
         scope.$broadcast(MSG_EVENT, testEvent, testIsLive);
+        scope.$apply();
         
         var unread = {};
         unread[testEvent.room_id] = 1;
@@ -113,6 +132,7 @@ describe('RecentsService', function() {
         recentsService.setSelectedRoomId("!someotherroomid:localhost");
         testEventContainsBingWord = true;
         scope.$broadcast(MSG_EVENT, testEvent, testIsLive);
+        scope.$apply();
         
         var unread = {};
         unread[testEvent.room_id] = 1;
@@ -179,6 +199,7 @@ describe('RecentsService', function() {
         nextEvent.content.body = "Goodbye cruel world.";
         nextEvent.event_id = "erfuerhfeaaaa@localhost";
         scope.$broadcast(MSG_EVENT, nextEvent, testIsLive);
+        scope.$apply();
         
         var bing = {};
         bing[testEvent.room_id] = nextEvent;

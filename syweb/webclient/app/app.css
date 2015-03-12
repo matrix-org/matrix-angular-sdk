@@ -961,6 +961,7 @@ textarea, input {
 }
 
 .profile-avatar img {
+    border-radius: 80px;
     width: 100%;
     height: 100%;
     object-fit: cover;    
@@ -977,9 +978,51 @@ textarea, input {
     max-width: 155px;
 }
 
-#user-save-button {
-    width: 160px;
+#wrapper button {
     font-size: 14px;
+}
+
+/*** Settings ***/
+
+.pushmaster {
+    padding: 5px;
+}
+
+.pushmaster.pushdisabled {
+    background-color: #e55;
+}
+
+.section select,
+.section input {
+    margin-right: 6px ! important;
+}
+
+.pushsection {
+    transition: max-height linear 0.5s, opacity linear 0.5s;
+    max-height: 1500px;
+    overflow: hidden;
+}
+
+.pushsection.pushdisabled {
+    max-height: 0px;
+    opacity: 0;
+}
+
+.settingsgroup {
+    margin: 5px;
+/*
+    padding: 15px;
+    background-color: #eee;
+    border: 1px solid black;
+*/
+}
+
+li.disabledRule {
+    color: #bbb;
+}
+
+.invisible {
+    visibility: hidden;
 }
 
 /*** Seasonal ***/

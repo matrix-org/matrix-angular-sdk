@@ -682,6 +682,12 @@ function($http, $window, $timeout, $q) {
             var path = "/pushrules/"+scope+"/"+encodeURIComponent(kind)+
                 "/"+encodeURIComponent(rule_id);
             return doRequest("DELETE", path);
+        },
+
+        setPushRuleEnabled: function(scope, kind, rule_id, enabled) {
+            var path = "/pushrules/"+scope+"/"+encodeURIComponent(kind)+
+                "/"+encodeURIComponent(rule_id)+"/enabled";
+            return doRequest("PUT", path, undefined, enabled ? 'true' : 'false');
         }
 
     };
