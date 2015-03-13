@@ -209,6 +209,9 @@ describe('NotificationService', function() {
                 event: {
                     content: {
                     }
+                },
+                aevent: {
+                    identicon: function() {}
                 }
             }
         },
