@@ -268,8 +268,9 @@ function($timeout, $q, $rootScope, matrixService, modelService, mPresence, mUser
         if (!actionObj.notify) return false;
 
         if (actionObj.tweaks.highlight == undefined) {
-            // if it isn't specified, we highlight
-            return true;
+            // if it isn't specified, highlight if it's a content
+            // rule but otherwise not
+            return rule.kind == 'content';
         }
 
         return !!actionObj.tweaks.highlight;
