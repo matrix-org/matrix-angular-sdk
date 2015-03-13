@@ -34,7 +34,8 @@ describe('MatrixCall', function() {
     };
     
     var modelService = {
-        getRoom: function(){}
+        getRoom: function(){},
+        getMember: function(){}
     };
     
     var webRtcService = {
