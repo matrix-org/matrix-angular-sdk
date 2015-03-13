@@ -60,6 +60,8 @@ function MatrixPhoneService($rootScope, $injector, webRtcService, matrixService,
 
             var MatrixCall = $injector.get('MatrixCall');
             var call = new MatrixCall(event.room_id);
+            call.call_id = msg.call_id;
+            call.initWithInvite(event);
 
             if (!webRtcService.isWebRTCSupported()) {
                 console.log("Incoming call ID "+msg.call_id+" but this browser doesn't support WebRTC");
@@ -70,8 +72,6 @@ function MatrixPhoneService($rootScope, $injector, webRtcService, matrixService,
                 return;
             }
 
-            call.call_id = msg.call_id;
-            call.initWithInvite(event);
             matrixPhoneService.allCalls[call.call_id] = call;
 
             // if we stashed candidate events for that call ID, play them back now

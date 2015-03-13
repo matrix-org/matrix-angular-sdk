@@ -473,7 +473,14 @@ angular.module('RoomController', ['ngSanitize', 'matrixFilter', 'mFileInput'])
     
     $scope.startVoiceCall = function() {        
         if (!$scope.checkWebRTC()) return;
+
         var call = new MatrixCall($scope.room_id);
+
+        var roomMembers = angular.copy(modelService.getRoom($scope.room_id).current_room_state.members);
+        delete roomMembers[matrixService.config().user_id];
+        var peer_user_id = Object.keys(roomMembers)[0];
+        call.peerMember = modelService.getMember($scope.room_id, peer_user_id);
+
         call.onError = $rootScope.onCallError;
         call.onHangup = $rootScope.onCallHangup;
         // remote video element is used for playing audio in voice calls
@@ -486,6 +493,12 @@ angular.module('RoomController', ['ngSanitize', 'matrixFilter', 'mFileInput'])
         if (!$scope.checkWebRTC()) return;
 
         var call = new MatrixCall($scope.room_id);
+
+        var roomMembers = angular.copy(modelService.getRoom($scope.room_id).current_room_state.members);
+        delete roomMembers[matrixService.config().user_id];
+        var peer_user_id = Object.keys(roomMembers)[0];
+        call.peerMember = modelService.getMember($scope.room_id, peer_user_id);
+
         call.onError = $rootScope.onCallError;
         call.onHangup = $rootScope.onCallHangup;
         call.localVideoSelector = '#localVideo';

@@ -130,6 +130,7 @@ function MatrixCallFactory(webRtcService, matrixService, matrixPhoneService, mod
 
     MatrixCall.prototype.initWithInvite = function(event) {
         this.msg = event.content;
+        this.peerMember = modelService.getMember(event.room_id, event.user_id);
         this.peerConn = this.createPeerConnection();
         var self = this;
         this.peerConn.ngsetRemoteDescription(webRtcService.newRTCSessionDescription(this.msg.offer)).then(
