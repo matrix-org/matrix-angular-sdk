@@ -89,7 +89,7 @@
         <!-- Do not show buttons on the login page -->
         <div id="headerContent" ng-hide="'/login' == location || '/register' == location">
             <div id="callBar" ng-show="currentCall">
-                <img id="callPeerImage" ng-show="currentCall.peerMember.event.content.avatar_url" ng-src="{{httpUri(currentCall.peerMember.event.content.avatar_url)}}" />
+                <img id="callPeerImage" ng-src="{{httpUri(currentCall.peerMember.event.content.avatar_url) || currentCall.peerMember.aevent.identicon()}}" />
                 <img class="callIcon" src="img/green_phone.png" ng-show="!!currentCall" ng-class="currentCall.state" />
                 <div id="callPeerNameAndState">
                     <span id="callPeerName">{{ currentCall.peerMember.id | mUserDisplayName: currentCall.room_id }}</span>
