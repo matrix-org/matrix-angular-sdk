@@ -184,11 +184,9 @@
                          ng-class="msg.e.content.msgtype == 'm.notice' ? 'avatarNotice' : ''"/>
                 </td>
                 <td class="msg" ng-class="(!msg.e.content.membership && ('m.room.topic' !== msg.e.type && 'm.room.name' !== msg.e.type))? (msg.e.content.msgtype === 'm.emote' ? 'emote text' : 'text') : 'membership text'">
-
-					<div class="sender" ng-click="appendName($event, msg)" ng-hide="room.aevents[$index - 1].e.user_id === msg.e.user_id">
-						{{ msg.sender.name }}
-					</div>
-
+                    <div class="sender" ng-click="appendName($event, msg)" ng-hide="room.aevents[$index - 1].e.user_id === msg.e.user_id">
+                        {{ msg.sender.name }}
+                    </div>
                     <div class="bubble" ng-dblclick="openJson(msg)" ng-mouseover="state.showTs = 1" ng-mouseout="state.showTs = 0">
                         <span class="msg_meta" ng-if="'join' === msg.e.content.membership && msg.changed_key === 'membership'">
                             {{ msg.e.content.displayname || room.now.members[msg.e.state_key].event.content.displayname || msg.e.state_key }} joined
@@ -276,7 +274,7 @@
                         </span>
                     </div>
                 </td>
-				<td class="rightBlock" ng-mouseover="state.showTs = 1" ng-mouseout="state.showTs = 0">
+                <td class="rightBlock" ng-mouseover="state.showTs = 1" ng-mouseout="state.showTs = 0">
                     <div class="timestamp"
                          ng-style="{ 'opacity': state.showTs ? 1.0 : 0.0 }"
                          ng-class="msg.css_class">

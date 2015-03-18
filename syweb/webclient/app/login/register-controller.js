@@ -167,27 +167,27 @@ angular.module('RegisterController', ['matrixService'])
             }
         );
     };
-	
-	var setupCaptcha = function() {
-	    console.log("Setting up ReCaptcha")
+    
+    var setupCaptcha = function() {
+        console.log("Setting up ReCaptcha")
         var public_key = window.webClientConfig.recaptcha_public_key;
         if (public_key === undefined) {
             console.error("No public key defined for captcha!")
             return;
         }
-	    Recaptcha.create(public_key,
-	    "regcaptcha",
-	    {
-	      theme: "red",
-	      callback: Recaptcha.focus_response_field
-	    });
-	};
+        Recaptcha.create(public_key,
+        "regcaptcha",
+        {
+          theme: "red",
+          callback: Recaptcha.focus_response_field
+        });
+    };
 
-	$scope.init = function() {
+    $scope.init = function() {
         if (useCaptcha) {
-	        setupCaptcha();
+            setupCaptcha();
         }
-	};
+    };
     
 }]);
 
