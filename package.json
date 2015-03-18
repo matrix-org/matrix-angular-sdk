@@ -1,0 +1,29 @@
+{
+  "name": "matrix-angular-sdk",
+  "version": "0.6.5",
+  "description": "Web front-end client for Matrix p2p chat platform written in Angular.js",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/matrix-org/matrix-angular-sdk.git"
+  },
+  "keywords": [
+    "angular",
+    "css",
+    "html",
+    "web",
+    "client",
+    "matrix-org",
+    "chat",
+    "webrtc"
+  ],
+  "author": "matrix.org",
+  "license": "Apache 2.0",
+  "bugs": {
+    "url": "https://github.com/matrix-org/matrix-angular-sdk/issues"
+  },
+  "homepage": "https://github.com/matrix-org/matrix-angular-sdk"
+}

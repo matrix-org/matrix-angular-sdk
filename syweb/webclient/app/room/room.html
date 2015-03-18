@@ -169,24 +169,26 @@
         <table id="messageTable" infinite-scroll="paginateMore()" aria-live="polite" role="log">
             <tr ng-repeat="msg in room.aevents"
                 ng-class="(room.aevents[$index - 1].e.user_id !== msg.e.user_id ? 'differentUser' : '') + (msg.e.user_id === state.user_id ? ' mine' : '')" scroll-item>
-                <td class="leftBlock" ng-mouseover="state.showTs = 1" ng-mouseout="state.showTs = 0">
-                    <div class="timestamp"
-                         ng-style="{ 'opacity': state.showTs ? 1.0 : 0.0 }"
-                         ng-class="msg.css_class">
-                        {{ (msg.e.origin_server_ts) | date:'MMM d HH:mm' }}
-                    </div>
-                    <div class="sender" ng-click="appendName($event, msg)" ng-hide="room.aevents[$index - 1].e.user_id === msg.e.user_id || msg.e.user_id === state.user_id"> {{ msg.sender.name }}</div>
-                </td>
                 <td class="avatar" ng-click="appendName($event, msg)">
                     <!--  room.now.members[msg.e.user_id].event.content.avatar_url is just backwards compat, and can be removed in the future. Synapse didn't used to
                           send m.room.member updates when avatar urls changed, so the image which should be visible here just going off room state isn't visible. We fix
                           this by reading off the m.presence url -->
+
+                    <img class="avatarImage" ng-src="{{ msg.httpUri(room.now.members[msg.e.user_id].event.content.avatar_url, 96, 96, 'crop') || msg.identicon() }}"
+                    err-src="img/default-profile.png" width="32" height="32"
+                         ng-hide="room.aevents[$index - 1].e.user_id === msg.e.user_id || msg.e.user_id !== state.user_id"/>
+
                     <img class="avatarImage mouse-pointer" ng-src="{{ msg.httpUri(msg.sender.event.content.avatar_url, 96, 96, 'crop') || msg.httpUri(room.now.members[msg.e.user_id].event.content.avatar_url, 96, 96, 'crop') || msg.identicon() }}"
                     err-src="img/default-profile.png" width="32" height="32" title="{{msg.e.user_id}}"
                          ng-hide="room.aevents[$index - 1].e.user_id === msg.e.user_id || msg.e.user_id === state.user_id" ng-click="$parent.goToUserPage(msg.e.user_id)"
                          ng-class="msg.e.content.msgtype == 'm.notice' ? 'avatarNotice' : ''"/>
                 </td>
                 <td class="msg" ng-class="(!msg.e.content.membership && ('m.room.topic' !== msg.e.type && 'm.room.name' !== msg.e.type))? (msg.e.content.msgtype === 'm.emote' ? 'emote text' : 'text') : 'membership text'">
+
+					<div class="sender" ng-click="appendName($event, msg)" ng-hide="room.aevents[$index - 1].e.user_id === msg.e.user_id">
+						{{ msg.sender.name }}
+					</div>
+
                     <div class="bubble" ng-dblclick="openJson(msg)" ng-mouseover="state.showTs = 1" ng-mouseout="state.showTs = 0">
                         <span class="msg_meta" ng-if="'join' === msg.e.content.membership && msg.changed_key === 'membership'">
                             {{ msg.e.content.displayname || room.now.members[msg.e.state_key].event.content.displayname || msg.e.state_key }} joined
@@ -225,33 +227,30 @@
                                   ng-class="shouldHighlightEvent(msg.event) && msg.e.user_id != state.user_id ? msg.css_class + ' messageBing' : msg.css_class"
                                   ng-bind-html="'* ' + (msg.sender.name) + ' ' + msg.e.content.body | linky:'_blank'"
                                   />
-
                             <span ng-switch-when="m.text"
                                   class="message"
                                   fix-width="false && msg.e.user_id === state.user_id" 
                                   ng-class="shouldHighlightEvent(msg.event) && msg.e.user_id != state.user_id ? msg.css_class + ' messageBing' : msg.css_class"
                                   ng-bind-html="(msg.e.content.format === 'org.matrix.custom.html') ? (msg.e.content.formatted_body | unsanitizedLinky:'_blank') : (msg.e.content.body | escapeHTML | unsanitizedLinky:'_blank') "/>
-
                             <span ng-switch-when="m.notice"
                                   class="message messageNotice"
                                   fix-width="false && msg.e.user_id === state.user_id" 
                                   ng-class="shouldHighlightEvent(msg.event) && msg.e.user_id != state.user_id ? msg.css_class + ' messageBing' : msg.css_class"
                                   ng-bind-html="(msg.e.content.format === 'org.matrix.custom.html') ? (msg.e.content.formatted_body | unsanitizedLinky:'_blank') : (msg.e.content.body | escapeHTML | unsanitizedLinky:'_blank') "/>
-
-                             <div ng-switch-when="m.image" style="position: relative;">
-                                 <div ng-hide='msg.e.content.thumbnail_url || msg.e.content.url.indexOf("mxc://") === 0' ng-style="msg.e.content.body.h && { 'height' : (msg.e.content.body.h < 320) ? msg.e.content.body.h : 320}">
-                                     <img class="image" ng-src="{{ msg.httpUri(msg.e.content.url, 320, 320) }}"/>
-                                 </div>
-                                 <div ng-show='msg.e.content.thumbnail_url' ng-style="{ 'height' : msg.e.content.thumbnail_info.h }">
-                                     <img class="image mouse-pointer" ng-src="{{ msg.httpUri(msg.e.content.thumbnail_url) }}"
+                            <div ng-switch-when="m.image" style="position: relative;">
+                                <div ng-hide='msg.e.content.thumbnail_url || msg.e.content.url.indexOf("mxc://") === 0' ng-style="msg.e.content.body.h && { 'height' : (msg.e.content.body.h < 320) ? msg.e.content.body.h : 320}">
+                                    <img class="image" ng-src="{{ msg.httpUri(msg.e.content.url, 320, 320) }}"/>
+                                </div>
+                                <div ng-show='msg.e.content.thumbnail_url' ng-style="{ 'height' : msg.e.content.thumbnail_info.h }">
+                                    <img class="image mouse-pointer" ng-src="{{ msg.httpUri(msg.e.content.thumbnail_url) }}"
                                           ng-click="$parent.$parent.fullScreenImageURL = msg.httpUri(msg.e.content.url); $event.stopPropagation();"/>
-                                 </div>
-                                 <div ng-show='msg.e.content.url.indexOf("mxc://") === 0' ng-style="{ 'height' : thumbHeight(msg.e.content.info.w, msg.e.content.info.h, 320) }">
-                                     <img class="messageImage mouse-pointer" ng-src="{{ msg.httpUri(msg.e.content.url, 320, 320) }}"
+                                </div>
+                                <div ng-show='msg.e.content.url.indexOf("mxc://") === 0' ng-style="{ 'height' : thumbHeight(msg.e.content.info.w, msg.e.content.info.h, 320) }">
+                                    <img class="messageImage mouse-pointer" ng-src="{{ msg.httpUri(msg.e.content.url, 320, 320) }}"
                                           ng-click="$parent.$parent.fullScreenImageURL = msg.httpUri(msg.e.content.url); $event.stopPropagation();"/>
-                                 </div>
-                                 <img class="messageImageOverlay" ng-show="msg.e.content.info.mimetype === 'image/gif'" src="img/icons/filetype-gif.png"></img>
-                             </div>
+                                </div>
+                                <img class="messageImageOverlay" ng-show="msg.e.content.info.mimetype === 'image/gif'" src="img/icons/filetype-gif.png"></img>
+                            </div>
 
                             <span ng-switch-when="m.file" ng-class="msg.css_class">
                                 <div class="file_thumbnail" ng-show='msg.e.content.thumbnail_url' ng-style="{ 'height' : msg.e.content.thumbnail_info.h }">
@@ -267,24 +266,22 @@
                                 ng-bind-html="msg.e.content.body | linky:'_blank'"
                                 />
                         </span>
-
                         <span class="msg_meta" ng-show='msg.e.type === "m.call.invite" && msg.e.user_id == state.user_id'>Outgoing Call{{ isWebRTCSupported() ? '' : ' (But your browser does not support VoIP)' }}</span>
                         <span class="msg_meta" ng-show='msg.e.type === "m.call.invite" && msg.e.user_id != state.user_id'>Incoming Call{{ isWebRTCSupported() ? '' : ' (But your browser does not support VoIP)' }}</span>
-
                         <span class="msg_meta" ng-if="'m.room.topic' === msg.e.type">
                             {{ msg.sender.name }} changed the topic to: {{ msg.e.content.topic }}
                         </span>
-
                         <span class="msg_meta" ng-if="'m.room.name' === msg.e.type">
                             {{ msg.sender.name }} changed the room name to: {{ msg.e.content.name }}
                         </span>
-
                     </div>
                 </td>
-                <td class="rightBlock">
-                    <img class="avatarImage" ng-src="{{ msg.httpUri(room.now.members[msg.e.user_id].event.content.avatar_url, 96, 96, 'crop') || msg.identicon() }}"
-                    err-src="img/default-profile.png" width="32" height="32"
-                         ng-hide="room.aevents[$index - 1].e.user_id === msg.e.user_id || msg.e.user_id !== state.user_id"/>
+				<td class="rightBlock" ng-mouseover="state.showTs = 1" ng-mouseout="state.showTs = 0">
+                    <div class="timestamp"
+                         ng-style="{ 'opacity': state.showTs ? 1.0 : 0.0 }"
+                         ng-class="msg.css_class">
+                        {{ (msg.e.origin_server_ts) | date:'MMM d HH:mm' }}
+                    </div>
                 </td>
             </tr>
         </table>

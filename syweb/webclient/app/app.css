@@ -319,6 +319,9 @@ textarea, input {
 
 /*** Room page ***/
 
+.room { 
+}
+
 #sidebar-resizer {
     position: absolute;
     background-color: #fff;
@@ -641,6 +644,7 @@ textarea, input {
     background-color: #FFCC00;
 }
 
+
 /*** Message table ***/
 
 #messageTableWrapper {
@@ -660,7 +664,6 @@ textarea, input {
         
 #messageTable td {
     padding: 0px;
-/*    border: 1px solid #888; */
 }
 
 .leftBlock {
@@ -672,23 +675,17 @@ textarea, input {
     font-weight: medium;
     font-size: 12px;
     text-align: right;
-/*
-    border-top: 1px #ddd solid;
-*/
 }
 
 .rightBlock {
-    width: 32px;
+    width: 75px;
     color: #888;
     line-height: 0;
     vertical-align: top;
 }        
 
-.sender, .timestamp {
-/*    padding-top: 3px;
-*/}
-
 .timestamp {
+	font-weight: normal;
     font-size: 10px;
     color: #ccc;
     height: 13px;
@@ -698,11 +695,11 @@ textarea, input {
 }
 
 .sender {
-    font-size: 12px;
-/*    
-    margin-top: 5px;
-    margin-bottom: -9px;
-*/
+    padding-left: 1em;
+	color: #a9a9a9;
+    font-size: 13px;
+	font-weight: bold;
+	font-family: Helvetica, Arial, sans-serif;
 }
 
 .avatar {
@@ -763,15 +760,6 @@ textarea, input {
 }
 
 .bubble {
-/*
-    background-color: #eee;
-    border: 1px solid #d8d8d8;
-    margin-bottom: -1px;
-    padding-top: 7px;
-    padding-bottom: 5px;
-    -webkit-text-size-adjust:100%
-    vertical-align: middle;
-*/
     display: inline-block;
     max-width: 90%;
     padding-left: 1em;
@@ -793,22 +781,14 @@ textarea, input {
 
 .msg_meta {
     font-style: italic;
+	color: #a9a9a9;
 }
 
+/*  */
 .mine {
-    text-align: right;
+
 }
 
-/*
-.text.emote .bubble,
-.text.membership .bubble,
-.mine .text.emote .bubble,
-.mine .text.membership .bubble
-{
-    background-color: transparent ! important;    
-    border: 0px ! important;
-}
-*/
 
 .mine .text .bubble {
 /*
