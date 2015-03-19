@@ -184,7 +184,7 @@
                          ng-class="msg.e.content.msgtype == 'm.notice' ? 'avatarNotice' : ''"/>
                 </td>
                 <td class="msg" ng-class="(!msg.e.content.membership && ('m.room.topic' !== msg.e.type && 'm.room.name' !== msg.e.type))? (msg.e.content.msgtype === 'm.emote' ? 'emote text' : 'text') : 'membership text'">
-                    <div class="sender" ng-click="appendName($event, msg)" ng-hide="room.aevents[$index - 1].e.user_id === msg.e.user_id">
+                    <div class="sender" ng-click="appendName($event, msg)" ng-hide="(room.aevents[$index - 1].e.user_id === msg.e.user_id || msg.changed_key === 'membership' || msg.changed_key === 'displayname')">
                         {{ msg.sender.name }}
                     </div>
                     <div class="bubble" ng-dblclick="openJson(msg)" ng-mouseover="state.showTs = 1" ng-mouseout="state.showTs = 0">
