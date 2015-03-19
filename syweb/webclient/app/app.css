@@ -467,7 +467,6 @@ textarea, input {
 
 .roomNameSection, .roomTopicSection {
     text-align: right;
-    float: right;
     width: 100%;
 }
 
