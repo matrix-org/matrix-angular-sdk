@@ -380,7 +380,7 @@ function MatrixCallFactory(webRtcService, matrixService, matrixPhoneService, mod
                 // when setting it on the peerconnection. According to the spec it should only add ICE
                 // candidates. Any ICE candidates that have already been generated at this point will
                 // probably be sent both in the offer and separately. Ho hum.
-                offer: self.peerConn.localDescription,
+                offer: { sdp: self.peerConn.localDescription.sdp, type: self.peerConn.localDescription.type },
                 lifetime: MatrixCall.CALL_TIMEOUT
             };
             self.sendEventWithRetry('m.call.invite', content);
