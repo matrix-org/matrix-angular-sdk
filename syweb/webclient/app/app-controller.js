@@ -177,7 +177,7 @@ angular.module('MatrixWebClientController', ['matrixService', 'mPresence', 'even
         
         notificationService.showNotification(
             "Incoming "+call.type+" call", 
-            "Call from "+mUserDisplayNameFilter(call.peerMember.user_id),
+            mUserDisplayNameFilter(call.peerMember.name, call.room_id),
             avatar, 
             undefined, 
             "matrixcall"
