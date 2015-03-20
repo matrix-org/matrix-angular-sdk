@@ -335,7 +335,13 @@ function MatrixCallFactory(webRtcService, matrixService, matrixPhoneService, mod
     MatrixCall.prototype.gotLocalIceCandidate = function(event) {
         if (event.candidate) {
             console.log("Got local ICE "+event.candidate.sdpMid+" candidate: "+event.candidate.candidate);
-            this.sendCandidate(event.candidate);
+            // As with the offer, note we need to make a copy of this object, not pass the original: that broke in Chrome ~m43.
+            var c = {
+                candidate: event.candidate.candidate,
+                sdpMid: event.candidate.sdpMid,
+                sdpMLineIndex: event.candidate.sdpMLineIndex,
+            };
+            this.sendCandidate(c);
         }
     };
 
@@ -407,7 +413,7 @@ function MatrixCallFactory(webRtcService, matrixService, matrixPhoneService, mod
             var content = {
                 version: 0,
                 call_id: self.call_id,
-                answer: self.peerConn.localDescription
+                answer: { sdp: self.peerConn.localDescription.sdp, type: self.peerConn.localDescription.type }
             };
             self.sendEventWithRetry('m.call.answer', content);
             self.state = 'connecting';
