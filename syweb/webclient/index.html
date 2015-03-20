@@ -104,6 +104,7 @@
                         <span ng-show="currentCall.state == 'ended' && !currentCall.hangupReason && !currentCall.didConnect && currentCall.direction == 'outbound' && currentCall.hangupParty == 'remote'">Call Rejected</span>
                         <span ng-show="currentCall.state == 'ended' && !currentCall.hangupReason && !currentCall.didConnect && currentCall.direction == 'outbound' && currentCall.hangupParty == 'local'">Call Canceled</span>
                         <span ng-show="currentCall.state == 'ended' && currentCall.hangupReason == 'invite_timeout' && !currentCall.didConnect && currentCall.direction == 'outbound' && currentCall.hangupParty == 'local'">User Not Responding</span>
+                        <span ng-show="currentCall.state == 'ended' && currentCall.hangupReason == 'answered_elsewhere' && currentCall.direction == 'inbound' && currentCall.hangupParty == 'remote'">Call answered elsewhere</span>
                         <span ng-show="currentCall.state == 'ended' && !currentCall.hangupReason && currentCall.didConnect && currentCall.direction == 'outbound'">Call Ended</span>
                         <span ng-show="currentCall.state == 'ended' && !currentCall.hangupReason && !currentCall.didConnect && currentCall.direction == 'inbound'">Call Canceled</span>
                         <span ng-show="currentCall.state == 'ended' && !currentCall.hangupReason && currentCall.didConnect && currentCall.direction == 'inbound'">Call Ended</span>

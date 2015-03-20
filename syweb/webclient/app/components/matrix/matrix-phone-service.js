@@ -112,14 +112,19 @@ function MatrixPhoneService($rootScope, $injector, webRtcService, matrixService,
                 $rootScope.$broadcast(matrixPhoneService.INCOMING_CALL_EVENT, call);
             }
         } else if (event.type == 'm.call.answer') {
-            if (event.user_id == matrixService.config().user_id) return;
-
             var call = matrixPhoneService.allCalls[msg.call_id];
             if (!call) {
                 console.log("Got answer for unknown call ID "+msg.call_id);
                 return;
             }
-            call.receivedAnswer(msg);
+
+            if (event.user_id == matrixService.config().user_id) {
+                if (call.state == 'ringing') {
+                    call.onAnsweredElsewhere(msg);
+                }
+            } else {
+                call.receivedAnswer(msg);
+            }
         } else if (event.type == 'm.call.candidates') {
             if (event.user_id == matrixService.config().user_id) return;
 

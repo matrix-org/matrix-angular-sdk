@@ -526,6 +526,18 @@ function MatrixCallFactory(webRtcService, matrixService, matrixPhoneService, mod
         if (this.onHangup) this.onHangup(this);
     };
 
+    MatrixCall.prototype.onAnsweredElsewhere = function(msg) {
+        console.log("Answered elsewhere");
+        if (this.getRemoteVideoElement() && this.getRemoteVideoElement().pause) this.getRemoteVideoElement().pause();
+        if (this.getLocalVideoElement() && this.getLocalVideoElement().pause) this.getLocalVideoElement().pause();
+        this.state = 'ended';
+        this.hangupParty = 'remote';
+        this.hangupReason = "answered_elsewhere";
+        this.stopAllMedia();
+        if (this.peerConn && this.peerConn.signalingState != 'closed') this.peerConn.close();
+        if (this.onHangup) this.onHangup(this);
+    };
+
     MatrixCall.prototype.replacedBy = function(newCall) {
         console.log(this.call_id+" being replaced by "+newCall.call_id);
         if (this.state == 'wait_local_media') {
