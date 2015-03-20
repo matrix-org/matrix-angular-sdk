@@ -157,8 +157,10 @@ function MatrixPhoneService($rootScope, $injector, webRtcService, matrixService,
                 call.initWithHangup(event);
                 matrixPhoneService.allCalls[msg.call_id] = call;
             } else {
-                call.onHangupReceived(msg);
-                delete(matrixPhoneService.allCalls[msg.call_id]);
+                if (call.state != 'ended') {
+                    call.onHangupReceived(msg);
+                    delete(matrixPhoneService.allCalls[msg.call_id]);
+                }
             }
         }
     });
