@@ -380,6 +380,8 @@ function MatrixCallFactory(webRtcService, matrixService, matrixPhoneService, mod
                 // when setting it on the peerconnection. According to the spec it should only add ICE
                 // candidates. Any ICE candidates that have already been generated at this point will
                 // probably be sent both in the offer and separately. Ho hum.
+                // Also, note that we have to make a new object here, copying the type and sdp properties.
+                // Passing the RTCSessionDescription object as-is doesn't work in Chrome (as of about m43).
                 offer: { sdp: self.peerConn.localDescription.sdp, type: self.peerConn.localDescription.type },
                 lifetime: MatrixCall.CALL_TIMEOUT
             };
