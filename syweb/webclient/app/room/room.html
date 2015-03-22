@@ -221,7 +221,7 @@
                         <span ng-show='::(msg.e.type === "m.room.message")' ng-switch='::msg.e.content.msgtype'>
                             <span ng-switch-when="m.emote"
                                   ng-class="::(shouldHighlightEvent(msg.event) && msg.e.user_id != state.user_id ? msg.css_class + ' messageBing' : msg.css_class)"
-                                  ng-bind-html="::('* ' + (msg.sender.name) + ' ' + msg.e.content.body | linky:'_blank')"
+                                  ng-bind-html="::('* ' + (msg.sender.name) + ' ' + msg.e.content.body) | linky:'_blank'"
                                   />
                             <span ng-switch-when="m.text"
                                   class="message"

@@ -21,10 +21,9 @@ angular.module('RecentsFilter', [])
     return function(rooms) {
         var user_id = matrixService.config().user_id;
 
-        // Transform the dict into an array
-        // The key, room_id, is already in value objects
         var filtered = [];
-        angular.forEach(rooms, function(room, room_id) {
+        angular.forEach(rooms, function(room) {
+            var room_id = room.room_id;
             if (paymentService.isAccountRoom(room)) {
                 return;
             }
