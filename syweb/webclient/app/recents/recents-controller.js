@@ -16,7 +16,7 @@
 
 'use strict';
 
-angular.module('RecentsController', ['matrixService', 'matrixFilter'])
+angular.module('RecentsController', ['matrixService', 'matrixFilter', 'vs-repeat'])
 .controller('RecentsController', ['$rootScope', '$scope', 'modelService', 'recentsService', 'eventHandlerService', 'dialogService', '$window',
                                function($rootScope, $scope, modelService, recentsService, eventHandlerService, dialogService, $window) {
 
@@ -29,7 +29,8 @@ angular.module('RecentsController', ['matrixService', 'matrixFilter'])
     $scope.modelService = modelService;
     
     // retrieve all rooms and expose them
-    $scope.rooms = modelService.getRooms();
+    // $scope.rooms = modelService.getRooms();
+    $scope.roomList = modelService.getRoomList();
     
     $scope.$on("$destroy", function() {
         $scope.rooms = null;
@@ -67,7 +68,8 @@ angular.module('RecentsController', ['matrixService', 'matrixFilter'])
     $scope.leave = function(roomId) {
         eventHandlerService.leaveRoom(roomId).then(function(response) {
             // refresh room list
-            $scope.rooms = modelService.getRooms();
+            //$scope.rooms = modelService.getRooms();
+            $scope.roomList = modelService.getRoomList();
         },
         function(error) {
             dialogService.showError(error);

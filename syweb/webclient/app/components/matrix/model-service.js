@@ -42,7 +42,7 @@ function(matrixService, $rootScope, $q) {
     var userIdToRoomMember;
     
     // main store
-    var rooms, users;
+    var rooms, roomList, users;
     
     var init = function() {
         roomIdToAlias = {};
@@ -55,6 +55,8 @@ function(matrixService, $rootScope, $q) {
         rooms = {
             // roomid: <Room>
         };
+        
+        roomList = [];
         
         users = {
             // user_id: <User>
@@ -386,6 +388,8 @@ function(matrixService, $rootScope, $q) {
         getRoom: function(roomId) {
             if(!rooms[roomId]) {
                 rooms[roomId] = new Room(roomId);
+                roomList.push(rooms[roomId]);
+                this.sortRoomList();
                 $rootScope.$emit(NEW_ROOM, rooms[roomId]);
             }
             return rooms[roomId];
@@ -403,11 +407,41 @@ function(matrixService, $rootScope, $q) {
         
         removeRoom: function(roomId) {
             delete rooms[roomId];
+            for (var i in roomList) { // XXX: linear search
+                if (roomId === roomList[i]) {
+                    roomList.splice(i, 1);
+                    break;
+                }
+            }
             console.log("Deleted room "+roomId);
         },
         
         getRooms: function() {
             return rooms;
+        },
+        
+        sortRoomList: function() {
+            roomList.sort(function (roomA, roomB) {
+
+                var lastMsgRoomA = roomA.lastAnnotatedEvent;
+                var lastMsgRoomB = roomB.lastAnnotatedEvent;
+
+                // Invite message does not have a body message nor ts
+                // Puth them at the top of the list
+                if (undefined === lastMsgRoomA) {
+                    return -1;
+                }
+                else if (undefined === lastMsgRoomB) {
+                    return 1;
+                }
+                else {
+                    return lastMsgRoomB.event.origin_server_ts - lastMsgRoomA.event.origin_server_ts;
+                }
+            });
+        },
+        
+        getRoomList: function() {
+            return roomList;
         },
         
         /**

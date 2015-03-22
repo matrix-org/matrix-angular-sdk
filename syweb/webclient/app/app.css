@@ -562,6 +562,8 @@ textarea, input {
 */
 
 .userAvatar {
+    width: 101px;
+    height: 120px;
 }
 
 .userAvatarFrame {
@@ -851,8 +853,11 @@ textarea, input {
 .recentsTable {
     max-width: 480px;
     width: 100%;
-    border-collapse: collapse;
-    table-layout: fixed;
+    height: inherit;
+    overflow-y: auto;
+    list-style-type: none;
+    margin: 0px;
+    padding: 0px;
 }
 
 .recentsSpinner {
@@ -860,16 +865,12 @@ textarea, input {
     max-width: 480px;
 }
 
-.recentsTable tr {
+.recentsTable li {
     width: 100%;
-}
-.recentsTable td {
     vertical-align: text-top;
     overflow: hidden;
     white-space: nowrap;
     text-overflow: ellipsis;
-    padding-left: 0.5em;
-    padding-right: 0.5em;
 }
 
 .recentsRoom {
@@ -924,12 +925,10 @@ textarea, input {
 
 #roomRecentsTableWrapper {
     float: left;
-    max-width: 320px;
+    width: 320px;
     padding-right: 10px;
     margin-right: 10px;
     height: 100%;
-/*    border-right: 1px solid #ddd; */
-    overflow-y: auto;
 }
 
 /*** Profile ***/
