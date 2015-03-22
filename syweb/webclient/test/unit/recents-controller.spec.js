@@ -8,7 +8,7 @@ describe("RecentsController ", function() {
     var modelService = {
         getRooms: function(){
             return testRooms;
-        }
+        },
         
         getRoomList: function() {
             var roomList = [];
@@ -18,7 +18,7 @@ describe("RecentsController ", function() {
                 }
             }
             return roomList;
-        }
+        },
     };
     
     var recentsService = {
