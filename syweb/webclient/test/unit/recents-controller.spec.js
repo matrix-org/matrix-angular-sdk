@@ -9,6 +9,16 @@ describe("RecentsController ", function() {
         getRooms: function(){
             return testRooms;
         }
+        
+        getRoomList: function() {
+            var roomList = [];
+            for (var id in testRooms) {
+                if (testRooms.hasOwnProperty(id)) {
+                    roomList.push(testRooms[id]);
+                }
+            }
+            return roomList;
+        }
     };
     
     var recentsService = {

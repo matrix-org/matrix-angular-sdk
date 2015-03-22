@@ -192,6 +192,7 @@ describe('NotificationService', function() {
 
     var modelService = {
         getRooms: function(){},
+        getRoomList: function(){},
         getKnownRoom: function(room_id) {
             var testRoom = {
                 room_id: testRoomId,

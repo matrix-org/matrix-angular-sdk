@@ -22,7 +22,8 @@ describe('RecentsService', function() {
     };
     
     var modelService = {
-        getRooms: function(){}
+        getRooms: function(){},
+        getRoomList: function(){},
     };
 
     var notificationService = {
