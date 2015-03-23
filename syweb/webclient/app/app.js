@@ -48,8 +48,12 @@ var matrixWebClient = angular.module('matrixWebClient', [
     'monospaced.elastic'
 ]);
 
-matrixWebClient.config(['$routeProvider', '$provide', '$httpProvider',
-    function($routeProvider, $provide, $httpProvider) {
+matrixWebClient.config(['$routeProvider', '$provide', '$httpProvider', '$compileProvider',
+    function($routeProvider, $provide, $httpProvider, $compileProvider) {
+        
+        // disable debug mode to speed things up
+        $compileProvider.debugInfoEnabled(false);
+        
         $routeProvider.
             when('/login', {
                 templateUrl: 'app/login/login.html'
