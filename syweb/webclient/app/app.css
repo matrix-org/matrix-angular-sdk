@@ -248,6 +248,14 @@ textarea, input {
     font-size: 12px;
 }
 
+.feedbackError {
+    color: red;
+}
+
+input.error {
+    background-color: #e88;
+}
+
 .mouse-pointer {
     cursor: pointer;
 }

@@ -133,6 +133,16 @@ function($scope, matrixService, modelService, eventHandlerService, notificationS
         avatarUrl: ""
     };
 
+    $scope.password = {
+        oldpw: '',
+        newpw: '',
+        confirmnewpw: '',
+        inprogress: false,
+        feedback: '',
+        state: null,
+        badfields: {}
+    };
+
     $scope.onInit = function() {
         // Load profile data
         // Display name
@@ -453,6 +463,47 @@ function($scope, matrixService, modelService, eventHandlerService, notificationS
         },
         function(err) {
             dialogService.showError(err);
+        });
+    };
+
+    $scope.passwordValid = function() {
+        if ($scope.password.oldpw == '') {
+            return false;
+        }
+        if ($scope.password.newpw == '') {
+            return false;
+        }
+        if ($scope.password.confirmnewpw == '') {
+            return false;
+        }
+        return true;
+    };
+
+    $scope.changePassword = function() {
+        if ($scope.password.newpw != $scope.password.confirmnewpw) {
+            $scope.password.feedback = "Passwords don't match";
+            $scope.password.state = "error";
+            $scope.password.badfields = [ 'newpw', 'confirmnewpw' ];
+            return;
+        }
+        var authDict = {
+            type: 'm.login.password',
+            user: matrixService.config().user_id,
+            password: $scope.password.oldpw
+        };
+        matrixService.setPassword($scope.password.newpw, authDict).then(function() {
+            $scope.password.feedback = "Password changed";
+            $scope.password.state = null;
+            $scope.password.badfields = [];
+            $scope.password.oldpw = '';
+            $scope.password.newpw = '';
+            $scope.password.confirmnewpw = '';
+        }, function(err) {
+            if (err.data.errcode == 'M_FORBIDDEN') {
+                $scope.password.feedback = "Current password incorrect";
+                $scope.password.state = "error";
+                $scope.password.badfields = [ 'oldpw' ];
+            }
         });
     };
 }]);

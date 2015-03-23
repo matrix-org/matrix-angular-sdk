@@ -61,6 +61,7 @@ function($http, $window, $timeout, $q) {
     // Current version of permanent storage
     var configVersion = 0;
     var prefixPath = "/_matrix/client/api/v1";
+    var prefixPathV2 = "/_matrix/client/v2_alpha";
     var handleRateLimiting = true;
     var rateLimitMaxMs = 1000 * 20; // 20s
     
@@ -121,6 +122,33 @@ function($http, $window, $timeout, $q) {
         
         if (path.indexOf(prefixPath) !== 0) {
             path = prefixPath + path;
+        }
+        
+        return doBaseRequest(config.homeserver, method, path, params, data, undefined, $httpParams);
+    };
+
+    // temporary mess for v1/v2 transition
+    var doV2Request = function(method, path, params, data, $httpParams) {
+        if (!config) {
+            // try to load it
+            loadConfig();
+            if (!config) {
+                console.error("No config exists. Cannot perform request to "+path);
+                var defer = $q.defer();
+                defer.reject("No config");
+                return defer.promise;
+            }
+        }
+    
+        // Inject the access token
+        if (!params) {
+            params = {};
+        }
+        
+        params.access_token = config.access_token;
+        
+        if (path.indexOf(prefixPathV2) !== 0) {
+            path = prefixPathV2 + path;
         }
         
         return doBaseRequest(config.homeserver, method, path, params, data, undefined, $httpParams);
@@ -688,7 +716,11 @@ function($http, $window, $timeout, $q) {
             var path = "/pushrules/"+scope+"/"+encodeURIComponent(kind)+
                 "/"+encodeURIComponent(rule_id)+"/enabled";
             return doRequest("PUT", path, undefined, enabled ? 'true' : 'false');
-        }
+        },
 
+        setPassword: function(newPassword, authDict) {
+            var body = {'auth': authDict, 'new_password': newPassword}
+            return doV2Request("POST", "/account/password", undefined, body);
+        }
     };
 }]);

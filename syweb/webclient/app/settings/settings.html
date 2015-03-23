@@ -313,6 +313,20 @@
                     </p>
                 </div>
             </tab>
+            <tab heading="Password">
+                <div class="section settingsgroup">
+                    <h2>Change Password</h2>
+                    <form ng-submit="changePassword()">
+                        <table>
+                            <tr><td>Current password: </td><td><input type="password" ng-model="password.oldpw" ng-class="{error: password.badfields.indexOf('oldpw') > -1}" /></td></tr>
+                            <tr><td>New password: </td><td><input type="password" ng-model="password.newpw" ng-class="{error: password.badfields.indexOf('newpw') > -1}" /></td></tr>
+                            <tr><td>Confirm new password: </td><td><input type="password" ng-model="password.confirmnewpw" ng-class="{error: password.badfields.indexOf('confirmnewpw') > -1}" /></td></tr>
+                            <tr><td><input type="submit" value="Change Password" ng-disabled="password.inprogress || !passwordValid()" /></td></tr>
+                        </table>
+                        <span ng-class="{feedbackError: password.state == 'error'}">{{password.feedback}}<span>
+                    </form>
+                </div>
+            </tab>
             <tab heading="Information">
                 <div class="section settingsgroup">
                     <p>
