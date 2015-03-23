@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-angular.module('RoomController', ['ngSanitize', 'matrixFilter', 'mFileInput', 'vs-repeat'])
+angular.module('RoomController', ['ngSanitize', 'matrixFilter', 'mFileInput', 'vs-repeat', 'gatedScope', 'slyRepeat'])
 .controller('RoomController', ['$modal', '$scope', '$timeout', '$routeParams', '$location', '$rootScope', 'matrixService', 'eventHandlerService', 'mFileUpload', 'MatrixCall', 'modelService', 'recentsService', 'mUserDisplayNameFilter', 'dialogService', 'typingService', 'notificationService',
                                function($modal, $scope, $timeout, $routeParams, $location, $rootScope, matrixService, eventHandlerService, mFileUpload, MatrixCall, modelService, recentsService, mUserDisplayNameFilter, dialogService, typingService, notificationService) {
    'use strict';
