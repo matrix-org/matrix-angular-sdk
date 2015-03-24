@@ -88,7 +88,7 @@ matrixWebClient.config(['$routeProvider', '$provide', '$httpProvider',
             function ($q, $rootScope) {
             return {
                 responseError: function(rejection) {
-                    if (rejection.status === 403 && "data" in rejection && 
+                    if ("data" in rejection &&
                             "errcode" in rejection.data && 
                             rejection.data.errcode === "M_UNKNOWN_TOKEN") {
                         console.log("Got a 403 with an unknown token. Logging out.")
