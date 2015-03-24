@@ -491,6 +491,7 @@ function($scope, matrixService, modelService, eventHandlerService, notificationS
             user: matrixService.config().user_id,
             password: $scope.password.oldpw
         };
+        $scope.password.inprogress = true;
         matrixService.setPassword($scope.password.newpw, authDict).then(function() {
             $scope.password.feedback = "Password changed";
             $scope.password.state = null;
@@ -498,11 +499,13 @@ function($scope, matrixService, modelService, eventHandlerService, notificationS
             $scope.password.oldpw = '';
             $scope.password.newpw = '';
             $scope.password.confirmnewpw = '';
+            $scope.password.inprogress = false;
         }, function(err) {
             if (err.data.errcode == 'M_FORBIDDEN') {
                 $scope.password.feedback = "Current password incorrect";
                 $scope.password.state = "error";
                 $scope.password.badfields = [ 'oldpw' ];
+                $scope.password.inprogress = false;
             }
         });
     };
