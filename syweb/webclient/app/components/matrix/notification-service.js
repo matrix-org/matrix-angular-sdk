@@ -517,7 +517,7 @@ function($timeout, $q, $rootScope, matrixService, modelService, mPresence, mUser
         
         showNotification : showNotification,
     };
-    self.getRulesets();
+    if (matrixService.config().user_id) self.getRulesets();
     return self;
 }]);
 
