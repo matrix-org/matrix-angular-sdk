@@ -327,6 +327,10 @@ input.error {
     font-size: 18px;
 }
 
+#regcaptcha div {
+    margin: auto;
+}
+
 /*** Room page ***/
 
 .room { 

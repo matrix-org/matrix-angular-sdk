@@ -103,7 +103,7 @@ angular.module('RegisterController', ['matrixService'])
                 $scope.registering = false;
                 $scope.feedback = "Success";
                 if (useCaptcha) {
-                    Recaptcha.destroy();
+                    grecaptcha.reset();
                 }
                 // Update the current config 
                 var config = matrixService.config();
@@ -129,9 +129,6 @@ angular.module('RegisterController', ['matrixService'])
             function(error) {
                 $scope.registering = false;
                 console.error("Registration error: "+JSON.stringify(error));
-                if (useCaptcha) {
-                    Recaptcha.reload();
-                }
                 if (error.data) {
                     if (error.data.errcode === "M_USER_IN_USE") {
                         dialogService.showMatrixError("Username taken", error.data);
@@ -168,26 +165,18 @@ angular.module('RegisterController', ['matrixService'])
         );
     };
     
-    var setupCaptcha = function() {
+    window.setupCaptcha = function() {
         console.log("Setting up ReCaptcha")
         var public_key = window.webClientConfig.recaptcha_public_key;
         if (public_key === undefined) {
             console.error("No public key defined for captcha!")
             return;
         }
-        Recaptcha.create(public_key,
-        "regcaptcha",
-        {
-          theme: "red",
-          callback: Recaptcha.focus_response_field
-        });
+        grecaptcha.render("regcaptcha",
+            {
+              sitekey: public_key,
+            }
+        );
     };
-
-    $scope.init = function() {
-        if (useCaptcha) {
-            setupCaptcha();
-        }
-    };
-    
 }]);
 

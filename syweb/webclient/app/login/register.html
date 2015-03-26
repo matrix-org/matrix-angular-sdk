@@ -7,6 +7,7 @@
         <br/>
 
         <form id="loginForm" novalidate>
+            <script src="https://www.google.com/recaptcha/api.js?onload=setupCaptcha&render=explicit" async defer></script>
             <div>
                 Create account:<br/>
                 
@@ -26,8 +27,7 @@
                     <br ng-show="!wait_3pid_code" />
                     <br ng-show="!wait_3pid_code" />
 
-
-                    <div id="regcaptcha" ng-init="init()" />
+                    <div id="regcaptcha" />
 
                     <button ng-show="!wait_3pid_code && !registering" ng-click="register()" ng-disabled="!account.desired_user_id || !account.homeserver || !account.pwd1 || !account.pwd2 || account.pwd1 !== account.pwd2">Sign up</button>
                     <div class="spinner" us-spinner ng-show="registering"> </div>
