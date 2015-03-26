@@ -503,10 +503,12 @@ function($scope, matrixService, modelService, eventHandlerService, notificationS
         }, function(err) {
             if (err.data.errcode == 'M_FORBIDDEN') {
                 $scope.password.feedback = "Current password incorrect";
-                $scope.password.state = "error";
-                $scope.password.badfields = [ 'oldpw' ];
-                $scope.password.inprogress = false;
+            $scope.password.badfields = [ 'oldpw' ];
+            } else {
+                $scope.password.feedback = "Failed to change password!";
             }
+            $scope.password.state = "error";
+            $scope.password.inprogress = false;
         });
     };
 }]);
