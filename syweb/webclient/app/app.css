@@ -1015,6 +1015,14 @@ li.disabledRule {
     visibility: hidden;
 }
 
+div.reminder {
+    background-color: lightgoldenrodyellow;
+    border: 1px solid black;
+    width: 300px;
+    padding: 20px;
+    text-align: center;
+}
+
 /*** Seasonal ***/
 
 

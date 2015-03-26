@@ -316,6 +316,7 @@
             <tab heading="Password">
                 <div class="section settingsgroup">
                     <h2>Change Password</h2>
+                    <p>When changing your password you will be logged out of all other devices and stop receiving push notifications until you log in again.</p>
                     <form ng-submit="changePassword()">
                         <table>
                             <tr><td>Current password: </td><td><input type="password" ng-model="password.oldpw" ng-class="{error: password.badfields.indexOf('oldpw') > -1}" /></td></tr>
@@ -325,6 +326,9 @@
                         </table>
                         <span ng-class="{feedbackError: password.state == 'error'}">{{password.feedback}}<span>
                     </form>
+                    <div ng-show="password.state == 'changed'" class="reminder">
+                        Remember: you will not receive push notifications on other devices until you log back in to them.
+                    </div>
                 </div>
             </tab>
             <tab heading="Information">

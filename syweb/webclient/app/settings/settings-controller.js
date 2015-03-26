@@ -494,7 +494,7 @@ function($scope, matrixService, modelService, eventHandlerService, notificationS
         $scope.password.inprogress = true;
         matrixService.setPassword($scope.password.newpw, authDict).then(function() {
             $scope.password.feedback = "Password changed";
-            $scope.password.state = null;
+            $scope.password.state = 'changed';
             $scope.password.badfields = [];
             $scope.password.oldpw = '';
             $scope.password.newpw = '';
