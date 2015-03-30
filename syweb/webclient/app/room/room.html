@@ -168,7 +168,8 @@
          keep-scroll>
         <table id="messageTable" infinite-scroll="paginateMore()" aria-live="polite" role="log">
             <tr ng-repeat="msg in room.aevents"
-                ng-class="(room.aevents[$index - 1].e.user_id !== msg.e.user_id ? 'differentUser' : '') + (msg.e.user_id === state.user_id ? ' mine' : '')" scroll-item>
+                ng-class="(room.aevents[$index - 1].e.user_id !== msg.e.user_id ? 'differentUser' : '') + (msg.e.user_id === state.user_id ? ' mine' : '')" scroll-item
+                aria-live="{{ (msg.send_state === 'pending' || msg.send_state === 'unsent') ? 'off' : 'polite' }}">
                 <td class="avatar" ng-click="appendName($event, msg)" role="presentation">
                     <!--  room.now.members[msg.e.user_id].event.content.avatar_url is just backwards compat, and can be removed in the future. Synapse didn't used to
                           send m.room.member updates when avatar urls changed, so the image which should be visible here just going off room state isn't visible. We fix
