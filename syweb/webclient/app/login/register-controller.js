@@ -19,12 +19,6 @@ angular.module('RegisterController', ['matrixService'])
                                     function($scope, $rootScope, $location, matrixService, eventStreamService, dialogService) {
     'use strict';
     
-    var config = window.webClientConfig;
-    var useCaptcha = false; // default to no captcha to make it easier to get a homeserver up and running...
-    if (config !== undefined) {
-        useCaptcha = config.useCaptcha;
-    }
-    
     // FIXME: factor out duplication with login-controller.js
     
     // Assume that this is hosted on the home server, in which case the URL
@@ -47,6 +41,8 @@ angular.module('RegisterController', ['matrixService'])
 
         return ret;
     };
+
+    $scope.stage = 'initial';
     
     $scope.account = {
         homeserver: hs_url,
@@ -96,15 +92,13 @@ angular.module('RegisterController', ['matrixService'])
         }
     };
 
-    $scope.registerWithMxidAndPassword = function(mxid, password, threepidCreds) {
+    $scope.registerWithMxidAndPassword = function(mxid, password, threepidCreds, captchaResponse) {
         $scope.registering = true;
-        matrixService.register(mxid, password, threepidCreds, useCaptcha).then(
+        matrixService.register(mxid, password, threepidCreds, captchaResponse).then(
             function(response) {
                 $scope.registering = false;
                 $scope.feedback = "Success";
-                if (useCaptcha) {
-                    grecaptcha.reset();
-                }
+                if (grecaptcha) grecaptcha.reset();
                 // Update the current config 
                 var config = matrixService.config();
                 angular.extend(config, {
@@ -129,23 +123,36 @@ angular.module('RegisterController', ['matrixService'])
             function(error) {
                 $scope.registering = false;
                 console.error("Registration error: "+JSON.stringify(error));
-                if (error.data) {
+                if (error.authfailed) {
+                    if (error.authfailed === "m.login.recaptcha") {
+                        $scope.captchaMessage = "Verification failed. Are you sure you're not a robot?";
+                        if (grecaptcha) grecaptcha.reset();
+                    } else {
+                        dialogService.showError("Authentication failed");
+                        $scope.stage = 'initial';
+                        if (grecaptcha) grecaptcha.reset();
+                    }
+                } else {
                     if (error.data.errcode === "M_USER_IN_USE") {
                         dialogService.showMatrixError("Username taken", error.data);
                         $scope.reenter_username = true;
-                    }
-                    else if (error.data.errcode == "M_CAPTCHA_INVALID") {
-                        dialogService.showMatrixError("Captcha failed", error.data);
+                        $scope.stage = 'initial';
+                        if (grecaptcha) grecaptcha.reset();
                     }
                     else if (error.data.errcode == "M_CAPTCHA_NEEDED") {
-                        dialogService.showMatrixError("Captcha required", error.data);
+                        $scope.stage = 'captcha';
+                        grecaptcha.render("regcaptcha", {
+                            sitekey: error.data.public_key,
+                            callback: function(response) {
+                                $scope.registerWithMxidAndPassword(mxid, password, threepidCreds, response);
+                            }
+                        });
                     }
                     else {
                         dialogService.showError(error);
+                        $scope.stage = 'initial';
+                        if (grecaptcha) grecaptcha.reset();
                     }
-                }
-                else {
-                    dialogService.showError(error);
                 }
             });
     }
@@ -161,20 +168,6 @@ angular.module('RegisterController', ['matrixService'])
             },
             function(error) {
                 $scope.feedback = "Unable to verify code.";
-            }
-        );
-    };
-    
-    window.setupCaptcha = function() {
-        console.log("Setting up ReCaptcha")
-        var public_key = window.webClientConfig.recaptcha_public_key;
-        if (public_key === undefined) {
-            console.error("No public key defined for captcha!")
-            return;
-        }
-        grecaptcha.render("regcaptcha",
-            {
-              sitekey: public_key,
             }
         );
     };

@@ -7,8 +7,8 @@
         <br/>
 
         <form id="loginForm" novalidate>
-            <script src="https://www.google.com/recaptcha/api.js?onload=setupCaptcha&render=explicit" async defer></script>
-            <div>
+            <script src="https://www.google.com/recaptcha/api.js?render=explicit" async defer></script>
+            <div ng-show="stage == 'initial'">
                 Create account:<br/>
                 
                 <div style="text-align: center">
@@ -26,8 +26,6 @@
                     <input ng-show="!wait_3pid_code" id="displayName" size="32" type="text" ng-model="account.displayName" placeholder="Display name (e.g. Bob Obson)"/>
                     <br ng-show="!wait_3pid_code" />
                     <br ng-show="!wait_3pid_code" />
-
-                    <div id="regcaptcha" />
 
                     <button ng-show="!wait_3pid_code && !registering" ng-click="register()" ng-disabled="!account.desired_user_id || !account.homeserver || !account.pwd1 || !account.pwd2 || account.pwd1 !== account.pwd2">Sign up</button>
                     <div class="spinner" us-spinner ng-show="registering"> </div>
@@ -51,6 +49,12 @@
                     <div class="smallPrint">Matrix provides identity servers to track which emails etc. belong to which Matrix IDs.<br/>
                         Only http://matrix.org:8090 currently exists.</div>
                 </div>
+            </div>
+            <div ng-show="stage == 'captcha'">
+                    <p>This Home Server only allows humans to create accounts.</p>
+                    <p>Please verify that you're not a robot.</p>
+                    <div id="regcaptcha" />
+                    <p class="feedback">{{captchaMessage}}</p>
             </div>
         </form>
 
