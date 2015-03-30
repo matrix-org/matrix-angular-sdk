@@ -98,7 +98,7 @@ angular.module('RegisterController', ['matrixService'])
             function(response) {
                 $scope.registering = false;
                 $scope.feedback = "Success";
-                if (grecaptcha) grecaptcha.reset();
+                if (window.grecaptcha) window.grecaptcha.reset();
                 // Update the current config 
                 var config = matrixService.config();
                 angular.extend(config, {
@@ -126,22 +126,22 @@ angular.module('RegisterController', ['matrixService'])
                 if (error.authfailed) {
                     if (error.authfailed === "m.login.recaptcha") {
                         $scope.captchaMessage = "Verification failed. Are you sure you're not a robot?";
-                        if (grecaptcha) grecaptcha.reset();
+                        if (window.grecaptcha) window.grecaptcha.reset();
                     } else {
                         dialogService.showError("Authentication failed");
                         $scope.stage = 'initial';
-                        if (grecaptcha) grecaptcha.reset();
+                        if (window.grecaptcha) window.grecaptcha.reset();
                     }
                 } else {
                     if (error.data.errcode === "M_USER_IN_USE") {
                         dialogService.showMatrixError("Username taken", error.data);
                         $scope.reenter_username = true;
                         $scope.stage = 'initial';
-                        if (grecaptcha) grecaptcha.reset();
+                        if (window.grecaptcha) window.grecaptcha.reset();
                     }
                     else if (error.data.errcode == "M_CAPTCHA_NEEDED") {
                         $scope.stage = 'captcha';
-                        grecaptcha.render("regcaptcha", {
+                        window.grecaptcha.render("regcaptcha", {
                             sitekey: error.data.public_key,
                             callback: function(response) {
                                 $scope.registerWithMxidAndPassword(mxid, password, threepidCreds, response);
@@ -151,7 +151,7 @@ angular.module('RegisterController', ['matrixService'])
                     else {
                         dialogService.showError(error);
                         $scope.stage = 'initial';
-                        if (grecaptcha) grecaptcha.reset();
+                        if (window.grecaptcha) window.grecaptcha.reset();
                     }
                 }
             });

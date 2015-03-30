@@ -138,7 +138,7 @@ describe("RegisterController ", function() {
         scope.register(); // this depends on the result of a deferred
         rootScope.$digest(); // which is delivered after the digest
         
-        expect(matrixService.register).toHaveBeenCalledWith("bob", "password", undefined, false);
+        expect(matrixService.register).toHaveBeenCalledWith("bob", "password", undefined, undefined);
         expect(matrixService.saveConfig).toHaveBeenCalled();
     });
     
@@ -183,7 +183,7 @@ describe("RegisterController ", function() {
             [jasmine.objectContaining({
                 sid: testEmailLinkData.sid,
                 clientSecret: scope.clientSecret
-            })], false);
+            })], undefined);
         expect(matrixService.saveConfig).toHaveBeenCalled();
     });
 });
