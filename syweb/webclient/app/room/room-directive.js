@@ -63,7 +63,7 @@ angular.module('RoomController')
                 //
                 // You're not missing anything - my point was that we should
                 // explicitly define the syntax for user IDs /somewhere/.
-                // Meanwhile as long as the delimeters are well defined, we
+                // Meanwhile as long as the delimiters are well defined, we
                 // could just pick "the last word".  But to know what the
                 // correct delimeters are, we probably do need a formal
                 // syntax for user IDs to refer to... --Matthew
@@ -255,17 +255,23 @@ angular.module('RoomController')
                 var UP_ARROW = 38;
                 var DOWN_ARROW = 40;
                 if (scope && scope.roomId) {
-                    if (keycodePressed === UP_ARROW) {
+                    var offset = element[0].selectionStart || 0;
+                    if (keycodePressed === UP_ARROW &&
+                        !element[0].value.substr(0, offset).match(/\n/))
+                    {
                         history.go(1);
                         event.preventDefault();
                     }
-                    else if (keycodePressed === DOWN_ARROW) {
+                    else if (keycodePressed === DOWN_ARROW &&
+                        !element[0].value.substr(offset).match(/\n/))
+                    {
                         history.go(-1);
                         event.preventDefault();
                     }
                 }
             });
             
+            // XXX: why is the act of storing a new history item called 'unreg'?
             var unreg = scope.$on(BROADCAST_NEW_HISTORY_ITEM, function(ngEvent, item) {
                 history.push(item);
             });
