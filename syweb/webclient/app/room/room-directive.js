@@ -254,6 +254,8 @@ angular.module('RoomController')
             var DOWN_ARROW = 40;
             
             var resizeTextArea = function (event) {
+                if (window.controlPanelResized) return;
+
                 // XXX: don't hardcode CSS heights
                 var oldHeight = element.height();
                 element.height(0);
@@ -262,6 +264,7 @@ angular.module('RoomController')
                 if (oldHeight !== newHeight) {
                     $("#controlPanel").height(60 + newHeight - 19);
                     $("#roomPage").css({ 'bottom': (60 + 10 + newHeight - 19) });
+                    $("#controlpanel-resizer").css({ 'bottom': (60 + newHeight - 19) });
                     if (newHeight > oldHeight) {
                         $("#messageTableWrapper").scrollTop(
                             $("#messageTableWrapper").scrollTop() + newHeight - oldHeight
@@ -484,6 +487,23 @@ angular.module('RoomController')
                 // Handle horizontal resizer
                 var y = window.innerHeight - event.pageY;
 
+                if ($attrs.resizerMax && y > $attrs.resizerMax) {
+                    y = parseInt($attrs.resizerMax);
+                }
+                
+                // XXX: hardcoded for controlPanel resizer
+                var yPrev = parseInt($element.css("bottom"), 10);
+                // XXX: evil evil evil abuse of the window global to see if this works
+                if (y !== yPrev) window.controlPanelResized = true;
+                if (y < 60) {
+                    y = 60;
+                    window.controlPanelResized = false;
+                }                
+                $("#mainInput").height(y - 40);
+                $("#messageTableWrapper").scrollTop(
+                    $("#messageTableWrapper").scrollTop() + y - yPrev
+                );
+                                
                 $element.css({
                     bottom: y + 'px'
                 });
