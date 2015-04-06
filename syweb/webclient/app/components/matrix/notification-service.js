@@ -360,13 +360,9 @@ function($timeout, $q, $rootScope, matrixService, modelService, mPresence, mUser
                     currentIds.push(rulesCache.global.content[i].rule_id);
                 }
 
-                var specialchars = ['*', '[', ']', '?', '!'];
-
                 do {
                     rule_id = pattern;
-                    for (var i = 0; i < specialchars.length; ++i) {
-                        rule_id = rule_id.replace(specialchars[i], '');
-                    }
+                    rule_id = rule_id.replace(/[^\w\d]*/g, '');
                     if (suff > 0) {
                         rule_id += suff++;
                     }
