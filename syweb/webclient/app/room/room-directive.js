@@ -252,6 +252,23 @@ angular.module('RoomController')
         link: function (scope, element, attrs) {
             var UP_ARROW = 38;
             var DOWN_ARROW = 40;
+            
+            var resizeTextArea = function (event) {
+                // XXX: don't hardcode CSS heights
+                var oldHeight = element.height();
+                element.height(0);
+                var newHeight = this.scrollHeight - 10 < (19*3) ? this.scrollHeight - 10 : (19*3);
+                element.height(newHeight);
+                if (oldHeight !== newHeight) {
+                    $("#controlPanel").height(60 + newHeight - 19);
+                    $("#roomPage").css({ 'bottom': (60 + 10 + newHeight - 19) });
+                    if (newHeight > oldHeight) {
+                        $("#messageTableWrapper").scrollTop(
+                            $("#messageTableWrapper").scrollTop() + newHeight - oldHeight
+                        );
+                    }
+                }
+            };
 
             element.on("keydown", function (event) {
                 var keycodePressed = event.which;
@@ -277,13 +294,8 @@ angular.module('RoomController')
                 }
             });
             
-            element.on("keypress", function (event) {
-                if (event.ctrlKey &&
-                    (event.which === UP_ARROW || event.which === DOWN_ARROW))
-                {
-                    event.preventDefault();
-                }
-            });
+            // Auto-expand the textarea. XXX: this probably shouldn't be here
+            element.on("keyup", resizeTextArea);
             
             // XXX: why is the act of storing a new history item called 'unreg'?
             var unreg = scope.$on(BROADCAST_NEW_HISTORY_ITEM, function(ngEvent, item) {
