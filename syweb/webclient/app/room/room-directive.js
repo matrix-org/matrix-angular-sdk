@@ -250,24 +250,38 @@ angular.module('RoomController')
             roomId: "=commandHistory"
         },
         link: function (scope, element, attrs) {
+            var UP_ARROW = 38;
+            var DOWN_ARROW = 40;
+
             element.on("keydown", function (event) {
                 var keycodePressed = event.which;
-                var UP_ARROW = 38;
-                var DOWN_ARROW = 40;
                 if (scope && scope.roomId) {
                     var offset = element[0].selectionStart || 0;
                     if (keycodePressed === UP_ARROW &&
-                        !element[0].value.substr(0, offset).match(/\n/))
+                        (event.ctrlKey ||
+                         !element[0].value.substr(0, offset).match(/\n/)))
                     {
                         history.go(1);
+                        var len = element[0].value.length;
+                        element[0].setSelectionRange(len, len);
                         event.preventDefault();
                     }
                     else if (keycodePressed === DOWN_ARROW &&
-                        !element[0].value.substr(offset).match(/\n/))
+                        (event.ctrlKey ||
+                         !element[0].value.substr(offset).match(/\n/)))
                     {
                         history.go(-1);
+                        element[0].setSelectionRange(0,0);                        
                         event.preventDefault();
                     }
+                }
+            });
+            
+            element.on("keypress", function (event) {
+                if (event.ctrlKey &&
+                    (event.which === UP_ARROW || event.which === DOWN_ARROW))
+                {
+                    event.preventDefault();
                 }
             });
             
