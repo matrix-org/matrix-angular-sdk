@@ -265,7 +265,7 @@ angular.module('RoomController')
                 // XXX: don't hardcode CSS heights
                 var oldHeight = element.height();
                 element.height(0);
-                var newHeight = this.scrollHeight - 10 < (19*3) ? this.scrollHeight - 10 : (19*3);
+                var newHeight = this.scrollHeight - 10 < (19*4) ? this.scrollHeight - 10 : (19*4);
                 element.height(newHeight);
                 if (oldHeight !== newHeight) {
                     // XXX: this CSS abuse should be factored out into a single place, rather than duplicated
@@ -497,12 +497,14 @@ angular.module('RoomController')
                 // Handle horizontal resizer
                 var y = window.innerHeight - event.pageY;
 
-                if ($attrs.resizerMax && y > $attrs.resizerMax) {
-                    y = parseInt($attrs.resizerMax);
+                // hardcoded
+                var yMax = window.innerHeight - 100;
+                if (y > yMax) {
+                    y = yMax;
                 }
                 
                 // XXX: hardcoded for controlPanel resizer
-                var yPrev = parseInt($element.css("bottom"), 10);
+                var yPrev = parseInt($element.css("bottom"));
                 // XXX: evil evil evil abuse of the window global to see if this works
                 if (y !== yPrev) window.controlPanelResized = true;
                 if (y < 60) {
