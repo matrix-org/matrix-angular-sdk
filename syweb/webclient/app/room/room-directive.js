@@ -201,7 +201,7 @@ angular.module('RoomController')
             this.typingMessage = undefined;
         },
 
-        // Move in the history
+        // Move in the history. Returns true if we managed to move.
         go: function(offset) {
             if (-1 === this.position) {
                 // User starts to go to into the history, save the current line
@@ -211,7 +211,12 @@ angular.module('RoomController')
                 // If the user modified this line in history, keep the change
                 this.data[this.position] = this.element.val();
             }
-
+            
+            if (offset > 0 && this.position == this.data.length - 1) {
+                // we've run out of history
+                return false;
+            }
+            
             // Bounds the new position to valid data
             var newPosition = this.position + offset;
             newPosition = Math.max(-1, newPosition);
@@ -226,6 +231,7 @@ angular.module('RoomController')
                 // Go back to the message the user started to type
                 this.element.val(this.typingMessage);
             }
+            return true;
         },
 
         saveLastTextEntry: function() {
@@ -262,6 +268,8 @@ angular.module('RoomController')
                 var newHeight = this.scrollHeight - 10 < (19*3) ? this.scrollHeight - 10 : (19*3);
                 element.height(newHeight);
                 if (oldHeight !== newHeight) {
+                    // XXX: this CSS abuse should be factored out into a single place, rather than duplicated
+                    // between here and the resizer directive
                     $("#controlPanel").height(60 + newHeight - 19);
                     $("#roomPage").css({ 'bottom': (60 + 10 + newHeight - 19) });
                     $("#controlpanel-resizer").css({ 'bottom': (60 + newHeight - 19) });
@@ -281,17 +289,19 @@ angular.module('RoomController')
                         (event.ctrlKey ||
                          !element[0].value.substr(0, offset).match(/\n/)))
                     {
-                        history.go(1);
-                        var len = element[0].value.length;
-                        element[0].setSelectionRange(len, len);
+                        if (history.go(1)) {
+                            var len = element[0].value.length;
+                            element[0].setSelectionRange(len, len);
+                        }
                         event.preventDefault();
                     }
                     else if (keycodePressed === DOWN_ARROW &&
                         (event.ctrlKey ||
                          !element[0].value.substr(offset).match(/\n/)))
                     {
-                        history.go(-1);
-                        element[0].setSelectionRange(0,0);                        
+                        if (history.go(-1)) {
+                            element[0].setSelectionRange(0,0);
+                        }
                         event.preventDefault();
                     }
                 }
