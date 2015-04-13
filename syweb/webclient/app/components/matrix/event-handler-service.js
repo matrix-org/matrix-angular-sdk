@@ -506,6 +506,10 @@ function(matrixService, $rootScope, $window, $q, $timeout, $filter, mPresence, n
                 promise = commandsService.processInput(roomId, input);
             }
             
+            if (input.indexOf("//") === 0) {
+                input = input.substring(1);
+            }
+            
             var echo = false;
             var bodyPart = input;
             if (!promise) { // not a non-echoable command
