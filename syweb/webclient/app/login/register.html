@@ -29,9 +29,8 @@
                     <div class="spinner" us-spinner ng-show="registering"> </div>
 
                     <div ng-show="wait_3pid_code">
-                        <span>Please enter the verification code sent to {{ account.email }}</span><br />
-                        <input id="threepidtoken" size="32" type="text" ng-focus="true" ng-model="account.threepidtoken" placeholder="Verification Code"/><br />
-                        <button ng-click="verifyToken()" ng-disabled="!account.threepidtoken">Validate</button>
+                        <span>An email has been sent to {{ account.email }}. Once you've followed the link it contains either continue registration there or click below</span><br />
+                        <button ng-click="verifyToken()">I've verified my address: continue registration here</button>
                     </div>
                     <br/><br/>
                 </div>

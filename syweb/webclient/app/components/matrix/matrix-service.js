@@ -266,7 +266,7 @@ function($http, $window, $timeout, $q) {
         },
 
         // Register a user
-        register: function(user_name, password, threepidCreds, captchaResponse) {
+        register: function(user_name, password, threepidCreds, captchaResponse, sessionId) {
             // registration is composed of multiple requests, to check you can
             // register, then to actually register. This deferred will fire when
             // all the requests are done, along with the final response.
@@ -277,12 +277,33 @@ function($http, $window, $timeout, $q) {
                 username: user_name,
                 password: password
             };
+            if (sessionId) {
+                data['auth'] = {};
+                data['auth']['session'] = sessionId;
+            }
             doV2Request("POST", path, undefined, data).then(function(resp) {
+                console.log("Got 2xx response straight away: completed!");
                 deferred.resolve(resp);
             }, function(error) {
                 console.log("/register [1] : "+JSON.stringify(error));
+                if (error.data == undefined) {
+                    deferred.reject(error);
+                    return;
+                }
                 var flows = error.data.flows;
                 var params = error.data.params;
+                sessionId = error.data.session;
+                var completed = error.data.completed;
+
+                if (completed == undefined) {
+                    completed = [];
+                }
+
+                if (flows == undefined) {
+                    deferred.reject(error);
+                    return;
+                }
+
                 var knownTypes = [
                     "m.login.password",
                     "m.login.recaptcha",
@@ -291,32 +312,19 @@ function($http, $window, $timeout, $q) {
                 // if they entered 3pid creds, we want to use a flow which uses it.
                 var useThreePidFlow = threepidCreds != undefined;
                 var flowIndex = 0;
-                var currentStage = undefined;
+
+                var needsCaptcha = true;
 
                 for (var i=0; i<flows.length; i++) {
                     var isThreePidFlow = false;
-                    if (flows[i].stages) {
-                        for (var j=0; j<flows[i].stages.length; j++) {
-                            var regType = flows[i].stages[j];
-                            if (knownTypes.indexOf(regType) === -1) {
-                                deferred.reject("Unknown type: "+regType);
-                                return;
-                            }
-                            if (regType == "m.login.email.identity") {
-                                isThreePidFlow = true;
-                            }
-                            if (!captchaResponse && regType == "m.login.recaptcha") {
-                                console.error("Web client setup to not use captcha, but HS demands a captcha.");
-                                deferred.reject({
-                                    data: {
-                                        errcode: "M_CAPTCHA_NEEDED",
-                                        error: "Home server requires a captcha.",
-                                        public_key: error.data.params['m.login.recaptcha'].public_key
-                                    }
-                                });
-                                return;
-                            }
-                        }
+                    if (!flows[i].stages) {
+                        continue;
+                    }
+                    if (flows[i].stages.indexOf('m.login.email.identity') > -1) {
+                        isThreePidFlow = true;
+                    }
+                    if (flows[i].stages.indexOf('m.login.recaptcha') === -1) {
+                        needsCaptcha = false;
                     }
                     
                     if ( (isThreePidFlow && useThreePidFlow) || (!isThreePidFlow && !useThreePidFlow) ) {
@@ -324,11 +332,27 @@ function($http, $window, $timeout, $q) {
                     }
                 }
 
-                // looks like we can register fine, go ahead and do it.
                 console.log("Using flow " + JSON.stringify(flows[flowIndex]));
+                var remainingStages = [];
+                for (var i = 0; i < flows[flowIndex].stages.length; ++i) {
+                    if (completed.indexOf(flows[flowIndex].stages[i]) === -1) {
+                        remainingStages.push(flows[flowIndex].stages[i]);
+                    } 
+                }
+                console.log("Remaining stages: " + JSON.stringify(remainingStages));
                 var currentStageIndex = 0;
-                currentStage = flows[flowIndex].stages[currentStageIndex];
-                var sessionId = undefined;
+                var currentStage = remainingStages[currentStageIndex];
+
+                if (currentStage == 'm.login.recaptcha' && !captchaResponse) {
+                    deferred.reject({
+                        data: {
+                            errcode: "M_CAPTCHA_NEEDED",
+                            error: "Home server requires a captcha.",
+                            public_key: error.data.params['m.login.recaptcha'].public_key
+                        }
+                    });
+                    return;
+                }
 
                 var loginResponseFunc = function(response) {
                     if (response.status / 100 == 2) {
@@ -342,12 +366,22 @@ function($http, $window, $timeout, $q) {
                     }
                     if (response.data.completed && response.data.completed.indexOf(currentStage) > -1) {
                         ++currentStageIndex;
-                        if (currentStageIndex >= flows[flowIndex].stages.length) {
+                        if (currentStageIndex >= remainingStages.length) {
                             console.log("Completed all stages but request still unsuccessful!");
                             deferred.reject(response);
                             return;
                         }
-                        currentStage = flows[flowIndex].stages[currentStageIndex];
+                        currentStage = remainingStages[currentStageIndex];
+                        if (currentStage == 'm.login.recaptcha' && !captchaResponse) {
+                            deferred.reject({
+                                data: {
+                                    errcode: "M_CAPTCHA_NEEDED",
+                                    error: "Home server requires a captcha.",
+                                    public_key: error.data.params['m.login.recaptcha'].public_key
+                                }
+                            });
+                            return;
+                        }
                         return doRegisterLogin(path, data, params, currentStage, sessionId, user_name, password, threepidCreds, captchaResponse).then(
                             loginResponseFunc,
                             loginResponseFunc
@@ -361,7 +395,7 @@ function($http, $window, $timeout, $q) {
                     }
                 };
 
-                doRegisterLogin(path, data, params, currentStage, undefined, user_name, password, threepidCreds, captchaResponse).then(
+                doRegisterLogin(path, data, params, currentStage, sessionId, user_name, password, threepidCreds, captchaResponse).then(
                     loginResponseFunc,
                     loginResponseFunc
                 );
@@ -517,9 +551,10 @@ function($http, $window, $timeout, $q) {
         },
 
         // hit the Identity Server for a 3PID request.
-        linkEmail: function(email, clientSecret, sendAttempt) {
+        linkEmail: function(email, clientSecret, sendAttempt, nextLink) {
             var path = "/_matrix/identity/api/v1/validate/email/requestToken";
-            var data = "clientSecret="+clientSecret+"&email=" + encodeURIComponent(email)+"&sendAttempt="+sendAttempt;
+            var data = "clientSecret="+clientSecret+"&email=" + encodeURIComponent(email)+
+                "&sendAttempt="+sendAttempt+"&nextLink="+encodeURIComponent(nextLink);
             var headers = {};
             headers["Content-Type"] = "application/x-www-form-urlencoded";
             return doBaseRequest(config.identityServer, "POST", path, {}, data, headers); 

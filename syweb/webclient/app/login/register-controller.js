@@ -75,6 +75,7 @@ angular.module('RegisterController', ['matrixService'])
         if ($scope.account.email) {
             $scope.clientSecret = generateClientSecret();
             $scope.registering = true;
+            //var nextLink = $location.protocol() + "://" + $location.host() + "/?continue="+"#/register";
             matrixService.linkEmail($scope.account.email, $scope.clientSecret, 1).then(
                 function(response) {
                     $scope.wait_3pid_code = true;
@@ -88,11 +89,11 @@ angular.module('RegisterController', ['matrixService'])
                 }
             );
         } else {
-            $scope.registerWithMxidAndPassword($scope.account.desired_user_id, $scope.account.pwd1);
+            registerWithMxidAndPassword($scope.account.desired_user_id, $scope.account.pwd1);
         }
     };
 
-    $scope.registerWithMxidAndPassword = function(mxid, password, threepidCreds, captchaResponse) {
+    var registerWithMxidAndPassword = function(mxid, password, threepidCreds, captchaResponse) {
         $scope.registering = true;
         matrixService.register(mxid, password, threepidCreds, captchaResponse).then(
             function(response) {
@@ -127,6 +128,8 @@ angular.module('RegisterController', ['matrixService'])
                     if (error.authfailed === "m.login.recaptcha") {
                         $scope.captchaMessage = "Verification failed. Are you sure you're not a robot?";
                         if (window.grecaptcha) window.grecaptcha.reset();
+                    } else if (error.authfailed === "m.login.email.identity") {
+                        dialogService.showError("Couldn't verify email address: make sure you've clicked the link in the email");
                     } else {
                         dialogService.showError("Authentication failed");
                         $scope.stage = 'initial';
@@ -144,7 +147,7 @@ angular.module('RegisterController', ['matrixService'])
                         window.grecaptcha.render("regcaptcha", {
                             sitekey: error.data.public_key,
                             callback: function(response) {
-                                $scope.registerWithMxidAndPassword(mxid, password, threepidCreds, response);
+                                registerWithMxidAndPassword(mxid, password, threepidCreds, response);
                             }
                         });
                     }
@@ -158,17 +161,9 @@ angular.module('RegisterController', ['matrixService'])
     }
 
     $scope.verifyToken = function() {
-        matrixService.authEmail($scope.clientSecret, $scope.sid, $scope.account.threepidtoken).then(
-            function(response) {
-                if (!response.data.success) {
-                    $scope.feedback = "Unable to verify code.";
-                } else {
-                    $scope.registerWithMxidAndPassword($scope.account.desired_user_id, $scope.account.pwd1, [{'sid':$scope.sid, 'clientSecret':$scope.clientSecret, 'idServer': $scope.account.identityServer.split('//')[1]}]);
-                }
-            },
-            function(error) {
-                $scope.feedback = "Unable to verify code.";
-            }
+        registerWithMxidAndPassword(
+            $scope.account.desired_user_id, $scope.account.pwd1,
+            {'sid':$scope.sid, 'clientSecret':$scope.clientSecret, 'idServer': $scope.account.identityServer.split('//')[1]}
         );
     };
 }]);
