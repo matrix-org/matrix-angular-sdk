@@ -173,17 +173,14 @@ describe("RegisterController ", function() {
         expect(matrixService.linkEmail).toHaveBeenCalledWith("foo@bar.com", scope.clientSecret, 1); // XXX what is sendAttempt?
         
         // token entry
-        scope.account.threepidtoken = "123456";
         scope.verifyToken();
         rootScope.$digest();
-        expect(matrixService.authEmail).toHaveBeenCalledWith(scope.clientSecret, 
-                testEmailLinkData.sid, scope.account.threepidtoken);
         
         expect(matrixService.register).toHaveBeenCalledWith("bob", "password", 
-            [jasmine.objectContaining({
+            jasmine.objectContaining({
                 sid: testEmailLinkData.sid,
                 clientSecret: scope.clientSecret
-            })], undefined);
+            }), undefined);
         expect(matrixService.saveConfig).toHaveBeenCalled();
     });
 });
