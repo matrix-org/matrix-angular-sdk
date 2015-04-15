@@ -243,6 +243,9 @@ function($http, $window, $timeout, $q) {
                 password: password
             };
         }
+        else if (loginType === "m.login.dummy") {
+            auth = {}
+        }
         
         if (sessionId) {
             auth.session = sessionId;
@@ -307,7 +310,8 @@ function($http, $window, $timeout, $q) {
                 var knownTypes = [
                     "m.login.password",
                     "m.login.recaptcha",
-                    "m.login.email.identity"
+                    "m.login.email.identity",
+                    "m.login.dummy"
                 ];
                 // if they entered 3pid creds, we want to use a flow which uses it.
                 var useThreePidFlow = threepidCreds != undefined;
@@ -326,6 +330,14 @@ function($http, $window, $timeout, $q) {
                     if (flows[i].stages.indexOf('m.login.recaptcha') === -1) {
                         needsCaptcha = false;
                     }
+                    var supported = true;
+                    for (var j = 0; j < flows[i].stages.length; ++j) {
+                        if (knownTypes.indexOf(flows[i].stages[j]) === -1) {
+                            console.log("Unknown type: "+flows[i].stages[j]+": discarding flow");
+                            supported = false;
+                        }
+                    }
+                    if (!supported) continue;
                     
                     if ( (isThreePidFlow && useThreePidFlow) || (!isThreePidFlow && !useThreePidFlow) ) {
                         flowIndex = i;
