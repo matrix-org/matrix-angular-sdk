@@ -97,6 +97,9 @@ function($http, $window, $timeout, $q) {
         else {
             console.error("No config to init client");
         }
+        
+        // convenience to get at user_domain:
+        config.user_domain = config.user_id.replace(/^.*:/, '');
     };
     initFromConfig();
 

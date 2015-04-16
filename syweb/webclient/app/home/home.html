@@ -9,7 +9,7 @@
                 <label><input type="checkbox" ng-model="newRoom.isPublic"> Public Room</label>
             </div>
             <div>
-                #<input size="32" ng-model="newRoom.alias" placeholder="Room Alias e.g. 'matrix' (optional)"/>:{{ config.homeserver.replace("http://", "").replace("https://", "") }}
+                #<input size="32" ng-model="newRoom.alias" placeholder="Room Alias e.g. 'matrix' (optional)"/>:{{ config.user_domain }}
             </div>
         </div>
         <div class="modal-footer">
@@ -25,7 +25,7 @@
         <a href ng-click="goToPage('/')"><img src="img/logo-small.png" width="100" height="43" alt="[matrix]"/></a>
     </div>
     
-    <h1>Welcome to homeserver {{ config.homeserver }}</h1>
+    <h1>Welcome to homeserver {{ config.user_domain }}</h1>
     
     <div>
         <div class="profile-avatar">
