@@ -331,6 +331,17 @@ input.error {
     margin: auto;
 }
 
+#bind_email_label {
+    display: inline-block;
+    width: 280px;
+    font-size: 80%;
+    text-align: left;
+    margin-top: 10px;
+    margin-bottom: 10px;
+    margin-left: 10px;
+    vertical-align: middle;
+}
+
 /*** Room page ***/
 
 .room { 

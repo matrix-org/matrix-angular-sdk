@@ -11,27 +11,22 @@
                 
                 <div style="text-align: center">
                     <br/>
-                    <input ng-show="!wait_3pid_code" id="email" size="32" type="text" ng-focus="true" ng-model="account.email" placeholder="Email address (optional)"/>
-                    <div ng-show="!wait_3pid_code" class="smallPrint">Specifying an email address lets other users find you on Matrix more easily,<br/>
-                        and will give you a way to reset your password in the future</div>
-                    <span ng-show="reenter_username">Choose another username:</span>
-                    <input ng-show="!wait_3pid_code || reenter_username" id="desired_user_id" size="32" type="text" ng-model="account.desired_user_id" placeholder="Matrix ID (e.g. bob)"/>
-                    <br ng-show="!wait_3pid_code" />
-                    <input ng-show="!wait_3pid_code" id="pwd1" size="32" type="password" ng-model="account.pwd1" placeholder="Type a password"/>
-                    <br ng-show="!wait_3pid_code" />
-                    <input ng-show="!wait_3pid_code" id="pwd2" size="32" type="password" ng-model="account.pwd2" placeholder="Confirm your password"/>
-                    <br ng-show="!wait_3pid_code" />
-                    <input ng-show="!wait_3pid_code" id="displayName" size="32" type="text" ng-model="account.displayName" placeholder="Display name (e.g. Bob Obson)"/>
-                    <br ng-show="!wait_3pid_code" />
-                    <br ng-show="!wait_3pid_code" />
+                    <input id="email" size="32" type="text" ng-focus="true" ng-model="account.email" placeholder="Email address (optional)"/><br />
+                    <input ng-model="account.bind_email" type="checkbox" />
+                    <div id="bind_email_label">Use this account when people search for my email address on Matrix</div><br />
+                    <input id="desired_user_id" size="32" type="text" ng-model="account.desired_user_id" placeholder="Matrix ID (e.g. bob)" ng-class="{error: reenter_username}" />
+                    <br />
+                    <input id="pwd1" size="32" type="password" ng-model="account.pwd1" placeholder="Type a password"/>
+                    <br />
+                    <input id="pwd2" size="32" type="password" ng-model="account.pwd2" placeholder="Confirm your password"/>
+                    <br />
+                    <input id="displayName" size="32" type="text" ng-model="account.displayName" placeholder="Display name (e.g. Bob Obson)"/>
+                    <br />
+                    <br />
 
-                    <button ng-show="!wait_3pid_code && !registering" ng-click="register()" ng-disabled="!account.desired_user_id || !account.homeserver || !account.pwd1 || !account.pwd2 || account.pwd1 !== account.pwd2">Sign up</button>
+                    <button ng-show="!registering" ng-click="register()" ng-disabled="!account.desired_user_id || !account.homeserver || !account.pwd1 || !account.pwd2 || account.pwd1 !== account.pwd2">Sign up</button>
                     <div class="spinner" us-spinner ng-show="registering"> </div>
 
-                    <div ng-show="wait_3pid_code">
-                        <span>An email has been sent to {{ account.email }}. Once you've followed the link it contains either continue registration there or click below</span><br />
-                        <button ng-click="verifyToken()">I've verified my address: continue registration here</button>
-                    </div>
                     <br/><br/>
                 </div>
 
@@ -48,10 +43,16 @@
                 </div>
             </div>
             <div ng-show="stage == 'captcha'">
-                    <p>This Home Server only allows humans to create accounts.</p>
-                    <p>Please verify that you're not a robot.</p>
-                    <div id="regcaptcha" />
-                    <p class="feedback">{{captchaMessage}}</p>
+                <p>This Home Server only allows humans to create accounts.</p>
+                <p>Please verify that you're not a robot.</p>
+                <div id="regcaptcha" />
+                <p class="feedback">{{captchaMessage}}</p>
+            </div>
+            <div ng-show="stage == 'email'">
+                <div style="text-align: center; ">
+                    <span>An email has been sent to {{ account.email }}. Once you've followed the link it contains either continue registration there or click below</span><br />
+                    <button ng-click="verifyToken()">I've verified my address: continue</button>
+                </div>
             </div>
         </form>
 

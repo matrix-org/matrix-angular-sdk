@@ -54,7 +54,8 @@ angular.module('RegisterController', ['matrixService'])
         identityServer: $location.protocol() + "://matrix.org",
         pwd1: "",
         pwd2: "",
-        displayName : ""
+        displayName : "",
+        bind_email: true
     };
     $scope.registering = false;
     
@@ -75,18 +76,40 @@ angular.module('RegisterController', ['matrixService'])
         }
 
         if ($scope.account.email) {
-            $scope.clientSecret = generateClientSecret();
+            // check the username is free
             $scope.registering = true;
-            matrixService.linkEmail($scope.account.email, $scope.clientSecret, 1).then(
-                function(response) {
-                    $scope.wait_3pid_code = true;
-                    $scope.sid = response.data.sid;
-                    $scope.feedback = "";
+            matrixService.register($scope.account.desired_user_id, $scope.account.pwd1).then(
+                function() {
+                    dialogService.showError("Registration protocol error occurred with this Home Server. Your account may be registered without your email address.");
                     $scope.registering = false;
                 },
                 function(error) {
-                    dialogService.showError(error);
-                    $scope.registering = false;
+                    if (!error.data) {
+                        dialogService.showError(error);
+                        $scope.registering = false;
+                        return;
+                    }
+                    if (error.data && error.data.errcode === "M_USER_IN_USE") {
+                        dialogService.showMatrixError("Username taken", error.data);
+                        $scope.reenter_username = true;
+                        $scope.stage = 'initial';
+                        $scope.registering = false;
+                        return;
+                    }
+                    $scope.clientSecret = generateClientSecret();
+                    matrixService.linkEmail($scope.account.email, $scope.clientSecret, 1).then(
+                        function(response) {
+                            $scope.stage = 'email';
+                            $scope.sid = response.data.sid;
+                            $scope.feedback = "";
+                            $scope.registering = false;
+                        },
+                        function(error) {
+                            $scope.stage = 'initial';
+                            dialogService.showError(error);
+                            $scope.registering = false;
+                        }
+                    );
                 }
             );
         } else {
@@ -96,7 +119,7 @@ angular.module('RegisterController', ['matrixService'])
 
     var registerWithMxidAndPassword = function(mxid, password, threepidCreds, captchaResponse) {
         $scope.registering = true;
-        matrixService.register(mxid, password, threepidCreds, captchaResponse).then(
+        matrixService.register(mxid, password, threepidCreds, captchaResponse, undefined, $scope.account.bind_email).then(
             function(response) {
                 $scope.registering = false;
                 if (captcha_rendered) window.grecaptcha.reset();
@@ -164,7 +187,11 @@ angular.module('RegisterController', ['matrixService'])
     $scope.verifyToken = function() {
         registerWithMxidAndPassword(
             $scope.account.desired_user_id, $scope.account.pwd1,
-            {'sid':$scope.sid, 'clientSecret':$scope.clientSecret, 'idServer': $scope.account.identityServer.split('//')[1]}
+            {
+                sid: $scope.sid,
+                clientSecret: $scope.clientSecret,
+                idServer: $scope.account.identityServer.split('//')[1]
+            }
         );
     };
 }]);
