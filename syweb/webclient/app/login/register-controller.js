@@ -78,7 +78,7 @@ angular.module('RegisterController', ['matrixService'])
         if ($scope.account.email) {
             // check the username is free
             $scope.registering = true;
-            matrixService.register($scope.account.desired_user_id, $scope.account.pwd1).then(
+            matrixService.register($scope.account.desired_user_id, $scope.account.pwd1, true).then(
                 function() {
                     dialogService.showError("Registration protocol error occurred with this Home Server. Your account may be registered without your email address.");
                     $scope.registering = false;

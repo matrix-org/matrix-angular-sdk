@@ -309,6 +309,15 @@ function($http, $window, $timeout, $q) {
                     return;
                 }
 
+                // this isn't great: if threepidCreds are set to true,
+                // the caller wants to do email auth but doesn't have the
+                // creds yet and right now is just starting the process,
+                // so return now.
+                if (threepidCreds === true) {
+                    deferred.reject(error);
+                    return;
+                }
+
                 var knownTypes = [
                     "m.login.password",
                     "m.login.recaptcha",
