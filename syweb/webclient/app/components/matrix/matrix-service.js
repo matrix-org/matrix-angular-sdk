@@ -99,7 +99,9 @@ function($http, $window, $timeout, $q) {
         }
         
         // convenience to get at user_domain:
-        config.user_domain = config.user_id.replace(/^.*:/, '');
+        if (config && config.user_id) {
+            config.user_domain = config.user_id.replace(/^.*:/, '');
+        }
     };
     initFromConfig();
 
