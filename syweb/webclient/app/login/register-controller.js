@@ -77,7 +77,6 @@ angular.module('RegisterController', ['matrixService'])
         if ($scope.account.email) {
             $scope.clientSecret = generateClientSecret();
             $scope.registering = true;
-            //var nextLink = $location.protocol() + "://" + $location.host() + "/?continue="+"#/register";
             matrixService.linkEmail($scope.account.email, $scope.clientSecret, 1).then(
                 function(response) {
                     $scope.wait_3pid_code = true;

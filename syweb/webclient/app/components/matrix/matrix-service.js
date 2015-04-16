@@ -563,10 +563,10 @@ function($http, $window, $timeout, $q) {
         },
 
         // hit the Identity Server for a 3PID request.
-        linkEmail: function(email, clientSecret, sendAttempt, nextLink) {
+        linkEmail: function(email, clientSecret, sendAttempt) {
             var path = "/_matrix/identity/api/v1/validate/email/requestToken";
             var data = "clientSecret="+clientSecret+"&email=" + encodeURIComponent(email)+
-                "&sendAttempt="+sendAttempt+"&nextLink="+encodeURIComponent(nextLink);
+                "&sendAttempt="+sendAttempt;
             var headers = {};
             headers["Content-Type"] = "application/x-www-form-urlencoded";
             return doBaseRequest(config.identityServer, "POST", path, {}, data, headers); 
