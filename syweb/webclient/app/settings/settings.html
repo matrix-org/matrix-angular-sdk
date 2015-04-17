@@ -43,11 +43,10 @@
                         {{ emailFeedback }}
                     </form>
                     <form ng-hide="!linkedEmails.emailBeingAuthed">
-                        Enter validation token for {{ linkedEmails.emailBeingAuthed }}:
+                        An email has been sent to {{ linkedEmails.emailBeingAuthed }}.
                         <br />
-                        <input size="20" ng-model="linkedEmails.emailCode" ng-enter="submitEmailCode(linkedEmails.emailCode)" />
-                        <button ng-disabled="!linkedEmails.emailCode || !linkedEmails.linkNewEmail" ng-click="submitEmailCode(linkedEmails.emailCode)">
-                            Submit Code
+                        <button ng-disabled="!linkedEmails.linkNewEmail" ng-click="submitEmailVerify()">
+                            I have verified my address: continue
                         </button>   
                     </form>
                     <table>

@@ -583,14 +583,6 @@ function($http, $window, $timeout, $q) {
             return doBaseRequest(config.identityServer, "POST", path, {}, data, headers); 
         },
 
-        authEmail: function(clientSecret, sid, code) {
-            var path = "/_matrix/identity/api/v1/validate/email/submitToken";
-            var data = "token="+code+"&sid="+sid+"&clientSecret="+clientSecret;
-            var headers = {};
-            headers["Content-Type"] = "application/x-www-form-urlencoded";
-            return doBaseRequest(config.identityServer, "POST", path, {}, data, headers);
-        },
-
         bindEmail: function(userId, tokenId, clientSecret) {
             var path = "/_matrix/identity/api/v1/3pid/bind";
             var data = "mxid="+encodeURIComponent(userId)+"&sid="+tokenId+"&clientSecret="+clientSecret;
