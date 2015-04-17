@@ -566,6 +566,16 @@ function($http, $window, $timeout, $q) {
         setProfilePictureUrl: function(newUrl) {
             return client.setAvatarUrl(newUrl);
         },
+
+        // get all 3pids associated with your account in your HS (not the IS)
+        getThreePids: function() {
+            return client.getThreePids();
+        },
+
+        // add a 3pid to your Home Server, optionally binding it with the ID server
+        addThreePid: function(threePidCreds, bind) {
+            return client.addThreePid(threePidCreds, bind);
+        },
         
         login: function(userId, password) {
             // TODO We should be checking to make sure the client can support
@@ -578,14 +588,6 @@ function($http, $window, $timeout, $q) {
             var path = "/_matrix/identity/api/v1/validate/email/requestToken";
             var data = "clientSecret="+clientSecret+"&email=" + encodeURIComponent(email)+
                 "&sendAttempt="+sendAttempt;
-            var headers = {};
-            headers["Content-Type"] = "application/x-www-form-urlencoded";
-            return doBaseRequest(config.identityServer, "POST", path, {}, data, headers); 
-        },
-
-        bindEmail: function(userId, tokenId, clientSecret) {
-            var path = "/_matrix/identity/api/v1/3pid/bind";
-            var data = "mxid="+encodeURIComponent(userId)+"&sid="+tokenId+"&clientSecret="+clientSecret;
             var headers = {};
             headers["Content-Type"] = "application/x-www-form-urlencoded";
             return doBaseRequest(config.identityServer, "POST", path, {}, data, headers); 

@@ -34,9 +34,10 @@
                 <h2>Identity management</h2>
 
                 <div class="section settingsgroup">
-                    <p>Linking an email address to your account lets users who know your email address find you on Matrix.</p>
                     <form>
-                        <input size="40" ng-model="linkedEmails.linkNewEmail" ng-enter="linkEmail(linkedEmails.linkNewEmail)" />
+                        <input size="40" ng-model="linkedEmails.linkNewEmail" ng-enter="linkEmail(linkedEmails.linkNewEmail)" /><br />
+                        <input ng-model="linkedEmails.bindNewEmail" type="checkbox" />
+                        <div id="bind_email_label">Use this account when people search for my email address on Matrix</div><br />
                         <button ng-disabled="!linkedEmails.linkNewEmail" ng-click="linkEmail(linkedEmails.linkNewEmail)">
                             Link Email
                         </button>
@@ -49,9 +50,10 @@
                             I have verified my address: continue
                         </button>   
                     </form>
+                    <img src="img/spinner.gif" ng-show="linkedEmails.fetchingEmailList" />
                     <table>
-                        <tr ng-repeat="(address, info) in linkedEmails.linkedEmailList">
-                            <td>{{address}}</td>
+                        <tr ng-repeat="threepid in linkedEmails.linkedEmailList">
+                            <td>{{threepid.address}}</td>
                         </tr>
                     </table>
                 </div>

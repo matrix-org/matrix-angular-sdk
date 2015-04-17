@@ -90,6 +90,17 @@ function($scope, matrixService, modelService, eventHandlerService, notificationS
         });
     };
 
+    var fetchThreepids = function() {
+        $scope.linkedEmails.fetchingEmailList = true;
+        matrixService.getThreePids().then(function(response) {
+            $scope.linkedEmails.fetchingEmailList = false;
+            $scope.linkedEmails.linkedEmailList = response.data.threepids;
+        }, function() {
+            $scope.linkedEmails.fetchingEmailList = false;
+        });
+    };
+
+
     $scope.rule_add = {
         input:  {
             content: '',
@@ -166,6 +177,7 @@ function($scope, matrixService, modelService, eventHandlerService, notificationS
             } 
         );
         fetchRules();
+        fetchThreepids();
     };
 
     $scope.$watch("profile.avatarFile", function(newValue, oldValue) {
@@ -218,10 +230,12 @@ function($scope, matrixService, modelService, eventHandlerService, notificationS
 
     $scope.linkedEmails = {
         linkNewEmail: "", // the email entry box
+        bindNewEmail: true,
         emailBeingAuthed: undefined, // to populate verification text
         authSid: undefined, // the token id from the IS
         emailCode: "", // the code entry box
-        linkedEmailList: matrixService.config().emailList // linked email list
+        linkedEmailList: [], // linked email list
+        fetchingEmailList: false
     };
     
     $scope.linkEmail = function(email) {
@@ -254,33 +268,23 @@ function($scope, matrixService, modelService, eventHandlerService, notificationS
             $scope.emailFeedback = "You have not requested a code with this email.";
             return;
         }
-        matrixService.bindEmail(matrixService.config().user_id, tokenId, $scope.clientSecret).then(
-            function(response) {
-                 if ('errcode' in response.data) {
-                     $scope.emailFeedback = "Failed to link email.";
-                     return;
-                 }
-                 var config = matrixService.config();
-                 var emailList = {};
-                 if ("emailList" in config) {
-                     emailList = config.emailList;
-                 }
-                 emailList[$scope.linkedEmails.emailBeingAuthed] = response;
-                 // save the new email list
-                 config.emailList = emailList;
-                 matrixService.setConfig(config);
-                 matrixService.saveConfig();
-                 // invalidate the email being authed and update UI.
-                 $scope.linkedEmails.emailBeingAuthed = undefined;
-                 $scope.emailFeedback = "";
-                 $scope.linkedEmails.linkedEmailList = emailList;
-                 $scope.linkedEmails.linkNewEmail = "";
-                 $scope.linkedEmails.emailCode = "";
-            }, function(reason) {
-                $scope.emailFeedback = "Failed to link email: " + reason;
-            }
-        );
-    };
+        matrixService.addThreePid({
+            sid: $scope.linkedEmails.authSid,
+            clientSecret: $scope.clientSecret,
+            idServer: matrixService.config().identityServer.split('//')[1]
+        }, $scope.linkedEmails.bindNewEmail).then(function() {
+             // invalidate the email being authed and update UI.
+             $scope.linkedEmails.emailBeingAuthed = undefined;
+             $scope.emailFeedback = "";
+             $scope.linkedEmails.linkNewEmail = "";
+             $scope.linkedEmails.emailCode = "";
+
+            fetchThreepids();
+        }, function() {
+            $scope.emailFeedback = "Email auth failed.";
+            return;
+        });
+    }
     
     
     /*** Desktop notifications section ***/
