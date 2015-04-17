@@ -18,6 +18,7 @@ var matrixWebClient = angular.module('matrixWebClient', [
     'ngRoute',
     'MatrixWebClientController',
     'LoginController',
+    'ResetPasswordController',
     'RegisterController',
     'RoomController',
     'HomeController',
@@ -56,6 +57,9 @@ matrixWebClient.config(['$routeProvider', '$provide', '$httpProvider',
             }).
             when('/register', {
                 templateUrl: 'app/login/register.html'
+            }).
+            when('/reset-password', {
+                templateUrl: 'app/login/reset-password.html'
             }).
             when('/room/:room_id_or_alias', {
                 templateUrl: 'app/room/room.html'
@@ -125,7 +129,7 @@ matrixWebClient.run(['$location', '$rootScope', 'matrixService', function($locat
     // If user auth details are not in cache, go to the login page
     $rootScope.$on("$routeChangeStart", function(event, next, current) {
         if (!matrixService.isUserLoggedIn() && $location.path() !== "/login" &&
-                $location.path() !== "/register") {
+                $location.path() !== "/register" && $location.path() !== "/reset-password") {
             $location.path("login");
         }
     });
