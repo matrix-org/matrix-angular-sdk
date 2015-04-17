@@ -268,10 +268,8 @@ describe("SettingsController ", function() {
     
     it('should be able to link an email address to the account.', function() {
         var linkDefer = $q.defer();
-        var authDefer = $q.defer();
         var bindDefer = $q.defer();
         spyOn(matrixService, "linkEmail").and.returnValue(linkDefer.promise);
-        spyOn(matrixService, "authEmail").and.returnValue(authDefer.promise);
         spyOn(matrixService, "bindEmail").and.returnValue(bindDefer.promise);
         
         var email = "foo@bar.com";
@@ -283,10 +281,7 @@ describe("SettingsController ", function() {
         linkDefer.resolve({data:{success:true, sid:sessionId}});
         scope.$digest();
         
-        scope.linkedEmails.emailCode = "123456";
-        scope.submitEmailCode();
-        expect(matrixService.authEmail).toHaveBeenCalledWith(jasmine.any(String), jasmine.any(String), "123456");
-        authDefer.resolve({data:{}});
+        scope.submitEmailVerify();
         scope.$digest();
         
         expect(matrixService.bindEmail).toHaveBeenCalled();
@@ -299,10 +294,8 @@ describe("SettingsController ", function() {
     it('should display an error if it fails to bind the email.', function() {
         var oldFeedback = angular.copy(scope.emailFeedback);
         var linkDefer = $q.defer();
-        var authDefer = $q.defer();
         var bindDefer = $q.defer();
         spyOn(matrixService, "linkEmail").and.returnValue(linkDefer.promise);
-        spyOn(matrixService, "authEmail").and.returnValue(authDefer.promise);
         spyOn(matrixService, "bindEmail").and.returnValue(bindDefer.promise);
         
         var email = "foo@bar.com";
@@ -314,41 +307,12 @@ describe("SettingsController ", function() {
         linkDefer.resolve({data:{success:true, sid:sessionId}});
         scope.$digest();
         
-        scope.linkedEmails.emailCode = "123456";
-        scope.submitEmailCode();
-        expect(matrixService.authEmail).toHaveBeenCalledWith(jasmine.any(String), jasmine.any(String), "123456");
-        authDefer.resolve({data:{}});
+        scope.submitEmailVerify();
         scope.$digest();
         
         // rejected here
         expect(matrixService.bindEmail).toHaveBeenCalled();
         bindDefer.reject({status:0, data:{}});
-        scope.$digest();
-        
-        expect(scope.emailFeedback).not.toEqual(oldFeedback);   
-    });
-    
-    it('should display an error if it fails to auth the email.', function() {
-        var oldFeedback = angular.copy(scope.emailFeedback);
-        var linkDefer = $q.defer();
-        var authDefer = $q.defer();
-        spyOn(matrixService, "linkEmail").and.returnValue(linkDefer.promise);
-        spyOn(matrixService, "authEmail").and.returnValue(authDefer.promise);
-        
-        var email = "foo@bar.com";
-        expect(scope.linkedEmails.linkedEmailList).toBeUndefined();
-        scope.linkEmail(email);
-        
-        expect(matrixService.linkEmail).toHaveBeenCalledWith(email, jasmine.any(String), jasmine.any(Number));
-        var sessionId = "session_id_here";
-        linkDefer.resolve({data:{success:true, sid:sessionId}});
-        scope.$digest();
-        
-        // rejected here
-        scope.linkedEmails.emailCode = "123456";
-        scope.submitEmailCode();
-        expect(matrixService.authEmail).toHaveBeenCalledWith(jasmine.any(String), jasmine.any(String), "123456");
-        authDefer.reject({status:0, data:{}});
         scope.$digest();
         
         expect(scope.emailFeedback).not.toEqual(oldFeedback);   
