@@ -39,6 +39,13 @@ on JIRA:
 
 All issues in JIRA are **public**.
 
+Contributing
+============
+Want to fix a bug or add a new feature? Check JIRA first to see if someone else is
+handling this issue. If no one is actively working on the issue, then please fork
+the ``develop`` branch when writing your fix, and open a pull request when you're
+ready. Do not base your pull requests off ``master``.
+
 Configuration
 =============
 The web client can be configured by adding a ``config.js`` file in the 

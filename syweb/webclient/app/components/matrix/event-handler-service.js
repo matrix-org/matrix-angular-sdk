@@ -95,6 +95,7 @@ function(matrixService, $rootScope, $window, $q, $timeout, $filter, mPresence, n
                 }
             }
         }
+        $rootScope.$broadcast(eventHandlerService.STATE_EVENT, event, isLiveEvent);
         // TODO: handle old_room_state
     };
     
@@ -316,6 +317,7 @@ function(matrixService, $rootScope, $window, $q, $timeout, $filter, mPresence, n
         NAME_EVENT: "NAME_EVENT",
         TOPIC_EVENT: "TOPIC_EVENT",
         RESET_EVENT: "RESET_EVENT",  // eventHandlerService has been reset
+        STATE_EVENT: "STATE_EVENT",
         EVENT_ID_LIFETIME_MS: 1000 * 10, // lifetime of an event ID in the map is 10s
         
         reset: function() {
@@ -502,6 +504,10 @@ function(matrixService, $rootScope, $window, $q, $timeout, $filter, mPresence, n
             var promise;
             if (!isEmote && !isMarkdown) {
                 promise = commandsService.processInput(roomId, input);
+            }
+            
+            if (input.indexOf("//") === 0) {
+                input = input.substring(1);
             }
             
             var echo = false;

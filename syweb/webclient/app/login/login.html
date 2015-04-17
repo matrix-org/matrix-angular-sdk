@@ -29,12 +29,12 @@
                 
                 <div id="serverConfig">
                     <label for="homeserver">Home Server:</label> 
-                    <input id="homeserver" size="32" type="text" ng-model="account.homeserver" placeholder="URL (e.g. http://matrix.org:8080)"/>
+                    <input id="homeserver" size="32" type="text" ng-model="account.homeserver" placeholder="URL (e.g. https://matrix.org)"/>
                     <div class="smallPrint">Your home server stores all your conversation and account data.</div>
                     <label for="identityServer">Identity Server:</label>
-                    <input id="identityServer" size="32" type="text" ng-model="account.identityServer" placeholder="URL (e.g. http://matrix.org:8090)"/>
+                    <input id="identityServer" size="32" type="text" ng-model="account.identityServer" placeholder="URL (e.g. https://matrix.org)"/>
                     <div class="smallPrint">Matrix provides identity servers to track which emails etc. belong to which Matrix IDs.<br/>
-                        Only http://matrix.org:8090 currently exists.</div>
+                        Only https://matrix.org currently exists.</div>
                     <br/>
                     <br/>
                     <a href="#/register" style="padding-right: 0em">Create account</a><br />

@@ -354,7 +354,16 @@ input.error {
     left: 320px;
     width: 10px;
     border-right: 1px solid #ccc;
-    cursor: e-resize;
+    cursor: ew-resize;
+}
+
+#controlpanel-resizer {
+    position: absolute;
+    background-color: transparent;
+    width: 100%;
+    bottom: 60px;
+    height: 10px;
+    cursor: ns-resize;
 }
 
 #roomPage {
@@ -412,7 +421,7 @@ input.error {
 #mainInput {
     width: 100%;
     padding: 5px;
-    resize: vertical;
+    resize: none;
 }
 
 #attachButton {
