@@ -81,6 +81,7 @@ function MatrixCallFactory(webRtcService, matrixService, matrixPhoneService, mod
     MatrixCall.prototype.createPeerConnection = function() {
         var self = this;
         var pc = webRtcService.createPeerConnection(MatrixCall.turnServer);
+        if (!pc) return null;
         pc.ngoniceconnectionstatechange = function() { self.onIceConnectionStateChanged(); };
         pc.ngonsignalingstatechange = function() { self.onSignallingStateChanged(); };
         pc.ngonicecandidate = function(c) { self.gotLocalIceCandidate(c); };
@@ -130,15 +131,19 @@ function MatrixCallFactory(webRtcService, matrixService, matrixPhoneService, mod
 
     MatrixCall.prototype.initWithInvite = function(event) {
         this.msg = event.content;
+        this.peerMember = modelService.getMember(event.room_id, event.user_id);
         this.peerConn = this.createPeerConnection();
         var self = this;
-        this.peerConn.ngsetRemoteDescription(webRtcService.newRTCSessionDescription(this.msg.offer)).then(
-        function(s) {
-            self.onSetRemoteDescriptionSuccess(s);
-        },
-        function(e) {
-            self.onSetRemoteDescriptionError(e);
-        });
+        if (this.peerConn) {
+            this.peerConn.ngsetRemoteDescription(webRtcService.newRTCSessionDescription(this.msg.offer)).then(
+                function(s) {
+                    self.onSetRemoteDescriptionSuccess(s);
+                },
+                function(e) {
+                    self.onSetRemoteDescriptionError(e);
+                }
+            );
+        }
         this.state = 'ringing';
         this.direction = 'inbound';
 
@@ -330,7 +335,13 @@ function MatrixCallFactory(webRtcService, matrixService, matrixPhoneService, mod
     MatrixCall.prototype.gotLocalIceCandidate = function(event) {
         if (event.candidate) {
             console.log("Got local ICE "+event.candidate.sdpMid+" candidate: "+event.candidate.candidate);
-            this.sendCandidate(event.candidate);
+            // As with the offer, note we need to make a copy of this object, not pass the original: that broke in Chrome ~m43.
+            var c = {
+                candidate: event.candidate.candidate,
+                sdpMid: event.candidate.sdpMid,
+                sdpMLineIndex: event.candidate.sdpMLineIndex,
+            };
+            this.sendCandidate(c);
         }
     };
 
@@ -375,7 +386,9 @@ function MatrixCallFactory(webRtcService, matrixService, matrixPhoneService, mod
                 // when setting it on the peerconnection. According to the spec it should only add ICE
                 // candidates. Any ICE candidates that have already been generated at this point will
                 // probably be sent both in the offer and separately. Ho hum.
-                offer: self.peerConn.localDescription,
+                // Also, note that we have to make a new object here, copying the type and sdp properties.
+                // Passing the RTCSessionDescription object as-is doesn't work in Chrome (as of about m43).
+                offer: { sdp: self.peerConn.localDescription.sdp, type: self.peerConn.localDescription.type },
                 lifetime: MatrixCall.CALL_TIMEOUT
             };
             self.sendEventWithRetry('m.call.invite', content);
@@ -400,7 +413,7 @@ function MatrixCallFactory(webRtcService, matrixService, matrixPhoneService, mod
             var content = {
                 version: 0,
                 call_id: self.call_id,
-                answer: self.peerConn.localDescription
+                answer: { sdp: self.peerConn.localDescription.sdp, type: self.peerConn.localDescription.type }
             };
             self.sendEventWithRetry('m.call.answer', content);
             self.state = 'connecting';
@@ -508,6 +521,18 @@ function MatrixCallFactory(webRtcService, matrixService, matrixPhoneService, mod
         this.state = 'ended';
         this.hangupParty = 'remote';
         this.hangupReason = msg.reason;
+        this.stopAllMedia();
+        if (this.peerConn && this.peerConn.signalingState != 'closed') this.peerConn.close();
+        if (this.onHangup) this.onHangup(this);
+    };
+
+    MatrixCall.prototype.onAnsweredElsewhere = function(msg) {
+        console.log("Answered elsewhere");
+        if (this.getRemoteVideoElement() && this.getRemoteVideoElement().pause) this.getRemoteVideoElement().pause();
+        if (this.getLocalVideoElement() && this.getLocalVideoElement().pause) this.getLocalVideoElement().pause();
+        this.state = 'ended';
+        this.hangupParty = 'remote';
+        this.hangupReason = "answered_elsewhere";
         this.stopAllMedia();
         if (this.peerConn && this.peerConn.signalingState != 'closed') this.peerConn.close();
         if (this.onHangup) this.onHangup(this);

@@ -111,6 +111,8 @@ textarea, input {
     height: 32px;
     border: none;
     float: left;
+    object-fit: cover;
+    border-radius: 16px;
 }
 
 #callPeerNameAndState {
@@ -246,6 +248,14 @@ textarea, input {
     font-size: 12px;
 }
 
+.feedbackError {
+    color: red;
+}
+
+input.error {
+    background-color: #e88;
+}
+
 .mouse-pointer {
     cursor: pointer;
 }
@@ -317,6 +327,21 @@ textarea, input {
     font-size: 18px;
 }
 
+#regcaptcha div {
+    margin: auto;
+}
+
+#bind_email_label {
+    display: inline-block;
+    width: 280px;
+    font-size: 80%;
+    text-align: left;
+    margin-top: 10px;
+    margin-bottom: 10px;
+    margin-left: 10px;
+    vertical-align: middle;
+}
+
 /*** Room page ***/
 
 .room { 
@@ -329,7 +354,16 @@ textarea, input {
     left: 320px;
     width: 10px;
     border-right: 1px solid #ccc;
-    cursor: e-resize;
+    cursor: ew-resize;
+}
+
+#controlpanel-resizer {
+    position: absolute;
+    background-color: transparent;
+    width: 100%;
+    bottom: 60px;
+    height: 10px;
+    cursor: ns-resize;
 }
 
 #roomPage {
@@ -387,7 +421,7 @@ textarea, input {
 #mainInput {
     width: 100%;
     padding: 5px;
-    resize: vertical;
+    resize: none;
 }
 
 #attachButton {
@@ -1003,6 +1037,14 @@ li.disabledRule {
 
 .invisible {
     visibility: hidden;
+}
+
+div.reminder {
+    background-color: lightgoldenrodyellow;
+    border: 1px solid black;
+    width: 300px;
+    padding: 20px;
+    text-align: center;
 }
 
 /*** Seasonal ***/

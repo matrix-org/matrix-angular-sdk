@@ -168,8 +168,9 @@
          keep-scroll>
         <table id="messageTable" infinite-scroll="paginateMore()" aria-live="polite" role="log">
             <tr ng-repeat="msg in room.aevents"
-                ng-class="(room.aevents[$index - 1].e.user_id !== msg.e.user_id ? 'differentUser' : '') + (msg.e.user_id === state.user_id ? ' mine' : '')" scroll-item>
-                <td class="avatar" ng-click="appendName($event, msg)">
+                ng-class="(room.aevents[$index - 1].e.user_id !== msg.e.user_id ? 'differentUser' : '') + (msg.e.user_id === state.user_id ? ' mine' : '')" scroll-item
+                aria-live="{{ (msg.send_state === 'pending' || msg.send_state === 'unsent') ? 'off' : 'polite' }}">
+                <td class="avatar" ng-click="appendName($event, msg)" role="presentation">
                     <!--  room.now.members[msg.e.user_id].event.content.avatar_url is just backwards compat, and can be removed in the future. Synapse didn't used to
                           send m.room.member updates when avatar urls changed, so the image which should be visible here just going off room state isn't visible. We fix
                           this by reading off the m.presence url -->
@@ -181,14 +182,12 @@
                     <img class="avatarImage mouse-pointer" ng-src="{{ msg.httpUri(msg.sender.event.content.avatar_url, 96, 96, 'crop') || msg.httpUri(room.now.members[msg.e.user_id].event.content.avatar_url, 96, 96, 'crop') || msg.identicon() }}"
                     err-src="img/default-profile.png" width="32" height="32" title="{{msg.e.user_id}}"
                          ng-hide="room.aevents[$index - 1].e.user_id === msg.e.user_id || msg.e.user_id === state.user_id" ng-click="$parent.goToUserPage(msg.e.user_id)"
-                         ng-class="msg.e.content.msgtype == 'm.notice' ? 'avatarNotice' : ''"/>
+                         ng-class="msg.e.content.msgtype == 'm.notice' ? 'avatarNotice' : ''" role="link" tabindex="0"/>
                 </td>
                 <td class="msg" ng-class="(!msg.e.content.membership && ('m.room.topic' !== msg.e.type && 'm.room.name' !== msg.e.type))? (msg.e.content.msgtype === 'm.emote' ? 'emote text' : 'text') : 'membership text'">
-
-					<div class="sender" ng-click="appendName($event, msg)" ng-hide="room.aevents[$index - 1].e.user_id === msg.e.user_id">
-						{{ msg.sender.name }}
-					</div>
-
+                    <div class="sender" ng-click="appendName($event, msg)" ng-hide="(room.aevents[$index - 1].e.user_id === msg.e.user_id || msg.changed_key === 'membership' || msg.changed_key === 'displayname')">
+                        {{ msg.sender.name }}
+                    </div>
                     <div class="bubble" ng-dblclick="openJson(msg)" ng-mouseover="state.showTs = 1" ng-mouseout="state.showTs = 0">
                         <span class="msg_meta" ng-if="'join' === msg.e.content.membership && msg.changed_key === 'membership'">
                             {{ msg.e.content.displayname || room.now.members[msg.e.state_key].event.content.displayname || msg.e.state_key }} joined
@@ -276,7 +275,7 @@
                         </span>
                     </div>
                 </td>
-				<td class="rightBlock" ng-mouseover="state.showTs = 1" ng-mouseout="state.showTs = 0">
+                <td class="rightBlock" ng-mouseover="state.showTs = 1" ng-mouseout="state.showTs = 0">
                     <div class="timestamp"
                          ng-style="{ 'opacity': state.showTs ? 1.0 : 0.0 }"
                          ng-class="msg.css_class">
@@ -292,6 +291,13 @@
     </div>
     
     </div>
+    </div>
+
+    <div id="controlpanel-resizer" 
+        resizer="horizontal" 
+        resizer-height="5" 
+        resizer-top="#roomPage" 
+        resizer-bottom="#controlPanel">
     </div>
 
     <div id="controlPanel">

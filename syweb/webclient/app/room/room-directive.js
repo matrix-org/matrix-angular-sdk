@@ -63,7 +63,7 @@ angular.module('RoomController')
                 //
                 // You're not missing anything - my point was that we should
                 // explicitly define the syntax for user IDs /somewhere/.
-                // Meanwhile as long as the delimeters are well defined, we
+                // Meanwhile as long as the delimiters are well defined, we
                 // could just pick "the last word".  But to know what the
                 // correct delimeters are, we probably do need a formal
                 // syntax for user IDs to refer to... --Matthew
@@ -201,7 +201,7 @@ angular.module('RoomController')
             this.typingMessage = undefined;
         },
 
-        // Move in the history
+        // Move in the history. Returns true if we managed to move.
         go: function(offset) {
             if (-1 === this.position) {
                 // User starts to go to into the history, save the current line
@@ -211,7 +211,12 @@ angular.module('RoomController')
                 // If the user modified this line in history, keep the change
                 this.data[this.position] = this.element.val();
             }
-
+            
+            if (offset > 0 && this.position == this.data.length - 1) {
+                // we've run out of history
+                return false;
+            }
+            
             // Bounds the new position to valid data
             var newPosition = this.position + offset;
             newPosition = Math.max(-1, newPosition);
@@ -226,6 +231,7 @@ angular.module('RoomController')
                 // Go back to the message the user started to type
                 this.element.val(this.typingMessage);
             }
+            return true;
         },
 
         saveLastTextEntry: function() {
@@ -250,22 +256,61 @@ angular.module('RoomController')
             roomId: "=commandHistory"
         },
         link: function (scope, element, attrs) {
+            var UP_ARROW = 38;
+            var DOWN_ARROW = 40;
+            
+            var resizeTextArea = function (event) {
+                if (window.controlPanelResized) return;
+
+                // XXX: don't hardcode CSS heights
+                var oldHeight = element.height();
+                element.height(0);
+                var newHeight = this.scrollHeight - 10 < (19*4) ? this.scrollHeight - 10 : (19*4);
+                element.height(newHeight);
+                if (oldHeight !== newHeight) {
+                    // XXX: this CSS abuse should be factored out into a single place, rather than duplicated
+                    // between here and the resizer directive
+                    $("#controlPanel").height(60 + newHeight - 19);
+                    $("#roomPage").css({ 'bottom': (60 + 10 + newHeight - 19) });
+                    $("#controlpanel-resizer").css({ 'bottom': (60 + newHeight - 19) });
+                    if (newHeight > oldHeight) {
+                        $("#messageTableWrapper").scrollTop(
+                            $("#messageTableWrapper").scrollTop() + newHeight - oldHeight
+                        );
+                    }
+                }
+            };
+
             element.on("keydown", function (event) {
                 var keycodePressed = event.which;
-                var UP_ARROW = 38;
-                var DOWN_ARROW = 40;
                 if (scope && scope.roomId) {
-                    if (keycodePressed === UP_ARROW) {
-                        history.go(1);
+                    var offset = element[0].selectionStart || 0;
+                    if (keycodePressed === UP_ARROW &&
+                        (event.ctrlKey ||
+                         !element[0].value.substr(0, offset).match(/\n/)))
+                    {
+                        if (history.go(1)) {
+                            var len = element[0].value.length;
+                            element[0].setSelectionRange(len, len);
+                        }
                         event.preventDefault();
                     }
-                    else if (keycodePressed === DOWN_ARROW) {
-                        history.go(-1);
+                    else if (keycodePressed === DOWN_ARROW &&
+                        (event.ctrlKey ||
+                         !element[0].value.substr(offset).match(/\n/)))
+                    {
+                        if (history.go(-1)) {
+                            element[0].setSelectionRange(0,0);
+                        }
                         event.preventDefault();
                     }
                 }
             });
             
+            // Auto-expand the textarea. XXX: this probably shouldn't be here
+            element.on("keyup", resizeTextArea);
+            
+            // XXX: why is the act of storing a new history item called 'unreg'?
             var unreg = scope.$on(BROADCAST_NEW_HISTORY_ITEM, function(ngEvent, item) {
                 history.push(item);
             });
@@ -452,6 +497,25 @@ angular.module('RoomController')
                 // Handle horizontal resizer
                 var y = window.innerHeight - event.pageY;
 
+                // hardcoded
+                var yMax = window.innerHeight - 100;
+                if (y > yMax) {
+                    y = yMax;
+                }
+                
+                // XXX: hardcoded for controlPanel resizer
+                var yPrev = parseInt($element.css("bottom"));
+                // XXX: evil evil evil abuse of the window global to see if this works
+                if (y !== yPrev) window.controlPanelResized = true;
+                if (y < 60) {
+                    y = 60;
+                    window.controlPanelResized = false;
+                }                
+                $("#mainInput").height(y - 40);
+                $("#messageTableWrapper").scrollTop(
+                    $("#messageTableWrapper").scrollTop() + y - yPrev
+                );
+                                
                 $element.css({
                     bottom: y + 'px'
                 });

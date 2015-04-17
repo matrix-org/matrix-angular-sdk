@@ -20,58 +20,58 @@ angular.module('PaymentController', [])
 .controller('PaymentController',
 ['$scope', '$sce', '$location', '$routeParams', 'matrixService', 'dialogService', 'paymentService',
 function($scope, $sce, $location, $routeParams, matrixService, dialogService, paymentService) {
-	if (!paymentService.hasAcceptedEula()) {
-		console.error("Has not accepted EULA");
-		$location.url("/");
-		return;
-	}
+    if (!paymentService.hasAcceptedEula()) {
+        console.error("Has not accepted EULA");
+        $location.url("/");
+        return;
+    }
 
-	$scope.purchase = {
-		user: matrixService.config().user_id,
-		amount: 5.00,
-		url: $sce.trustAsResourceUrl(webClientConfig.paymentUrl),
-		submitted: false
-	};
+    $scope.purchase = {
+        user: matrixService.config().user_id,
+        amount: 5.00,
+        url: $sce.trustAsResourceUrl(webClientConfig.paymentUrl),
+        submitted: false
+    };
 
-	if ($routeParams.payment_state) {
-		$scope.status = {};
-		// the user has been redirected back here after payment
-		if ($routeParams.payment_state === "success") {
-			$scope.status.title = "Success";
-			$scope.status.description = "You have successfully been logged in.";
-		}
-		else if ($routeParams.payment_state === "fail") {
-			$scope.status.title = "Failed";
-			$scope.status.description = "Your have failed to log in.";
-		}
-		else if ($routeParams.payment_state === "cancel") {
-			$scope.status.title = "Cancelled";
-			$scope.status.description = "Your payment was cancelled.";
-		}
-		else {
-			console.error("Unknown payment state");
-			$location.url("/");
-		}
-	}
+    if ($routeParams.payment_state) {
+        $scope.status = {};
+        // the user has been redirected back here after payment
+        if ($routeParams.payment_state === "success") {
+            $scope.status.title = "Success";
+            $scope.status.description = "You have successfully been logged in.";
+        }
+        else if ($routeParams.payment_state === "fail") {
+            $scope.status.title = "Failed";
+            $scope.status.description = "Your have failed to log in.";
+        }
+        else if ($routeParams.payment_state === "cancel") {
+            $scope.status.title = "Cancelled";
+            $scope.status.description = "Your payment was cancelled.";
+        }
+        else {
+            console.error("Unknown payment state");
+            $location.url("/");
+        }
+    }
 
-	$scope.onSubmit = function($event) {
-		if($scope.purchase.amount <= 0) {
-			dialogService.showError("Must have a positive amount.");
-			$event.preventDefault();
-			return;
-		}
-		// prevent multiple clicks
-		if ($scope.purchase.submitted) {
-			$event.preventDefault();
-			return;
-		}
-		$scope.purchase.submitted = true;
-	};
+    $scope.onSubmit = function($event) {
+        if($scope.purchase.amount <= 0) {
+            dialogService.showError("Must have a positive amount.");
+            $event.preventDefault();
+            return;
+        }
+        // prevent multiple clicks
+        if ($scope.purchase.submitted) {
+            $event.preventDefault();
+            return;
+        }
+        $scope.purchase.submitted = true;
+    };
 
-	$scope.onInit = function() {
-		if (!$scope.purchase.url) {
-			console.error("No configured payment URL!");
-			$location.url("/");
-		}
-	};
+    $scope.onInit = function() {
+        if (!$scope.purchase.url) {
+            console.error("No configured payment URL!");
+            $location.url("/");
+        }
+    };
 }]);

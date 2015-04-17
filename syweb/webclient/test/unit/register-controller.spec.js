@@ -55,8 +55,9 @@ describe("RegisterController ", function() {
             }
             return d.promise;
         },
-        register: function(mxid, password, threepidCreds, useCaptcha) {
+        register: function(mxid, password, threepidCreds, captchaResponse, sessionId, bind_email) {
             var d = $q.defer();
+            if (threepidCreds === true) d.reject({data: {}});
             if (testFailRegisterData) {
                 d.reject({
                     data: testFailRegisterData
@@ -138,7 +139,7 @@ describe("RegisterController ", function() {
         scope.register(); // this depends on the result of a deferred
         rootScope.$digest(); // which is delivered after the digest
         
-        expect(matrixService.register).toHaveBeenCalledWith("bob", "password", undefined, false);
+        expect(matrixService.register).toHaveBeenCalledWith("bob", "password", undefined, undefined, undefined, true);
         expect(matrixService.saveConfig).toHaveBeenCalled();
     });
     
@@ -169,21 +170,22 @@ describe("RegisterController ", function() {
         scope.account.email = "foo@bar.com";
         scope.register(); // this depends on the result of a deferred
         rootScope.$digest(); // which is delivered after the digest
+
+        expect(matrixService.register).toHaveBeenCalledWith("bob", "password", true);
+        matrixService.register.calls.reset();
+
         expect(scope.clientSecret).toBeDefined();
         expect(matrixService.linkEmail).toHaveBeenCalledWith("foo@bar.com", scope.clientSecret, 1); // XXX what is sendAttempt?
         
         // token entry
-        scope.account.threepidtoken = "123456";
         scope.verifyToken();
         rootScope.$digest();
-        expect(matrixService.authEmail).toHaveBeenCalledWith(scope.clientSecret, 
-                testEmailLinkData.sid, scope.account.threepidtoken);
         
         expect(matrixService.register).toHaveBeenCalledWith("bob", "password", 
-            [jasmine.objectContaining({
+            jasmine.objectContaining({
                 sid: testEmailLinkData.sid,
                 clientSecret: scope.clientSecret
-            })], false);
+            }), undefined, undefined, true);
         expect(matrixService.saveConfig).toHaveBeenCalled();
     });
 });

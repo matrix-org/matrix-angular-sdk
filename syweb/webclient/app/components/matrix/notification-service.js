@@ -268,8 +268,9 @@ function($timeout, $q, $rootScope, matrixService, modelService, mPresence, mUser
         if (!actionObj.notify) return false;
 
         if (actionObj.tweaks.highlight == undefined) {
-            // if it isn't specified, we highlight
-            return true;
+            // if it isn't specified, highlight if it's a content
+            // rule but otherwise not
+            return rule.kind == 'content';
         }
 
         return !!actionObj.tweaks.highlight;
@@ -359,13 +360,9 @@ function($timeout, $q, $rootScope, matrixService, modelService, mPresence, mUser
                     currentIds.push(rulesCache.global.content[i].rule_id);
                 }
 
-                var specialchars = ['*', '[', ']', '?', '!'];
-
                 do {
                     rule_id = pattern;
-                    for (var i = 0; i < specialchars.length; ++i) {
-                        rule_id = rule_id.replace(specialchars[i], '');
-                    }
+                    rule_id = rule_id.replace(/[^\w\d]*/g, '');
                     if (suff > 0) {
                         rule_id += suff++;
                     }
@@ -481,6 +478,9 @@ function($timeout, $q, $rootScope, matrixService, modelService, mPresence, mUser
                     if (member.event.content.avatar_url) {
                         avatarUrl = matrixService.getHttpUriForMxc(member.event.content.avatar_url);
                     }
+                    if (!avatarUrl) {
+                        avatarUrl = member.aevent.identicon();
+                    }
 
                     var displayname = mUserDisplayNameFilter(ev.user_id, ev.room_id);
                     
@@ -513,7 +513,7 @@ function($timeout, $q, $rootScope, matrixService, modelService, mPresence, mUser
         
         showNotification : showNotification,
     };
-    self.getRulesets();
+    if (matrixService.isUserLoggedIn()) self.getRulesets();
     return self;
 }]);
 

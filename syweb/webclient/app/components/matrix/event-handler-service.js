@@ -221,7 +221,12 @@ function(matrixService, $rootScope, $window, $q, $timeout, $filter, mPresence, n
 
     var handleCallEvent = function(event, isLiveEvent) {
         $rootScope.$broadcast(eventHandlerService.CALL_EVENT, event, isLiveEvent);
-        if (event.type === 'm.call.invite') {
+        // We add hangup events to the room too because generally all we get in
+        // the initialsync is a hangup event and come candidate events. If don't
+        // add either of those, the room ends up having no events and so we
+        // don't know where to put it in the ordering.
+        // Roll on CS API v2 event filtering and other call events being update events.
+        if (event.type === 'm.call.invite' || event.type === 'm.call.hangup') {
             var room = modelService.getRoom(event.room_id);
             room.addMessageEvent(event, !isLiveEvent);
         }
@@ -499,6 +504,10 @@ function(matrixService, $rootScope, $window, $q, $timeout, $filter, mPresence, n
             var promise;
             if (!isEmote && !isMarkdown) {
                 promise = commandsService.processInput(roomId, input);
+            }
+            
+            if (input.indexOf("//") === 0) {
+                input = input.substring(1);
             }
             
             var echo = false;
