@@ -34,25 +34,26 @@
                 <h2>Identity management</h2>
 
                 <div class="section settingsgroup">
-                    <p>Linking an email address to your account lets users who know your email address find you on Matrix.</p>
                     <form>
-                        <input size="40" ng-model="linkedEmails.linkNewEmail" ng-enter="linkEmail(linkedEmails.linkNewEmail)" />
+                        <input size="40" ng-model="linkedEmails.linkNewEmail" ng-enter="linkEmail(linkedEmails.linkNewEmail)" /><br />
+                        <input ng-model="linkedEmails.bindNewEmail" type="checkbox" />
+                        <div id="bind_email_label">Use this account when people search for my email address on Matrix</div><br />
                         <button ng-disabled="!linkedEmails.linkNewEmail" ng-click="linkEmail(linkedEmails.linkNewEmail)">
                             Link Email
                         </button>
                         {{ emailFeedback }}
                     </form>
                     <form ng-hide="!linkedEmails.emailBeingAuthed">
-                        Enter validation token for {{ linkedEmails.emailBeingAuthed }}:
+                        An email has been sent to {{ linkedEmails.emailBeingAuthed }}.
                         <br />
-                        <input size="20" ng-model="linkedEmails.emailCode" ng-enter="submitEmailCode(linkedEmails.emailCode)" />
-                        <button ng-disabled="!linkedEmails.emailCode || !linkedEmails.linkNewEmail" ng-click="submitEmailCode(linkedEmails.emailCode)">
-                            Submit Code
+                        <button ng-disabled="!linkedEmails.linkNewEmail" ng-click="submitEmailVerify()">
+                            I have verified my address: continue
                         </button>   
                     </form>
+                    <img src="img/spinner.gif" ng-show="linkedEmails.fetchingEmailList" />
                     <table>
-                        <tr ng-repeat="(address, info) in linkedEmails.linkedEmailList">
-                            <td>{{address}}</td>
+                        <tr ng-repeat="threepid in linkedEmails.linkedEmailList">
+                            <td>{{threepid.address}}</td>
                         </tr>
                     </table>
                 </div>
@@ -311,6 +312,24 @@
                     <p>
                         <button ng-click='getCredit()'>Link PayPal account</button>
                     </p>
+                </div>
+            </tab>
+            <tab heading="Password">
+                <div class="section settingsgroup">
+                    <h2>Change Password</h2>
+                    <p>When changing your password you will be logged out of all other devices and stop receiving push notifications until you log in again.</p>
+                    <form ng-submit="changePassword()">
+                        <table>
+                            <tr><td>Current password: </td><td><input type="password" ng-model="password.oldpw" ng-class="{error: password.badfields.indexOf('oldpw') > -1}" /></td></tr>
+                            <tr><td>New password: </td><td><input type="password" ng-model="password.newpw" ng-class="{error: password.badfields.indexOf('newpw') > -1}" /></td></tr>
+                            <tr><td>Confirm new password: </td><td><input type="password" ng-model="password.confirmnewpw" ng-class="{error: password.badfields.indexOf('confirmnewpw') > -1}" /></td></tr>
+                            <tr><td><input type="submit" value="Change Password" ng-disabled="password.inprogress || !passwordValid()" /></td></tr>
+                        </table>
+                        <span ng-class="{feedbackError: password.state == 'error'}">{{password.feedback}}<span>
+                    </form>
+                    <div ng-show="password.state == 'changed'" class="reminder">
+                        Remember: you will not receive push notifications on other devices until you log back in to them.
+                    </div>
                 </div>
             </tab>
             <tab heading="Information">

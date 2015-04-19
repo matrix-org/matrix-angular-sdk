@@ -1,5 +1,5 @@
 /*
- Copyright 2014 OpenMarket Ltd
+ Copyright 2014,2015 OpenMarket Ltd
  
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -19,12 +19,6 @@ angular.module('RegisterController', ['matrixService'])
                                     function($scope, $rootScope, $location, matrixService, eventStreamService, dialogService) {
     'use strict';
     
-    var config = window.webClientConfig;
-    var useCaptcha = false; // default to no captcha to make it easier to get a homeserver up and running...
-    if (config !== undefined) {
-        useCaptcha = config.useCaptcha;
-    }
-    
     // FIXME: factor out duplication with login-controller.js
     
     // Assume that this is hosted on the home server, in which case the URL
@@ -37,6 +31,8 @@ angular.module('RegisterController', ['matrixService'])
         hs_url += ":" + $location.port();
     }
 
+    var captcha_rendered = false;
+
     var generateClientSecret = function() {
         var ret = "";
         var chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
@@ -47,6 +43,8 @@ angular.module('RegisterController', ['matrixService'])
 
         return ret;
     };
+
+    $scope.stage = 'initial';
     
     $scope.account = {
         homeserver: hs_url,
@@ -56,7 +54,8 @@ angular.module('RegisterController', ['matrixService'])
         identityServer: $location.protocol() + "://matrix.org",
         pwd1: "",
         pwd2: "",
-        displayName : ""
+        displayName : "",
+        bind_email: true
     };
     $scope.registering = false;
     
@@ -77,34 +76,53 @@ angular.module('RegisterController', ['matrixService'])
         }
 
         if ($scope.account.email) {
-            $scope.clientSecret = generateClientSecret();
+            // check the username is free
             $scope.registering = true;
-            matrixService.linkEmail($scope.account.email, $scope.clientSecret, 1).then(
-                function(response) {
-                    $scope.wait_3pid_code = true;
-                    $scope.sid = response.data.sid;
-                    $scope.feedback = "";
+            matrixService.register($scope.account.desired_user_id, $scope.account.pwd1, true).then(
+                function() {
+                    dialogService.showError("Registration protocol error occurred with this Home Server. Your account may be registered without your email address.");
                     $scope.registering = false;
                 },
                 function(error) {
-                    dialogService.showError(error);
-                    $scope.registering = false;
+                    if (!error.data) {
+                        dialogService.showError(error);
+                        $scope.registering = false;
+                        return;
+                    }
+                    if (error.data && error.data.errcode === "M_USER_IN_USE") {
+                        dialogService.showMatrixError("Username taken", error.data);
+                        $scope.reenter_username = true;
+                        $scope.stage = 'initial';
+                        $scope.registering = false;
+                        return;
+                    }
+                    $scope.clientSecret = generateClientSecret();
+                    matrixService.linkEmail($scope.account.email, $scope.clientSecret, 1).then(
+                        function(response) {
+                            $scope.stage = 'email';
+                            $scope.sid = response.data.sid;
+                            $scope.feedback = "";
+                            $scope.registering = false;
+                        },
+                        function(error) {
+                            $scope.stage = 'initial';
+                            dialogService.showError(error);
+                            $scope.registering = false;
+                        }
+                    );
                 }
             );
         } else {
-            $scope.registerWithMxidAndPassword($scope.account.desired_user_id, $scope.account.pwd1);
+            registerWithMxidAndPassword($scope.account.desired_user_id, $scope.account.pwd1);
         }
     };
 
-    $scope.registerWithMxidAndPassword = function(mxid, password, threepidCreds) {
+    var registerWithMxidAndPassword = function(mxid, password, threepidCreds, captchaResponse) {
         $scope.registering = true;
-        matrixService.register(mxid, password, threepidCreds, useCaptcha).then(
+        matrixService.register(mxid, password, threepidCreds, captchaResponse, undefined, $scope.account.bind_email).then(
             function(response) {
                 $scope.registering = false;
-                $scope.feedback = "Success";
-                if (useCaptcha) {
-                    Recaptcha.destroy();
-                }
+                if (captcha_rendered) window.grecaptcha.reset();
                 // Update the current config 
                 var config = matrixService.config();
                 angular.extend(config, {
@@ -129,65 +147,52 @@ angular.module('RegisterController', ['matrixService'])
             function(error) {
                 $scope.registering = false;
                 console.error("Registration error: "+JSON.stringify(error));
-                if (useCaptcha) {
-                    Recaptcha.reload();
-                }
-                if (error.data) {
-                    if (error.data.errcode === "M_USER_IN_USE") {
+                if (error.authfailed) {
+                    if (error.authfailed === "m.login.recaptcha") {
+                        $scope.captchaMessage = "Verification failed. Are you sure you're not a robot?";
+                        if (captcha_rendered) window.grecaptcha.reset();
+                    } else if (error.authfailed === "m.login.email.identity") {
+                        dialogService.showError("Couldn't verify email address: make sure you've clicked the link in the email");
+                    } else {
+                        dialogService.showError("Authentication failed");
+                        $scope.stage = 'initial';
+                        if (captcha_rendered) window.grecaptcha.reset();
+                    }
+                } else {
+                    if (error.data && error.data.errcode === "M_USER_IN_USE") {
                         dialogService.showMatrixError("Username taken", error.data);
                         $scope.reenter_username = true;
+                        $scope.stage = 'initial';
+                        if (captcha_rendered) window.grecaptcha.reset();
                     }
-                    else if (error.data.errcode == "M_CAPTCHA_INVALID") {
-                        dialogService.showMatrixError("Captcha failed", error.data);
-                    }
-                    else if (error.data.errcode == "M_CAPTCHA_NEEDED") {
-                        dialogService.showMatrixError("Captcha required", error.data);
+                    else if (error.data && error.data.errcode == "M_CAPTCHA_NEEDED") {
+                        $scope.stage = 'captcha';
+                        window.grecaptcha.render("regcaptcha", {
+                            sitekey: error.data.public_key,
+                            callback: function(response) {
+                                registerWithMxidAndPassword(mxid, password, threepidCreds, response);
+                            }
+                        });
+                        captcha_rendered = true;
                     }
                     else {
                         dialogService.showError(error);
+                        $scope.stage = 'initial';
+                        if (captcha_rendered) window.grecaptcha.reset();
                     }
-                }
-                else {
-                    dialogService.showError(error);
                 }
             });
     }
 
     $scope.verifyToken = function() {
-        matrixService.authEmail($scope.clientSecret, $scope.sid, $scope.account.threepidtoken).then(
-            function(response) {
-                if (!response.data.success) {
-                    $scope.feedback = "Unable to verify code.";
-                } else {
-                    $scope.registerWithMxidAndPassword($scope.account.desired_user_id, $scope.account.pwd1, [{'sid':$scope.sid, 'clientSecret':$scope.clientSecret, 'idServer': $scope.account.identityServer.split('//')[1]}]);
-                }
-            },
-            function(error) {
-                $scope.feedback = "Unable to verify code.";
+        registerWithMxidAndPassword(
+            $scope.account.desired_user_id, $scope.account.pwd1,
+            {
+                sid: $scope.sid,
+                clientSecret: $scope.clientSecret,
+                idServer: $scope.account.identityServer.split('//')[1]
             }
         );
     };
-    
-    var setupCaptcha = function() {
-        console.log("Setting up ReCaptcha")
-        var public_key = window.webClientConfig.recaptcha_public_key;
-        if (public_key === undefined) {
-            console.error("No public key defined for captcha!")
-            return;
-        }
-        Recaptcha.create(public_key,
-        "regcaptcha",
-        {
-          theme: "red",
-          callback: Recaptcha.focus_response_field
-        });
-    };
-
-    $scope.init = function() {
-        if (useCaptcha) {
-            setupCaptcha();
-        }
-    };
-    
 }]);
 

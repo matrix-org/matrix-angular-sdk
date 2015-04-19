@@ -248,6 +248,14 @@ textarea, input {
     font-size: 12px;
 }
 
+.feedbackError {
+    color: red;
+}
+
+input.error {
+    background-color: #e88;
+}
+
 .mouse-pointer {
     cursor: pointer;
 }
@@ -317,6 +325,21 @@ textarea, input {
 #loginForm button,
 #loginForm select {
     font-size: 18px;
+}
+
+#regcaptcha div {
+    margin: auto;
+}
+
+#bind_email_label {
+    display: inline-block;
+    width: 280px;
+    font-size: 80%;
+    text-align: left;
+    margin-top: 10px;
+    margin-bottom: 10px;
+    margin-left: 10px;
+    vertical-align: middle;
 }
 
 /*** Room page ***/
@@ -1014,6 +1037,14 @@ li.disabledRule {
 
 .invisible {
     visibility: hidden;
+}
+
+div.reminder {
+    background-color: lightgoldenrodyellow;
+    border: 1px solid black;
+    width: 300px;
+    padding: 20px;
+    text-align: center;
 }
 
 /*** Seasonal ***/
