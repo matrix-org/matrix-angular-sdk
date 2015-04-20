@@ -122,7 +122,9 @@ angular.module('RegisterController', ['matrixService'])
         matrixService.register(mxid, password, threepidCreds, captchaResponse, undefined, $scope.account.bind_email).then(
             function(response) {
                 $scope.registering = false;
-                if (captchaRendered) window.grecaptcha.reset();
+                if (captchaRendered) {
+                    $window.grecaptcha.reset();
+                }
                 // Update the current config 
                 var config = matrixService.config();
                 angular.extend(config, {
@@ -150,20 +152,26 @@ angular.module('RegisterController', ['matrixService'])
                 if (error.authfailed) {
                     if (error.authfailed === "m.login.recaptcha") {
                         $scope.captchaMessage = "Verification failed. Are you sure you're not a robot?";
-                        if (captchaRendered) window.grecaptcha.reset();
+                        if (captchaRendered) {
+                            $window.grecaptcha.reset();
+                        }
                     } else if (error.authfailed === "m.login.email.identity") {
                         dialogService.showError("Couldn't verify email address: make sure you've clicked the link in the email");
                     } else {
                         dialogService.showError("Authentication failed");
                         $scope.stage = 'initial';
-                        if (captchaRendered) window.grecaptcha.reset();
+                        if (captchaRendered) {
+                            window.grecaptcha.reset();
+                        }
                     }
                 } else {
                     if (error.data && error.data.errcode === "M_USER_IN_USE") {
                         dialogService.showMatrixError("Username taken", error.data);
                         $scope.reenter_username = true;
                         $scope.stage = 'initial';
-                        if (captchaRendered) window.grecaptcha.reset();
+                        if (captchaRendered) {
+                            $window.grecaptcha.reset();
+                        }
                     }
                     else if (error.data && error.data.errcode == "M_CAPTCHA_NEEDED") {
                         $scope.stage = 'captcha';
@@ -178,7 +186,9 @@ angular.module('RegisterController', ['matrixService'])
                     else {
                         dialogService.showError(error);
                         $scope.stage = 'initial';
-                        if (captchaRendered) window.grecaptcha.reset();
+                        if (captchaRendered) {
+                            window.grecaptcha.reset();
+                        }
                     }
                 }
             });
