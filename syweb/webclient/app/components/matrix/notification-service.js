@@ -513,7 +513,9 @@ function($timeout, $q, $rootScope, matrixService, modelService, mPresence, mUser
         
         showNotification : showNotification,
     };
-    if (matrixService.isUserLoggedIn()) self.getRulesets();
+    if (matrixService.isUserLoggedIn()) {
+        self.getRulesets();
+    }
     return self;
 }]);
 
