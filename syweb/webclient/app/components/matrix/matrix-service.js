@@ -274,18 +274,20 @@ function($http, $window, $timeout, $q) {
         },
 
         // Register a user
-        register: function(user_name, password, threepidCreds, captchaResponse, sessionId, bind_email) {
+        register: function(user_name, password, threepidCreds, captchaResponse, sessionId, bindEmail) {
             // registration is composed of multiple requests, to check you can
             // register, then to actually register. This deferred will fire when
             // all the requests are done, along with the final response.
             var deferred = $q.defer();
             var path = "/register";
-            if (bind_email === undefined) bind_email = false;
+            if (bindEmail === undefined) {
+                bindEmail = false;
+            }
 
             var data = {
                 username: user_name,
                 password: password,
-                bind_email: bind_email
+                bindEmail: bindEmail
             };
             if (sessionId) {
                 data['auth'] = {};
