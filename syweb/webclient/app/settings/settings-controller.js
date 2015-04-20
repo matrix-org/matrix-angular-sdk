@@ -495,7 +495,7 @@ function($scope, matrixService, modelService, eventHandlerService, notificationS
             $scope.password.inprogress = false;
         }, function(err) {
             if (err.data.errcode == 'M_FORBIDDEN') {
-                $scope.password.feedback = "Current password incorrect";
+            $scope.password.feedback = "Current password incorrect";
             $scope.password.badfields = [ 'oldpw' ];
             } else {
                 $scope.password.feedback = "Failed to change password!";
