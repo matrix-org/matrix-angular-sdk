@@ -305,11 +305,7 @@ function($http, $window, $timeout, $q) {
                 var flows = error.data.flows;
                 var params = error.data.params;
                 sessionId = error.data.session;
-                var completed = error.data.completed;
-
-                if (completed == undefined) {
-                    completed = [];
-                }
+                var completed = error.data.completed || [];
 
                 if (flows == undefined) {
                     deferred.reject(error);
