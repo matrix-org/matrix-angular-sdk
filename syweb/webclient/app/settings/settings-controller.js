@@ -234,7 +234,7 @@ function($scope, matrixService, modelService, eventHandlerService, notificationS
         emailBeingAuthed: undefined, // to populate verification text
         authSid: undefined, // the token id from the IS
         emailCode: "", // the code entry box
-        linkedEmailList: [], // linked email list
+        linkedEmailList: [],
         fetchingEmailList: false
     };
     
