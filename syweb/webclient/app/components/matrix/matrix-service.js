@@ -381,7 +381,7 @@ function($http, $window, $timeout, $q) {
                 }
 
                 var loginResponseFunc = function(response) {
-                    if (response.status < 200 || response.status >= 300) {
+                    if (response.status >= 200 && response.status < 300) {
                         console.log("Got 2xx response: completed!");
                         deferred.resolve(response);
                         return;
