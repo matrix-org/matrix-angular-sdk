@@ -228,6 +228,7 @@ function($http, $window, $timeout, $q) {
         }, retryAfterMs);
     };
     
+    // NB. Despite it's name, this is used only for registering, not logging in.
     var doRegisterLogin = function(path, data, params, loginType, sessionId, userName, password, threepidCreds, captchaResponse) {
         var data = $.extend({}, data)
         var auth = {};
