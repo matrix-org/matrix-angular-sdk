@@ -270,8 +270,8 @@ function($scope, matrixService, modelService, eventHandlerService, notificationS
         }
         matrixService.addThreePid({
             sid: $scope.linkedEmails.authSid,
-            clientSecret: $scope.clientSecret,
-            idServer: matrixService.config().identityServer.split('//')[1]
+            client_secret: $scope.clientSecret,
+            id_server: matrixService.config().identityServer.split('//')[1]
         }, $scope.linkedEmails.bindNewEmail).then(function() {
              // invalidate the email being authed and update UI.
              $scope.linkedEmails.emailBeingAuthed = undefined;

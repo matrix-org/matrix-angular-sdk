@@ -15,8 +15,8 @@
  */
  
 angular.module('RegisterController', ['matrixService'])
-.controller('RegisterController', ['$scope', '$rootScope', '$location', 'matrixService', 'eventStreamService', 'dialogService',
-                                    function($scope, $rootScope, $location, matrixService, eventStreamService, dialogService) {
+.controller('RegisterController', ['$scope', '$rootScope', '$location', '$window', 'matrixService', 'eventStreamService', 'dialogService',
+                                    function($scope, $rootScope, $location, $window, matrixService, eventStreamService, dialogService) {
     'use strict';
     
     // FIXME: factor out duplication with login-controller.js
@@ -199,8 +199,8 @@ angular.module('RegisterController', ['matrixService'])
             $scope.account.desired_user_id, $scope.account.pwd1,
             {
                 sid: $scope.sid,
-                clientSecret: $scope.clientSecret,
-                idServer: $scope.account.identityServer.split('//')[1]
+                client_secret: $scope.clientSecret,
+                id_server: $scope.account.identityServer.split('//')[1]
             }
         );
     };
