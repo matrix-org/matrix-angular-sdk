@@ -184,7 +184,7 @@ describe("RegisterController ", function() {
         expect(matrixService.register).toHaveBeenCalledWith("bob", "password", 
             jasmine.objectContaining({
                 sid: testEmailLinkData.sid,
-                clientSecret: scope.clientSecret
+                client_secret: scope.clientSecret
             }), undefined, undefined, true);
         expect(matrixService.saveConfig).toHaveBeenCalled();
     });
