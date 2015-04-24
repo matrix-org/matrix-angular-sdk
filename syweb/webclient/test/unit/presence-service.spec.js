@@ -1,5 +1,5 @@
 describe('PresenceService', function() {
-    var $q, $timeout;
+    var $q, $interval;
     
     var matrixService = {
         setUserPresence: function(state){},
@@ -26,9 +26,9 @@ describe('PresenceService', function() {
         module('mPresence');
     });
     
-    beforeEach(inject(function(_$q_, _$timeout_) {
-            $q = _$q_;
-            $timeout = _$timeout_;
+    beforeEach(inject(function(_$q_, _$interval_) {
+        $q = _$q_;
+        $interval = _$interval_;
     }));
     
     it('should start with the user as online.', inject(
@@ -47,7 +47,7 @@ describe('PresenceService', function() {
         spyOn(matrixService, "setUserPresence").and.returnValue(defer.promise);
         mPresence.start();
         defer.resolve({});
-        $timeout.flush(); // expire the timer
+        $interval.flush(mPresence.UNAVAILABLE_TIME);// expire the timer
         expect(matrixService.setUserPresence).toHaveBeenCalledWith(
             matrixService.presence.unavailable
         );
@@ -62,7 +62,7 @@ describe('PresenceService', function() {
         
         mPresence.stop();
         
-        $timeout.flush(); // expire the timer
+        $interval.flush(mPresence.UNAVAILABLE_TIME);// expire the timer
         expect(matrixService.setUserPresence).not.toHaveBeenCalledWith(
             matrixService.presence.unavailable
         );
@@ -76,7 +76,7 @@ describe('PresenceService', function() {
         defer.resolve({});
         expect(mPresence.getState()).toEqual(matrixService.presence.online);
         
-        $timeout.flush(); // expire the timer
+        $interval.flush(mPresence.UNAVAILABLE_TIME);// expire the timer
         expect(mPresence.getState()).toEqual(matrixService.presence.unavailable);
     }));
     
@@ -86,7 +86,7 @@ describe('PresenceService', function() {
         spyOn(matrixService, "setUserPresence").and.returnValue(defer.promise);
         mPresence.start();
         defer.resolve({}); // online
-        $timeout.flush(); // expire the timer
+        $interval.flush(mPresence.UNAVAILABLE_TIME); // expire the timer
         expect(mPresence.getState()).toEqual(matrixService.presence.unavailable);
         
         doc[0].onmousemove();

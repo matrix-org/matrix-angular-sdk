@@ -1,5 +1,5 @@
 describe('EventHandlerService', function() {
-    var scope, q, timeout, _window;
+    var scope, $q, $interval, $window;
     
     var testContainsBingWords, testPresenceState, testRoomName; // mPresence, mRoomNameFilter, notificationService
     var testUserId, testDisplayName, testBingWords; // matrixService.config
@@ -73,7 +73,7 @@ describe('EventHandlerService', function() {
     
     var matrixService = {
         resolveRoomAlias: function(alias) {
-            var defer = q.defer();
+            var defer = $q.defer();
             if (testResolvedRoomId) {
                 defer.resolve({ data: { room_id: testResolvedRoomId} });
             }
@@ -83,7 +83,7 @@ describe('EventHandlerService', function() {
             return defer.promise;
         },
         join: function(roomId) {
-            var defer = q.defer();
+            var defer = $q.defer();
             if (testJoinSuccess) {
                 defer.resolve({});
             }
@@ -93,7 +93,7 @@ describe('EventHandlerService', function() {
             return defer.promise;
         },
         roomInitialSync: function(roomId) {
-            var defer = q.defer();
+            var defer = $q.defer();
             if (testRoomInitialSync) {
                 defer.resolve({ data: testRoomInitialSync });
             }
@@ -106,7 +106,7 @@ describe('EventHandlerService', function() {
             return testConfig;
         },
         sendTextMessage: function(roomId, input) {
-            var defer = q.defer();
+            var defer = $q.defer();
             if (testSendMessage) {
                 defer.resolve({ data: testSendMessage });
             }
@@ -143,13 +143,13 @@ describe('EventHandlerService', function() {
     var mRoomNameFilter = function(){
         return function() {
             return testRoomName;
-        }
+        };
     };
     
     var mUserDisplayNameFilter = function() {
         return function(input) {
             return input;
-        }
+        };
     };
     
     // helper function
@@ -274,11 +274,11 @@ describe('EventHandlerService', function() {
         module('eventHandlerService');
     });
     
-    beforeEach(inject(function($rootScope, $q, $timeout, $window) {
+    beforeEach(inject(function($rootScope, _$q_, _$interval_, _$window_) {
         scope = $rootScope;
-        q = $q;
-        timeout = $timeout;
-        _window = $window;
+        $q = _$q_;
+        $interval = _$interval_;
+        $window = _$window_;
     }));
 
     it('joinRoom: should be able to join a room from a room ID.', inject(
@@ -685,11 +685,11 @@ describe('EventHandlerService', function() {
         var testTime = new Date().getTime() + 
                        eventHandlerService.EVENT_ID_LIFETIME_MS + 1000;
         var oldDate = Date;
-        spyOn(window, 'Date').and.callFake(function() {
+        spyOn($window, 'Date').and.callFake(function() {
             return new oldDate(testTime);
         });
         
-        timeout.flush(); // force a recheck
+        $interval.flush(eventHandlerService.REAP_POLL_MS); // force a recheck
         
         // should not suppress since it forgot about it.
         eventHandlerService.handleEvent(dupeEvent, true);
@@ -702,7 +702,7 @@ describe('EventHandlerService', function() {
         var isPublic = true;
         var invitee = "@alicia:matrix.org";
         var roomId = "!avauyga:matrix.org";
-        var defer = q.defer();
+        var defer = $q.defer();
         spyOn(matrixService, "create").and.returnValue(defer.promise);
         spyOn(matrixService, "roomInitialSync").and.callThrough();
         
