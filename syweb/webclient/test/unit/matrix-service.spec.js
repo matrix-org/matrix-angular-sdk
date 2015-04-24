@@ -970,7 +970,7 @@ describe('MatrixService', function() {
         httpBackend.expectPOST(V2URL + "/register", {
             username: 'test',
             password: 'testpw',
-            bindEmail: false
+            bind_email: false
         }).respond(401, {
             session: 'asession',
             flows: [
@@ -981,11 +981,11 @@ describe('MatrixService', function() {
         httpBackend.expectPOST(V2URL + "/register", {
             username: 'test',
             password: 'testpw',
-            bindEmail: false,
+            bind_email: false,
             auth: {
                 type: 'm.login.email.identity',
                 session: 'asession',
-                threepidCreds: testCreds
+                threepid_creds: testCreds
             }
         }).respond(401, {
             completed: ['m.login.email.identity'],
@@ -998,7 +998,7 @@ describe('MatrixService', function() {
         httpBackend.expectPOST(V2URL + "/register", {
             username: 'test',
             password: 'testpw',
-            bindEmail: false,
+            bind_email: false,
             auth: {
                 type: 'm.login.recaptcha',
                 session: 'asession',

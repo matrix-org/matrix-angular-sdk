@@ -288,7 +288,7 @@ function($http, $window, $timeout, $q) {
             var data = {
                 username: user_name,
                 password: password,
-                bindEmail: bindEmail
+                bind_email: bindEmail
             };
             if (sessionId) {
                 data['auth'] = {};

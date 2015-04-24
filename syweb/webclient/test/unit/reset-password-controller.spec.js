@@ -77,9 +77,9 @@ describe("ResetPasswordController ", function() {
         
         expect(matrixService.setPassword).toHaveBeenCalledWith("password", {
             type: 'm.login.email.identity',
-            threepidCreds: jasmine.objectContaining({
+            threepid_creds: jasmine.objectContaining({
                 sid: 'thetestsid',
-                idServer: 'example.com'
+                id_server: 'example.com'
             })
         });
     });
