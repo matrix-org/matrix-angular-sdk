@@ -88,10 +88,10 @@ angular.module('ResetPasswordController', ['matrixService'])
     $scope.verifyToken = function() {
         var authDict = {
             type: 'm.login.email.identity',
-            threepidCreds: {
+            threepid_creds: {
                 sid: $scope.sid,
-                clientSecret: $scope.clientSecret,
-                idServer: $scope.account.identityServer.split('//')[1]
+                client_secret: $scope.clientSecret,
+                id_server: $scope.account.identityServer.split('//')[1]
             }
         };
         matrixService.setPassword($scope.account.pwd1, authDict).then(

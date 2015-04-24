@@ -240,7 +240,7 @@ function($http, $window, $timeout, $q) {
         }
         else if (loginType === "m.login.email.identity") {
             auth = {
-                threepidCreds: threepidCreds
+                threepid_creds: threepidCreds
             };
         }
         else if (loginType === "m.login.password") {
@@ -590,8 +590,8 @@ function($http, $window, $timeout, $q) {
         // hit the Identity Server for a 3PID request.
         linkEmail: function(email, clientSecret, sendAttempt) {
             var path = "/_matrix/identity/api/v1/validate/email/requestToken";
-            var data = "clientSecret="+encodeURIComponent(clientSecret)+"&email=" + encodeURIComponent(email)+
-                "&sendAttempt="+sendAttempt;
+            var data = "client_secret="+encodeURIComponent(clientSecret)+"&email=" + encodeURIComponent(email)+
+                "&send_attempt="+sendAttempt;
             var headers = {};
             headers["Content-Type"] = "application/x-www-form-urlencoded";
             return doBaseRequest(config.identityServer, "POST", path, {}, data, headers); 
