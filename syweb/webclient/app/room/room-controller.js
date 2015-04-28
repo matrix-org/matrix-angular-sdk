@@ -171,7 +171,7 @@ angular.module('RoomController', ['ngSanitize', 'matrixFilter', 'mFileInput'])
         }
     };
 
-    $scope.$on(modelService.LIVE_MESSAGE_EVENT, function(ngEvent, annotatedEvent) {
+    var cancelMessageListener = $scope.$on(modelService.LIVE_MESSAGE_EVENT, function(ngEvent, annotatedEvent) {
         if (annotatedEvent.event.room_id === $scope.room_id) {
             scrollToBottom();
         }
@@ -180,13 +180,13 @@ angular.module('RoomController', ['ngSanitize', 'matrixFilter', 'mFileInput'])
     // It is possible for this room to be reaped. If that happens, we need to
     // attach to the NEW room which is created, rather than holding onto the
     // old one.
-    $rootScope.$on(modelService.NEW_ROOM, function(ngEvent, newRoom) {
+    var cancelNewRoomListener = $rootScope.$on(modelService.NEW_ROOM, function(ngEvent, newRoom) {
         if (newRoom.room_id === $scope.room_id) {
             $scope.room = newRoom;
         }
     });
     
-    $scope.$on(eventHandlerService.MEMBER_EVENT, function(ngEvent, event, isLive) {
+    var cancelMemberEventListener = $scope.$on(eventHandlerService.MEMBER_EVENT, function(ngEvent, event, isLive) {
         // if there is a live event affecting us
         if (isLive && event.room_id === $scope.room_id && event.state_key === $scope.state.user_id) {
             // if someone else changed our state..
@@ -205,6 +205,12 @@ angular.module('RoomController', ['ngSanitize', 'matrixFilter', 'mFileInput'])
                 scrollToBottom();
             }
         }
+    });
+
+    $scope.$on("$destroy", function() {
+        cancelMessageListener();
+        cancelNewRoomListener();
+        cancelMemberEventListener();
     });
 
     $scope.memberCount = function() {
