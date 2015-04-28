@@ -171,7 +171,7 @@ angular.module('RoomController', ['ngSanitize', 'matrixFilter', 'mFileInput'])
         }
     };
 
-    var cancelMessageListener = $scope.$on(modelService.LIVE_MESSAGE_EVENT, function(ngEvent, annotatedEvent) {
+    $scope.$on(modelService.LIVE_MESSAGE_EVENT, function(ngEvent, annotatedEvent) {
         if (annotatedEvent.event.room_id === $scope.room_id) {
             scrollToBottom();
         }
@@ -186,7 +186,7 @@ angular.module('RoomController', ['ngSanitize', 'matrixFilter', 'mFileInput'])
         }
     });
     
-    var cancelMemberEventListener = $scope.$on(eventHandlerService.MEMBER_EVENT, function(ngEvent, event, isLive) {
+    $scope.$on(eventHandlerService.MEMBER_EVENT, function(ngEvent, event, isLive) {
         // if there is a live event affecting us
         if (isLive && event.room_id === $scope.room_id && event.state_key === $scope.state.user_id) {
             // if someone else changed our state..
@@ -208,9 +208,7 @@ angular.module('RoomController', ['ngSanitize', 'matrixFilter', 'mFileInput'])
     });
 
     $scope.$on("$destroy", function() {
-        cancelMessageListener();
         cancelNewRoomListener();
-        cancelMemberEventListener();
     });
 
     $scope.memberCount = function() {
