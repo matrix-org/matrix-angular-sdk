@@ -31,25 +31,29 @@ angular.module('RecentsController', ['matrixService', 'matrixFilter'])
     // retrieve all rooms and expose them
     $scope.rooms = modelService.getRooms();
     
-    $scope.$on("$destroy", function() {
+    var cancelDestroyListener = $scope.$on("$destroy", function() {
         $scope.rooms = null;
+        cancelDestroyListener();
+        cancelSelectedRoomIdListener();
+        cancelUnreadMessagesListener();
+        cancelUnreadBingListener();
     });
     
     // track the selected room ID: the html will use this
     $scope.recentsSelectedRoomID = recentsService.getSelectedRoomId();
-    $scope.$on(recentsService.BROADCAST_SELECTED_ROOM_ID, function(ngEvent, room_id) {
+    var cancelSelectedRoomIdListener = $scope.$on(recentsService.BROADCAST_SELECTED_ROOM_ID, function(ngEvent, room_id) {
         $scope.recentsSelectedRoomID = room_id;
     });
     
     // track the list of unread messages: the html will use this
     $scope.unreadMessages = recentsService.getUnreadMessages();
-    $scope.$on(recentsService.BROADCAST_UNREAD_MESSAGES, function(ngEvent, room_id, unreadCount) {
+    var cancelUnreadMessagesListener = $scope.$on(recentsService.BROADCAST_UNREAD_MESSAGES, function(ngEvent, room_id, unreadCount) {
         $scope.unreadMessages = recentsService.getUnreadMessages();
     });
     
     // track the list of unread BING messages: the html will use this
     $scope.unreadBings = recentsService.getUnreadBingMessages();
-    $scope.$on(recentsService.BROADCAST_UNREAD_BING_MESSAGES, function(ngEvent, room_id, event) {
+    var cancelUnreadBingListener = $scope.$on(recentsService.BROADCAST_UNREAD_BING_MESSAGES, function(ngEvent, room_id, event) {
         $scope.unreadBings = recentsService.getUnreadBingMessages();
     });
     

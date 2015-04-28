@@ -207,10 +207,11 @@ angular.module('RoomController', ['ngSanitize', 'matrixFilter', 'mFileInput'])
         }
     });
 
-    $scope.$on("$destroy", function() {
+    var cancelDestroyListener = $scope.$on("$destroy", function() {
         cancelMessageListener();
         cancelNewRoomListener();
         cancelMemberEventListener();
+        cancelDestroyListener();
     });
 
     $scope.memberCount = function() {
