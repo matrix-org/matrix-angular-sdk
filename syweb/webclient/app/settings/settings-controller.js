@@ -90,6 +90,17 @@ function($scope, matrixService, modelService, eventHandlerService, notificationS
         });
     };
 
+    var fetchThreepids = function() {
+        $scope.linkedEmails.fetchingEmailList = true;
+        matrixService.getThreePids().then(function(response) {
+            $scope.linkedEmails.fetchingEmailList = false;
+            $scope.linkedEmails.linkedEmailList = response.data.threepids;
+        }, function() {
+            $scope.linkedEmails.fetchingEmailList = false;
+        });
+    };
+
+
     $scope.rule_add = {
         input:  {
             content: '',
@@ -133,6 +144,16 @@ function($scope, matrixService, modelService, eventHandlerService, notificationS
         avatarUrl: ""
     };
 
+    $scope.password = {
+        oldpw: '',
+        newpw: '',
+        confirmnewpw: '',
+        inprogress: false,
+        feedback: '',
+        state: null,
+        badfields: {}
+    };
+
     $scope.onInit = function() {
         // Load profile data
         // Display name
@@ -156,6 +177,7 @@ function($scope, matrixService, modelService, eventHandlerService, notificationS
             } 
         );
         fetchRules();
+        fetchThreepids();
     };
 
     $scope.$watch("profile.avatarFile", function(newValue, oldValue) {
@@ -208,10 +230,12 @@ function($scope, matrixService, modelService, eventHandlerService, notificationS
 
     $scope.linkedEmails = {
         linkNewEmail: "", // the email entry box
+        bindNewEmail: true,
         emailBeingAuthed: undefined, // to populate verification text
         authSid: undefined, // the token id from the IS
         emailCode: "", // the code entry box
-        linkedEmailList: matrixService.config().emailList // linked email list
+        linkedEmailList: [],
+        fetchingEmailList: false
     };
     
     $scope.linkEmail = function(email) {
@@ -238,50 +262,29 @@ function($scope, matrixService, modelService, eventHandlerService, notificationS
         );
     };
 
-    $scope.submitEmailCode = function() {
+    $scope.submitEmailVerify = function() {
         var tokenId = $scope.linkedEmails.authSid;
         if (tokenId === undefined) {
             $scope.emailFeedback = "You have not requested a code with this email.";
             return;
         }
-        matrixService.authEmail($scope.clientSecret, $scope.linkedEmails.authSid, $scope.linkedEmails.emailCode).then(
-            function(response) {
-                if ("errcode" in response.data) {
-                    $scope.emailFeedback = "Failed to authenticate email.";
-                    return;
-                }
-                matrixService.bindEmail(matrixService.config().user_id, tokenId, $scope.clientSecret).then(
-                    function(response) {
-                         if ('errcode' in response.data) {
-                             $scope.emailFeedback = "Failed to link email.";
-                             return;
-                         }
-                         var config = matrixService.config();
-                         var emailList = {};
-                         if ("emailList" in config) {
-                             emailList = config.emailList;
-                         }
-                         emailList[$scope.linkedEmails.emailBeingAuthed] = response;
-                         // save the new email list
-                         config.emailList = emailList;
-                         matrixService.setConfig(config);
-                         matrixService.saveConfig();
-                         // invalidate the email being authed and update UI.
-                         $scope.linkedEmails.emailBeingAuthed = undefined;
-                         $scope.emailFeedback = "";
-                         $scope.linkedEmails.linkedEmailList = emailList;
-                         $scope.linkedEmails.linkNewEmail = "";
-                         $scope.linkedEmails.emailCode = "";
-                    }, function(reason) {
-                        $scope.emailFeedback = "Failed to link email: " + reason;
-                    }
-                );
-            },
-            function(reason) {
-                $scope.emailFeedback = "Failed to auth email: " + reason;
-            }
-        );
-    };
+        matrixService.addThreePid({
+            sid: $scope.linkedEmails.authSid,
+            client_secret: $scope.clientSecret,
+            id_server: matrixService.config().identityServer.split('//')[1]
+        }, $scope.linkedEmails.bindNewEmail).then(function() {
+             // invalidate the email being authed and update UI.
+             $scope.linkedEmails.emailBeingAuthed = undefined;
+             $scope.emailFeedback = "";
+             $scope.linkedEmails.linkNewEmail = "";
+             $scope.linkedEmails.emailCode = "";
+
+            fetchThreepids();
+        }, function() {
+            $scope.emailFeedback = "Email auth failed.";
+            return;
+        });
+    }
     
     
     /*** Desktop notifications section ***/
@@ -453,6 +456,52 @@ function($scope, matrixService, modelService, eventHandlerService, notificationS
         },
         function(err) {
             dialogService.showError(err);
+        });
+    };
+
+    $scope.passwordValid = function() {
+        if ($scope.password.oldpw == '') {
+            return false;
+        }
+        if ($scope.password.newpw == '') {
+            return false;
+        }
+        if ($scope.password.confirmnewpw == '') {
+            return false;
+        }
+        return true;
+    };
+
+    $scope.changePassword = function() {
+        if ($scope.password.newpw != $scope.password.confirmnewpw) {
+            $scope.password.feedback = "Passwords don't match";
+            $scope.password.state = "error";
+            $scope.password.badfields = [ 'newpw', 'confirmnewpw' ];
+            return;
+        }
+        var authDict = {
+            type: 'm.login.password',
+            user: matrixService.config().user_id,
+            password: $scope.password.oldpw
+        };
+        $scope.password.inprogress = true;
+        matrixService.setPassword($scope.password.newpw, authDict).then(function() {
+            $scope.password.feedback = "Password changed";
+            $scope.password.state = 'changed';
+            $scope.password.badfields = [];
+            $scope.password.oldpw = '';
+            $scope.password.newpw = '';
+            $scope.password.confirmnewpw = '';
+            $scope.password.inprogress = false;
+        }, function(err) {
+            if (err.data.errcode == 'M_FORBIDDEN') {
+            $scope.password.feedback = "Current password incorrect";
+            $scope.password.badfields = [ 'oldpw' ];
+            } else {
+                $scope.password.feedback = "Failed to change password!";
+            }
+            $scope.password.state = "error";
+            $scope.password.inprogress = false;
         });
     };
 }]);

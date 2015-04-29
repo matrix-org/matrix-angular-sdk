@@ -18,6 +18,7 @@ var matrixWebClient = angular.module('matrixWebClient', [
     'ngRoute',
     'MatrixWebClientController',
     'LoginController',
+    'ResetPasswordController',
     'RegisterController',
     'RoomController',
     'HomeController',
@@ -57,6 +58,9 @@ matrixWebClient.config(['$routeProvider', '$provide', '$httpProvider',
             when('/register', {
                 templateUrl: 'app/login/register.html'
             }).
+            when('/reset-password', {
+                templateUrl: 'app/login/reset-password.html'
+            }).
             when('/room/:room_id_or_alias', {
                 templateUrl: 'app/room/room.html'
             }).
@@ -88,7 +92,7 @@ matrixWebClient.config(['$routeProvider', '$provide', '$httpProvider',
             function ($q, $rootScope) {
             return {
                 responseError: function(rejection) {
-                    if (rejection.status === 403 && "data" in rejection && 
+                    if ("data" in rejection && rejection.data && typeof rejection.data == 'object' &&
                             "errcode" in rejection.data && 
                             rejection.data.errcode === "M_UNKNOWN_TOKEN") {
                         console.log("Got a 403 with an unknown token. Logging out.")
@@ -124,8 +128,8 @@ matrixWebClient.run(['$location', '$rootScope', 'matrixService', function($locat
 
     // If user auth details are not in cache, go to the login page
     $rootScope.$on("$routeChangeStart", function(event, next, current) {
-        if (!matrixService.isUserLoggedIn() && $location.path() !== "/login" &&
-                $location.path() !== "/register") {
+        var unauthenticatedPages = ["/register", "/reset-password", "/login"];
+        if (!matrixService.isUserLoggedIn() && unauthenticatedPages.indexOf($location.path()) === -1) {
             $location.path("login");
         }
     });
