@@ -1,3 +1,12 @@
+Changes in Matrix Angular SDK 0.6.6 (2015-05-06)
+================================================
+
+Features:
+ - Add password change and reset feature using v2_alpha APIs.
+
+Bug fixes:
+ - Fix memory leak caused by not removing a watcher on the root scope.
+
 Changes in Matrix Angular SDK 0.6.5 (2015-03-12)
 ================================================
 Features:
