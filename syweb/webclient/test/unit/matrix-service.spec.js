@@ -2,7 +2,9 @@ describe('MatrixService', function() {
     var scope, timeout, httpBackend;
     var BASE = "http://example.com";
     var PREFIX = "/_matrix/client/api/v1";
+    var V2PREFIX = "/_matrix/client/v2_alpha";
     var URL = BASE + PREFIX;
+    var V2URL = BASE + V2PREFIX;
     var roomId = "!wejigf387t34:matrix.org";
     
     var CONFIG = {
@@ -951,5 +953,59 @@ describe('MatrixService', function() {
         expect(errorResponse).toBeDefined();
         expect(errorResponse.data).toEqual(errMsg);
         
+    }));
+
+    it('should be able to negotiate 3pid and password auth', inject(
+    function(matrixService) {
+        var cfg = {
+            homeserver: BASE
+        };
+        matrixService.setConfig(cfg);
+        var testCreds = 'foo';
+        var testCaptchaResponse = 'bar';
+        matrixService.register('test', 'testpw', testCreds, testCaptchaResponse, undefined).then(function(response) {
+            expect(response.data).toEqual({});
+        });
+
+        httpBackend.expectPOST(V2URL + "/register", {
+            username: 'test',
+            password: 'testpw',
+            bind_email: false
+        }).respond(401, {
+            session: 'asession',
+            flows: [
+                {stages: ['m.login.email.identity', 'm.login.recaptcha']}
+            ]
+        });
+
+        httpBackend.expectPOST(V2URL + "/register", {
+            username: 'test',
+            password: 'testpw',
+            bind_email: false,
+            auth: {
+                type: 'm.login.email.identity',
+                session: 'asession',
+                threepid_creds: testCreds
+            }
+        }).respond(401, {
+            completed: ['m.login.email.identity'],
+            session: 'asession',
+            flows: [
+                {stages: ['m.login.email.identity', 'm.login.recaptcha']}
+            ]
+        });
+
+        httpBackend.expectPOST(V2URL + "/register", {
+            username: 'test',
+            password: 'testpw',
+            bind_email: false,
+            auth: {
+                type: 'm.login.recaptcha',
+                session: 'asession',
+                response: testCaptchaResponse
+            }
+        }).respond(200, {
+        });
+        httpBackend.flush();
     }));
 });

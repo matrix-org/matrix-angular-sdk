@@ -13,7 +13,6 @@
     <meta name="viewport" content="width=device-width">
    
     <script type="text/javascript" src="lib/jquery-2.1.3.min.js"></script>
-    <script type="text/javascript" src="lib/recaptcha_ajax.js"></script> 
     <script src="lib/angular.min.js"></script>
     <script src="lib/angular-route.min.js"></script>
     <script src="lib/angular-sanitize.min.js"></script>
@@ -39,6 +38,7 @@
     <script src="app/home/home-controller.js"></script>
     <script src="app/login/login-controller.js"></script>
     <script src="app/login/register-controller.js"></script>
+    <script src="app/login/reset-password-controller.js"></script>
     <script src="app/recents/recents-controller.js"></script>
     <script src="app/recents/recents-filter.js"></script>
     <script src="app/room/room-controller.js"></script>
@@ -87,12 +87,12 @@
             Connection Lost
         </div>
         <!-- Do not show buttons on the login page -->
-        <div id="headerContent" ng-hide="'/login' == location || '/register' == location">
+        <div id="headerContent" ng-hide="'/login' == location || '/register' == location || '/reset-password' == location">
             <div id="callBar" ng-show="currentCall">
-                <img id="callPeerImage" ng-show="currentCall.userProfile.avatar_url" ng-src="{{ currentCall.userProfile.avatar_url }}" />
+                <img id="callPeerImage" ng-src="{{httpUri(currentCall.peerMember.event.content.avatar_url) || currentCall.peerMember.aevent.identicon()}}" />
                 <img class="callIcon" src="img/green_phone.png" ng-show="!!currentCall" ng-class="currentCall.state" />
                 <div id="callPeerNameAndState">
-                    <span id="callPeerName">{{ currentCall.userProfile.displayname }}</span>
+                    <span id="callPeerName">{{ currentCall.peerMember.name | mUserDisplayName: currentCall.room_id }}</span>
                     <br />
                     <span id="callState">
                         <span ng-show="currentCall.state == 'invite_sent'">Calling...</span>
@@ -104,6 +104,7 @@
                         <span ng-show="currentCall.state == 'ended' && !currentCall.hangupReason && !currentCall.didConnect && currentCall.direction == 'outbound' && currentCall.hangupParty == 'remote'">Call Rejected</span>
                         <span ng-show="currentCall.state == 'ended' && !currentCall.hangupReason && !currentCall.didConnect && currentCall.direction == 'outbound' && currentCall.hangupParty == 'local'">Call Canceled</span>
                         <span ng-show="currentCall.state == 'ended' && currentCall.hangupReason == 'invite_timeout' && !currentCall.didConnect && currentCall.direction == 'outbound' && currentCall.hangupParty == 'local'">User Not Responding</span>
+                        <span ng-show="currentCall.state == 'ended' && currentCall.hangupReason == 'answered_elsewhere' && currentCall.direction == 'inbound' && currentCall.hangupParty == 'remote'">Call answered elsewhere</span>
                         <span ng-show="currentCall.state == 'ended' && !currentCall.hangupReason && currentCall.didConnect && currentCall.direction == 'outbound'">Call Ended</span>
                         <span ng-show="currentCall.state == 'ended' && !currentCall.hangupReason && !currentCall.didConnect && currentCall.direction == 'inbound'">Call Canceled</span>
                         <span ng-show="currentCall.state == 'ended' && !currentCall.hangupReason && currentCall.didConnect && currentCall.direction == 'inbound'">Call Ended</span>

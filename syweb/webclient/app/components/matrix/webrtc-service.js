@@ -82,7 +82,7 @@ angular.module('webRtcService', [])
           
             pc = new $window.mozRTCPeerConnection({"iceServers":iceServers});
         } 
-        else {
+        else if (webRtc.RtcPeerConnection) {
             var iceServers = [];
             // https://github.com/EricssonResearch/openwebrtc/issues/85
             if (turnServers && !this.isOpenWebRTC()) {
@@ -98,6 +98,9 @@ angular.module('webRtcService', [])
                 }
             }
             pc = new webRtc.RtcPeerConnection({"iceServers":iceServers});
+        } else {
+            console.log("WebRTC not supported here");
+            return null;
         }
         
         pc.ngoniceconnectionstatechange = function(){};

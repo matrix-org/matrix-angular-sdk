@@ -12,6 +12,7 @@ describe('NotificationService', function() {
 
     // These would be better if individual rules were configured in the tests themselves.
     var matrixService = {
+        isUserLoggedIn: function() { return true; },
         getPushRules : function() {
             var def = $q.defer();
             var rulesets = {
@@ -209,6 +210,9 @@ describe('NotificationService', function() {
                 event: {
                     content: {
                     }
+                },
+                aevent: {
+                    identicon: function() {}
                 }
             }
         },

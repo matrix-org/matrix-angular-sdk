@@ -182,7 +182,6 @@ describe('MatrixPhoneService', function() {
         };
         $rootScope.$broadcast(eventHandlerService.CALL_EVENT, event);
         
-        expect(theCall.initWithInvite).not.toHaveBeenCalled();
         expect(broadcastedCall).toBeDefined();
     }));
     

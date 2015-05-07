@@ -112,15 +112,6 @@ angular.module('MatrixWebClientController', ['matrixService', 'mPresence', 'even
             if (angular.element('#remoteVideo')[0].load) angular.element('#remoteVideo')[0].load();
             return;
         }
-
-        // set it to the user ID until we fetch the display name
-        $rootScope.currentCall.userProfile = { displayname: $rootScope.currentCall.user_id };
-
-        var user = modelService.getUser($rootScope.currentCall.user_id);
-        if (user && user.event && user.event.content) {
-            $rootScope.currentCall.userProfile.avatar_url = user.event.content.avatar_url;
-        }
-        $rootScope.currentCall.userProfile.displayname = mUserDisplayNameFilter($rootScope.currentCall.user_id);
     });
     $rootScope.$watch('currentCall.state', function(newVal, oldVal) {
         if (newVal == 'ringing') {
@@ -177,21 +168,16 @@ angular.module('MatrixWebClientController', ['matrixService', 'mPresence', 'even
         call.localVideoSelector  = '#localVideo';
         call.remoteVideoSelector  = '#remoteVideo';
         
-        var roomMembers = angular.copy(modelService.getRoom(call.room_id).current_room_state.members);
-        delete roomMembers[matrixService.config().user_id];
-        call.user_id = Object.keys(roomMembers)[0];
-        
         $rootScope.currentCall = call;
         
-        var usr = modelService.getUser(call.user_id);
         var avatar;
-        if (usr && usr.event && usr.event.content) {
-            avatar = usr.event.content.avatar_url;
+        if (call.peerMember.event.content.avatar_url) {
+            avatar = matrixService.getHttpUriForMxc(call.peerMember.event.content.avatar_url);
         }
         
         notificationService.showNotification(
             "Incoming "+call.type+" call", 
-            "Call from "+mUserDisplayNameFilter(call.user_id), 
+            mUserDisplayNameFilter(call.peerMember.name, call.room_id),
             avatar, 
             undefined, 
             "matrixcall"

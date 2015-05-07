@@ -180,7 +180,7 @@ angular.module('RoomController', ['ngSanitize', 'matrixFilter', 'mFileInput'])
     // It is possible for this room to be reaped. If that happens, we need to
     // attach to the NEW room which is created, rather than holding onto the
     // old one.
-    $rootScope.$on(modelService.NEW_ROOM, function(ngEvent, newRoom) {
+    var cancelNewRoomListener = $rootScope.$on(modelService.NEW_ROOM, function(ngEvent, newRoom) {
         if (newRoom.room_id === $scope.room_id) {
             $scope.room = newRoom;
         }
@@ -205,6 +205,10 @@ angular.module('RoomController', ['ngSanitize', 'matrixFilter', 'mFileInput'])
                 scrollToBottom();
             }
         }
+    });
+
+    $scope.$on("$destroy", function() {
+        cancelNewRoomListener();
     });
 
     $scope.memberCount = function() {
@@ -473,7 +477,14 @@ angular.module('RoomController', ['ngSanitize', 'matrixFilter', 'mFileInput'])
     
     $scope.startVoiceCall = function() {        
         if (!$scope.checkWebRTC()) return;
+
         var call = new MatrixCall($scope.room_id);
+
+        var roomMembers = angular.copy(modelService.getRoom($scope.room_id).current_room_state.members);
+        delete roomMembers[matrixService.config().user_id];
+        var peer_user_id = Object.keys(roomMembers)[0];
+        call.peerMember = modelService.getMember($scope.room_id, peer_user_id);
+
         call.onError = $rootScope.onCallError;
         call.onHangup = $rootScope.onCallHangup;
         // remote video element is used for playing audio in voice calls
@@ -486,6 +497,12 @@ angular.module('RoomController', ['ngSanitize', 'matrixFilter', 'mFileInput'])
         if (!$scope.checkWebRTC()) return;
 
         var call = new MatrixCall($scope.room_id);
+
+        var roomMembers = angular.copy(modelService.getRoom($scope.room_id).current_room_state.members);
+        delete roomMembers[matrixService.config().user_id];
+        var peer_user_id = Object.keys(roomMembers)[0];
+        call.peerMember = modelService.getMember($scope.room_id, peer_user_id);
+
         call.onError = $rootScope.onCallError;
         call.onHangup = $rootScope.onCallHangup;
         call.localVideoSelector = '#localVideo';
