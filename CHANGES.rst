@@ -1,4 +1,4 @@
-Changes in Matrix Angular SDK 0.6.6 (2015-05-06)
+Changes in Matrix Angular SDK 0.6.6 (2015-05-07)
 ================================================
 
 Features:
