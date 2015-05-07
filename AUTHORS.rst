@@ -1,6 +1,9 @@
 Kegan Dougal <kegan at matrix.org>
  * Core
 
+Emmanuel Rohee <manu at matrix.org>
+ * Early development
+
 Dave Baker <dave at matrix.org>
  * VoIP
  * Push API impl.
