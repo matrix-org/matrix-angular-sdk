@@ -1,6 +1,6 @@
 {
   "name": "matrix-angular-sdk",
-  "version": "0.6.5",
+  "version": "0.6.6,
   "description": "AngularJS SDK and example front-end client for the Matrix.org decentralised communications platform",
   "main": "index.js",
   "scripts": {
