@@ -23,8 +23,8 @@ limitations under the License.
  * server poke (which when it times out means you need to re-poke).
  */
 angular.module('typingService', [])
-.factory('typingService', [ '$timeout', 'matrixService',
-function($timeout, matrixService) {
+.factory('typingService', [ 'matrixService', '$interval',
+function(matrixService, $interval) {
     var typingService = {};
 
     // canonical source for rooms typing in
@@ -42,17 +42,17 @@ function($timeout, matrixService) {
     var cancelUserTimeout = function(roomId) {
         var timerPromise = userTimeouts[roomId];
         if (timerPromise) {
-            $timeout.cancel(timerPromise);
+            $interval.cancel(timerPromise);
         }
     };
     var startUserTimeout = function(roomId) {
-        userTimeouts[roomId] = $timeout(function() {
+        userTimeouts[roomId] = $interval(function() {
             if (roomsTyping[roomId]) {
                 console.log("[typing] user-timeout: expired "+roomId);
                 roomsTyping[roomId] = false;
                 stopTyping(roomId);
             }
-        }, typingService.USER_TIMEOUT_MS);
+        }, typingService.USER_TIMEOUT_MS, 1);
     };
 
     // The "server timeout" is the time taken from the last server poke until another poke is required if they are still
@@ -65,11 +65,11 @@ function($timeout, matrixService) {
     var cancelServerTimeout = function(roomId) {
         var timerPromise = serverTimeouts[roomId];
         if (timerPromise) {
-            $timeout.cancel(timerPromise);
+            $interval.cancel(timerPromise);
         }
     };
     var startServerTimeout = function(roomId) {
-        serverTimeouts[roomId] = $timeout(function() {
+        serverTimeouts[roomId] = $interval(function() {
             console.log("[typing] server-timeout: expired. Still typing: "+roomsTyping[roomId]+" in room "+roomId);
             if (roomsTyping[roomId]) {
                 startServerTimeout(roomId);
@@ -81,7 +81,7 @@ function($timeout, matrixService) {
                     console.error("[typing] server-timeout: Unable to re-poke typing notification.");
                 });
             }
-        }, typingService.SERVER_TIMEOUT_MS);
+        }, typingService.SERVER_TIMEOUT_MS, 1);
     };
 
 

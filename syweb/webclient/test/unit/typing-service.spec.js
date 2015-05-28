@@ -1,5 +1,5 @@
 describe('TypingService', function() {
-    var $timeout, $q, $rootScope;
+    var $interval, $q, $rootScope;
 
     var matrixService = {
         setTyping: function(){}
@@ -12,8 +12,8 @@ describe('TypingService', function() {
         module('typingService');
     });
     
-    beforeEach(inject(function(_$timeout_, _$q_, _$rootScope_) {
-        $timeout = _$timeout_;
+    beforeEach(inject(function(_$interval_, _$q_, _$rootScope_) {
+        $interval = _$interval_;
         $q = _$q_;
         $rootScope = _$rootScope_;
     }));
@@ -52,7 +52,7 @@ describe('TypingService', function() {
         defer.resolve({});
         $rootScope.$digest();
         
-        $timeout.flush(); // annoyingly this flushes ALL THE TIMEOUTS :(
+        $interval.flush(typingService.USER_TIMEOUT_MS); // annoyingly this flushes ALL THE TIMEOUTS :(
         
         expect(matrixService.setTyping).toHaveBeenCalledWith(roomId, false);
     }));
