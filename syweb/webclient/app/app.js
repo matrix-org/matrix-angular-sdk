@@ -108,21 +108,38 @@ matrixWebClient.config(['$routeProvider', '$provide', '$httpProvider',
 matrixWebClient.run(['$location', '$rootScope', 'matrixService', function($location, $rootScope, matrixService) {
     $rootScope.httpUri = matrixService.getHttpUriForMxc;
 
-    // Check browser support
-    // Support IE from 9.0. AngularJS needs some tricks to run on IE8 and below
-    /* FIXME: $.browser.version was removed in jquery 1.9
-    var version = parseFloat($.browser.version);
-    if ($.browser.msie && version < 9.0) {
+    // Source: https://msdn.microsoft.com/en-us/library/cc817582.aspx
+    // Returns the version of Windows Internet Explorer or a -1
+    // (indicating the use of another browser).
+    function getInternetExplorerVersion() {
+        var rv = -1; // Return value assumes failure.
+        if (!navigator) {
+            return rv;
+        }
+        if (navigator.appName == 'Microsoft Internet Explorer') {
+            var ua = navigator.userAgent;
+            var re = new RegExp("MSIE ([0-9]{1,}[\.0-9]{0,})");
+            if (re.exec(ua) != null) {
+                rv = parseFloat( RegExp.$1 );
+            }
+        }
+        return rv;
+    }
+
+    // Check browser support. Fail gracefully and display an error message
+    // if running on IE8 and below.
+    var ieVersion = getInternetExplorerVersion();
+    if (ieVersion > -1 && ieVersion < 9.0) {
         $rootScope.unsupportedBrowser = {
             browser: navigator.userAgent,
-            reason: "Internet Explorer is supported from version 9"
+            reason: "Internet Explorer is supported from version 9."
         };
-    } */
+    }
     // The app requires localStorage
     if(typeof(Storage) === "undefined") {
         $rootScope.unsupportedBrowser = {
             browser: navigator.userAgent,
-            reason: "It does not support HTML local storage"
+            reason: "Your browser does not support HTML local storage."
         };
     }
 
