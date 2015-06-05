@@ -63,6 +63,8 @@ function MatrixPhoneService($rootScope, $injector, webRtcService, matrixService,
             call.call_id = msg.call_id;
             call.initWithInvite(event);
 
+            matrixPhoneService.allCalls[call.call_id] = call;
+
             if (!webRtcService.isWebRTCSupported()) {
                 console.log("Incoming call ID "+msg.call_id+" but this browser doesn't support WebRTC");
                 // don't hang up the call: there could be other clients connected that do support WebRTC and declining the
@@ -71,8 +73,6 @@ function MatrixPhoneService($rootScope, $injector, webRtcService, matrixService,
                 $rootScope.$broadcast(matrixPhoneService.INCOMING_CALL_EVENT, call);
                 return;
             }
-
-            matrixPhoneService.allCalls[call.call_id] = call;
 
             // if we stashed candidate events for that call ID, play them back now
             if (!isLive && matrixPhoneService.candidatesByCall[call.call_id] != undefined) {
