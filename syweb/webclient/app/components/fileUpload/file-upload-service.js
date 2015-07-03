@@ -97,10 +97,13 @@ angular.module('mFileUpload', ['matrixService', 'mUtilities', 'angularFileUpload
         var deferred = $q.defer();
         var url = matrixService.getContentUrl();
         console.log("Uploading " + file.name + " to "+url.path);
+
+        var params = url.params;
+        params.filename = file.name;
         
         $upload.http({
             url: url.base + url.path,
-            params: url.params,
+            params: params,
             headers: {'Content-Type': file.type},
             file: file,
             data: file,
