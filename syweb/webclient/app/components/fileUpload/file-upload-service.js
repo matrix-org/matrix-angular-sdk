@@ -98,8 +98,8 @@ angular.module('mFileUpload', ['matrixService', 'mUtilities', 'angularFileUpload
         var url = matrixService.getContentUrl();
         console.log("Uploading " + file.name + " to "+url.path);
 
-        var params = url.params
-        params.filename = file.name
+        var params = url.params;
+        params.filename = file.name;
         
         $upload.http({
             url: url.base + url.path,
