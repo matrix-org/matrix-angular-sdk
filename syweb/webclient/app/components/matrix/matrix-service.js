@@ -587,6 +587,10 @@ function($http, $window, $timeout, $q) {
             return client.loginWithPassword(userId, password);
         },
 
+        loginSAML2: function(relayState) {
+            return client.loginWithSAML2(relayState);
+        },
+
         // hit the Identity Server for a 3PID request.
         linkEmail: function(email, clientSecret, sendAttempt) {
             var path = "/_matrix/identity/api/v1/validate/email/requestToken";
