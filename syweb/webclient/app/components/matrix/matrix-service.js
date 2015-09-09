@@ -77,7 +77,10 @@ function($http, $window, $timeout, $q) {
         $window.matrixcs.request(function(opts, callback) {
             // return a promise rather than use callbacks
             return doInternalRequest(opts.uri, opts.method, opts.qs, opts.body, undefined, {
-                timeout: 35000
+                // this needs to be larger than we expect the longest request will be
+                // to avoid knifing the connection early whilst the server is still
+                // processing the request
+                timeout: (1000 * 60 * 2)
             });
         });
 
