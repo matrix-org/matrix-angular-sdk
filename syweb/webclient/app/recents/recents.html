@@ -71,6 +71,12 @@
                                     </span>
                                 </div>
 
+                                <div ng-switch-when="m.notice">
+                                    {{ room.lastAnnotatedEvent.event.user_id | mUserDisplayName: room.room_id }} :
+                                    <span ng-bind-html="(room.lastAnnotatedEvent.event.content.body) | escapeHTML">
+                                    </span>
+                                </div>
+
                                 <div ng-switch-when="m.image">
                                     {{ room.lastAnnotatedEvent.event.user_id | mUserDisplayName: room.room_id }} sent an image
                                 </div>

@@ -36,8 +36,8 @@ var forAllTracksOnStream = function(s, f) {
 }
 
 angular.module('MatrixCall', [])
-.factory('MatrixCall', ['webRtcService', 'matrixService', 'matrixPhoneService', 'modelService', '$rootScope', '$timeout', 
-function MatrixCallFactory(webRtcService, matrixService, matrixPhoneService, modelService, $rootScope, $timeout) {
+.factory('MatrixCall', ['webRtcService', 'matrixService', 'matrixPhoneService', 'modelService', '$rootScope', '$timeout', '$interval',
+function MatrixCallFactory(webRtcService, matrixService, matrixPhoneService, modelService, $rootScope, $timeout, $interval) {
 
     var MatrixCall = function(room_id) {
         this.room_id = room_id;
@@ -63,7 +63,7 @@ function MatrixCallFactory(webRtcService, matrixService, matrixPhoneService, mod
                 MatrixCall.turnServer = response.data;
                 $rootScope.haveTurn = true;
                 // re-fetch when we're about to reach the TTL
-                $timeout(MatrixCall.getTurnServer, MatrixCall.turnServer.ttl * 1000 * 0.9);
+                $interval(MatrixCall.getTurnServer, MatrixCall.turnServer.ttl * 1000 * 0.9, 1);
             } else {
                 console.log("Got no TURN URIs from HS");
                 $rootScope.haveTurn = false;
@@ -393,11 +393,11 @@ function MatrixCallFactory(webRtcService, matrixService, matrixPhoneService, mod
             };
             self.sendEventWithRetry('m.call.invite', content);
 
-            $timeout(function() {
+            $interval(function() {
                 if (self.state == 'invite_sent') {
                     self.hangup('invite_timeout');
                 }
-            }, MatrixCall.CALL_TIMEOUT);
+            }, MatrixCall.CALL_TIMEOUT, 1);
             self.state = 'invite_sent';
         }, 
         function() { 

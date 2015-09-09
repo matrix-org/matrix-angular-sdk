@@ -23,12 +23,13 @@ stream. This service is not responsible for parsing event data. For that, see
 the eventHandlerService.
 */
 angular.module('eventStreamService', [])
-.factory('eventStreamService', ['$q', '$timeout', '$rootScope', 'matrixService', 'eventHandlerService', function($q, $timeout, $rootScope, matrixService, eventHandlerService) {
+.factory('eventStreamService', ['$q', '$timeout', '$rootScope', 'matrixService', 'eventHandlerService', '$interval', function($q, $timeout, $rootScope, matrixService, eventHandlerService, $interval) {
     var BROADCAST_BAD_CONNECTION = "eventStreamService.BROADCAST_BAD_CONNECTION(isBad)";
     var END = "END";
     var SERVER_TIMEOUT_MS = 1000 * 30;
     var MAX_JITTER_TIME_MS = 1000 * 3;
     var MAX_BACKOFF_MS = 1000 * 60;
+    var INITIAL_SYNC_BASE_WAIT_MS = 1000 * 10;
     
     var badConnection = false;
     var failedAttempts = 0;
@@ -62,9 +63,9 @@ angular.module('eventStreamService', [])
     // cannot trust that the connection will in fact be ended remotely after 
     // SERVER_TIMEOUT_MS
     var startConnectionTimer = function() {
-        return $timeout(function() {
+        return $interval(function() {
             killConnection("timed out");
-        }, SERVER_TIMEOUT_MS + (1000 * 10)); // buffer period
+        }, SERVER_TIMEOUT_MS + (1000 * 10), 1); // buffer period
     };
     
     
@@ -98,7 +99,7 @@ angular.module('eventStreamService', [])
                 failedAttempts = 0;
                 setBadConnection(false);
                 
-                $timeout.cancel(connTimer);
+                $interval.cancel(connTimer);
                 if (!settings.isActive) {
                     console.log("[EventStream] Got response but now inactive. Dropping data.");
                     return;
@@ -117,7 +118,7 @@ angular.module('eventStreamService', [])
                 deferred.resolve(response);
                 
                 if (settings.shouldPoll) {
-                    $timeout(doEventStream, 0);
+                    $interval(doEventStream, 0, 1);
                 }
                 else {
                     console.log("[EventStream] Stopping poll.");
@@ -125,7 +126,7 @@ angular.module('eventStreamService', [])
             },
             function(error) {
                 console.error("[EventStream] failed /events request, retrying...");
-                $timeout.cancel(connTimer);
+                $interval.cancel(connTimer);
                 failedAttempts += 1;
                 if (failedAttempts >= MAX_FAILED_ATTEMPTS) {
                     setBadConnection(true);
@@ -140,11 +141,12 @@ angular.module('eventStreamService', [])
                 if (settings.shouldPoll) {
                     // Apply between 0 ~ MAX_JITTER_TIME_MS of jitter
                     var jitter = Math.floor(Math.random() * MAX_JITTER_TIME_MS);
-                    $timeout(
+                    $interval(
                         doEventStream,
                         // Backoff 2>4>8>.. secs to a cap of MAX_BACKOFF_MS
                         (Math.min(1000 * Math.pow(2,failedAttempts), MAX_BACKOFF_MS) +
-                        jitter)
+                        jitter),
+                        1
                     );
                 }
                 else {
@@ -183,7 +185,7 @@ angular.module('eventStreamService', [])
                 initialSyncFailedAttempts += 1;
                 $timeout(function() {
                     startEventStream(deferred);
-                }, Math.min(
+                }, INITIAL_SYNC_BASE_WAIT_MS + Math.min(
                     1000 * Math.pow(2,initialSyncFailedAttempts), MAX_BACKOFF_MS
                 ));
             }
