@@ -1,3 +1,17 @@
+Changes in Matrix Angular SDK 0.6.7 (2015-09-09)
+================================================
+
+Improvements:
+ - Use ``$interval`` instead of ``$timeout`` to aid Protractor testing.
+ - Fail more gracefully on IE8.
+ - Add ``?filename`` parameter when uploading.
+ - Add SAML2 login helper method.
+ - Use exponential backoff on ``/initialSync`` and ``/events``.
+
+Bug fixes:
+ - Fix display of HTML entities in recents tab.
+ - Fix CSS when displaying topics
+
 Changes in Matrix Angular SDK 0.6.6 (2015-05-07)
 ================================================
 
