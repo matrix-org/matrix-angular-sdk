@@ -29,6 +29,7 @@ angular.module('eventStreamService', [])
     var SERVER_TIMEOUT_MS = 1000 * 30;
     var MAX_JITTER_TIME_MS = 1000 * 3;
     var MAX_BACKOFF_MS = 1000 * 60;
+    var INITIAL_SYNC_BASE_WAIT_MS = 1000 * 10;
     
     var badConnection = false;
     var failedAttempts = 0;
@@ -184,7 +185,7 @@ angular.module('eventStreamService', [])
                 initialSyncFailedAttempts += 1;
                 $timeout(function() {
                     startEventStream(deferred);
-                }, Math.min(
+                }, INITIAL_SYNC_BASE_WAIT_MS + Math.min(
                     1000 * Math.pow(2,initialSyncFailedAttempts), MAX_BACKOFF_MS
                 ));
             }

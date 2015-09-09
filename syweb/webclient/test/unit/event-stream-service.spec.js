@@ -171,7 +171,7 @@ describe('EventStreamService', function() {
             request.reject({data:{status:0}}); // reject no connection.
             request = $q.defer(); // make a new promise in prep for the next request
             $scope.$digest(); // invoke the .then
-            $interval.flush(eventStreamService.SERVER_TIMEOUT + (1000 * 2)); // flush the waiting period.
+            $interval.flush(eventStreamService.SERVER_TIMEOUT + (1000 * 10)); // flush the waiting period.
         }
         
         expect(isBadConnection).toBe(true);
