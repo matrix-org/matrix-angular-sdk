@@ -26,8 +26,9 @@ angular.module('eventStreamService', [])
 .factory('eventStreamService', ['$q', '$timeout', '$rootScope', 'matrixService', 'eventHandlerService', '$interval', function($q, $timeout, $rootScope, matrixService, eventHandlerService, $interval) {
     var BROADCAST_BAD_CONNECTION = "eventStreamService.BROADCAST_BAD_CONNECTION(isBad)";
     var END = "END";
-    var SERVER_TIMEOUT_MS = 30000;
-    var ERR_TIMEOUT_MS = 5000;
+    var SERVER_TIMEOUT_MS = 1000 * 30;
+    var MAX_JITTER_TIME_MS = 1000 * 3;
+    var MAX_BACKOFF_MS = 1000 * 60;
     
     var badConnection = false;
     var failedAttempts = 0;
@@ -63,7 +64,7 @@ angular.module('eventStreamService', [])
     var startConnectionTimer = function() {
         return $interval(function() {
             killConnection("timed out");
-        }, SERVER_TIMEOUT_MS + (1000 * 2), 1); // buffer period
+        }, SERVER_TIMEOUT_MS + (1000 * 10), 1); // buffer period
     };
     
     
@@ -137,9 +138,15 @@ angular.module('eventStreamService', [])
                 deferred.reject(error);
                 
                 if (settings.shouldPoll) {
-                    // up to 3s jittering
-                    var jitter = Math.floor(Math.random() * 3000);
-                    $interval(doEventStream, (ERR_TIMEOUT_MS + jitter), 1);
+                    // Apply between 0 ~ MAX_JITTER_TIME_MS of jitter
+                    var jitter = Math.floor(Math.random() * MAX_JITTER_TIME_MS);
+                    $interval(
+                        doEventStream,
+                        // Backoff 2>4>8>.. secs to a cap of MAX_BACKOFF_MS
+                        (Math.min(1000 * Math.pow(2,failedAttempts), MAX_BACKOFF_MS) +
+                        jitter),
+                        1
+                    );
                 }
                 else {
                     console.log("[EventStream] Stopping polling.");
@@ -150,6 +157,7 @@ angular.module('eventStreamService', [])
         return deferred.promise;
     }; 
 
+    var initialSyncFailedAttempts = 0;
     var startEventStream = function(deferred) {
         settings.shouldPoll = true;
         settings.isActive = true;
@@ -165,7 +173,7 @@ angular.module('eventStreamService', [])
         matrixService.initialSync(8, false).then(
             function(response) {
                 eventHandlerService.handleInitialSyncDone(response);
-
+                initialSyncFailedAttempts = 0;
                 // Start event streaming from that point
                 settings.from = response.data.end;
                 console.log("[EventStream] initialSync complete. Using token "+settings.from);
@@ -173,9 +181,12 @@ angular.module('eventStreamService', [])
             },
             function(error) {
                 console.error("[EventStream] initialSync failed, retrying...");
+                initialSyncFailedAttempts += 1;
                 $timeout(function() {
                     startEventStream(deferred);
-                }, ERR_TIMEOUT_MS);
+                }, Math.min(
+                    1000 * Math.pow(2,initialSyncFailedAttempts), MAX_BACKOFF_MS
+                ));
             }
         );
 

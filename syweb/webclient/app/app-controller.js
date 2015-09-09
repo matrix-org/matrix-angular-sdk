@@ -37,7 +37,7 @@ angular.module('MatrixWebClientController', ['matrixService', 'mPresence', 'even
         $scope.location = $location.path();
     });
     
-    eventReaperService.setEnabled(true);
+    eventReaperService.setEnabled(false);
     
     /**
      * Open a given page.
