@@ -127,7 +127,12 @@ angular.module('matrixWebClient')
       if (match[2] == match[3]) url = 'mailto:' + url;
       i = match.index;
       addText(raw.substr(0, i));
-      addLink(url, match[0].replace(MAILTO_REGEXP, ''));
+      if (raw.substr(0, i).toLowerCase().indexOf("<a") >= 0) {
+        addText(match[0]);
+      }
+      else {
+        addLink(url, match[0].replace(MAILTO_REGEXP, ''));
+      }
       raw = raw.substring(i + match[0].length);
     }
     addText(raw);
