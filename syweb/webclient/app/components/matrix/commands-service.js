@@ -56,6 +56,17 @@ angular.module('commandsService', [])
         }
         return reject("Usage: /join <room_alias>");
     };
+
+    // Invite a user to the room
+    var doInvite = function(room_id, args) {
+        if (args) {
+            var matches = args.match(/^(\S+)$/);
+            if (matches) {
+                return matrixService.invite(room_id, matches[1]);
+            }
+        }
+        return reject("Usage: /invite <userId>");
+    };
     
     // Kick a user from the room with an optional reason
     var doKick = function(room_id, args) {
@@ -126,6 +137,7 @@ angular.module('commandsService', [])
     var commands = {
         "nick": doNick,
         "join": doJoin,
+        "invite": doInvite,
         "kick": doKick,
         "ban": doBan,
         "unban": doUnban,
