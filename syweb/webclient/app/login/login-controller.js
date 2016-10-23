@@ -22,10 +22,19 @@ angular.module('LoginController', ['matrixService'])
     
     // Assume that this is hosted on the home server, in which case the URL
     // contains the home server.
-    var hs_url = $location.protocol() + "://" + $location.host();
+    var location_protocol = $location.protocol();
+    var location_host = $location.host();
+    var id_host = "matrix.org"
+    var id_url = $location.protocol() + "://" + id_host;
+    if (location_protocol === "file") {
+        location_protocol = "https";
+        location_host = id_host;
+	    id_url = location_protocol + "://" + location_host;
+    }
+    var hs_url = location_protocol + "://" + location_host;
     if ($location.port() &&
-        !($location.protocol() === "http" && $location.port() === 80) &&
-        !($location.protocol() === "https" && $location.port() === 443))
+        !(location_protocol === "http" && $location.port() === 80) &&
+        !(location_protocol=== "https" && $location.port() === 443))
     {
         hs_url += ":" + $location.port();
     }
@@ -35,7 +44,7 @@ angular.module('LoginController', ['matrixService'])
         desired_user_name: "",
         user_id: "",
         password: "",
-        identityServer: $location.protocol() + "://matrix.org",
+        identityServer: id_url,
         pwd1: "",
         pwd2: "",
     };
