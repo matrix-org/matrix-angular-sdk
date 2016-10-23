@@ -1,6 +1,15 @@
 Matrix Angular SDK 
 ==================
 
+.. DANGER::
+   **matrix-angular-sdk is not currently being maintained or developed by the core
+   team, and whilst stable it has some serious performance issues; Angular makes it
+   a bit too easy to shoot yourself in the foot and doesn't help you escape when
+   you do so.  All of our current focus is going into the
+   https://github.com/matrix-org/matrix-js-sdk, https://github.com/matrix-org/matrix-react-sdk
+   and https://github.com/matrix-org/matrix-react-skin stack instead - please use
+   those rather than this if you want support from the core team.  Thanks!**
+
 .. image:: http://matrix.org/jenkins/buildStatus/icon?job=SynapseWebClient
    :target: http://matrix.org/jenkins/job/SynapseWebClient/
 

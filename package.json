@@ -1,6 +1,6 @@
 {
   "name": "matrix-angular-sdk",
-  "version": "0.6.7,
+  "version": "0.6.8",
   "description": "AngularJS SDK and example front-end client for the Matrix.org decentralised communications platform",
   "main": "index.js",
   "scripts": {
@@ -24,7 +24,7 @@
     "iot"
   ],
   "author": "Matrix.org",
-  "license": "Apache 2.0",
+  "license": "Apache-2.0",
   "bugs": {
     "url": "https://matrix.org/jira/browse/SYWEB"
   },

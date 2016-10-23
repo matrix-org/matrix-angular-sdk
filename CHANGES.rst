@@ -1,3 +1,9 @@
+Changes in Matrix Angular SDK 0.6.8 (2016-02-10)
+================================================
+
+Bug fixes:
+ - Fix display of HTML bodies (SYWEB-361)
+
 Changes in Matrix Angular SDK 0.6.7 (2015-09-09)
 ================================================
 
