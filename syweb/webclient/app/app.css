@@ -500,7 +500,6 @@ input.error {
 
 .roomNameSection, .roomTopicSection {
     text-align: right;
-    float: right;
     width: 100%;
 }
 
